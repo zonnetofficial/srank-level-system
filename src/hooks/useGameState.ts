@@ -11,6 +11,7 @@ import {
   isRestDay,
   QuestStatus,
   DailyQuestLog,
+  parseLocalDate,
 } from '@/lib/gameData';
 
 const STORAGE_KEY = 'daily-quest-rpg-state';
@@ -173,14 +174,21 @@ export function useGameState() {
     const weeklyUses = cooldown.weekStart === currentWeekStart ? cooldown.usesThisWeek : 0;
 
     if (stat === 'int') {
-      // Daily, 1 per day
+      // INT test: check intTestCooldown in state
+      const intCooldown = (state as any).intTestCooldown as string | null;
+      if (intCooldown) {
+        const cooldownDate = parseLocalDate(intCooldown);
+        const todayDate = parseLocalDate(today);
+        if (todayDate < cooldownDate) return false;
+      }
+      // Also check if already used today (passed/failed)
       return cooldown.lastUsed !== today;
     }
     if (stat === 'str' || stat === 'end') {
       // Every 4 days
       if (!cooldown.lastUsed) return true;
-      const last = new Date(cooldown.lastUsed);
-      const now = new Date(today);
+      const last = parseLocalDate(cooldown.lastUsed);
+      const now = parseLocalDate(today);
       const diffDays = Math.floor((now.getTime() - last.getTime()) / (1000 * 60 * 60 * 24));
       return diffDays >= 4;
     }
@@ -193,7 +201,7 @@ export function useGameState() {
       return weeklyUses < 4;
     }
     return false;
-  }, [state.skillCooldowns, today]);
+  }, [state.skillCooldowns, today, (state as any).intTestCooldown]);
 
   const completeSkillTask = useCallback((stat: StatKey, points: number) => {
     setState(prev => {
@@ -206,8 +214,8 @@ export function useGameState() {
       // Check cooldown
       if (stat === 'int' && cooldown.lastUsed === today) return prev;
       if ((stat === 'str' || stat === 'end') && cooldown.lastUsed) {
-        const last = new Date(cooldown.lastUsed);
-        const now = new Date(today);
+        const last = parseLocalDate(cooldown.lastUsed);
+        const now = parseLocalDate(today);
         const diffDays = Math.floor((now.getTime() - last.getTime()) / (1000 * 60 * 60 * 24));
         if (diffDays < 4) return prev;
       }
@@ -229,6 +237,46 @@ export function useGameState() {
     });
   }, [today]);
 
+  // INT test: complete with result info
+  const completeIntTest = useCallback((points: number, failed: boolean, perfectCount: number) => {
+    setState(prev => {
+      const newStats = { ...prev.stats, int: prev.stats.int + points };
+      const newPoints = { ...prev.statPoints, int: prev.statPoints.int + points };
+      const currentWeekStart = getWeekStart(today);
+      const cooldown = prev.skillCooldowns.int;
+
+      let intTestCooldown: string | null = null;
+      if (failed) {
+        // Failed: next test in 2 days
+        const d = parseLocalDate(today);
+        d.setDate(d.getDate() + 2);
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        intTestCooldown = `${year}-${month}-${day}`;
+      }
+
+      const newCooldowns = {
+        ...prev.skillCooldowns,
+        int: {
+          ...cooldown,
+          lastUsed: perfectCount > 0 ? null : today, // if perfect, allow another today
+          usesThisWeek: (cooldown.weekStart === currentWeekStart ? cooldown.usesThisWeek : 0) + 1,
+          weekStart: currentWeekStart,
+        },
+      };
+
+      return {
+        ...prev,
+        stats: newStats,
+        statPoints: newPoints,
+        skillCooldowns: newCooldowns,
+        intTestCooldown: failed ? intTestCooldown : (prev as any).intTestCooldown || null,
+        intPerfectsToday: perfectCount,
+      } as any;
+    });
+  }, [today]);
+
   const dismissTimeWarning = useCallback(() => setTimeWarning(false), []);
 
   const resetGame = useCallback(() => {
@@ -246,6 +294,7 @@ export function useGameState() {
     startQuest,
     completeQuest,
     completeSkillTask,
+    completeIntTest,
     isSkillAvailable,
     dismissTimeWarning,
     resetGame,

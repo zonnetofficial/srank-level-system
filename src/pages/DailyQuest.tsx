@@ -15,7 +15,7 @@ const DailyQuest = () => {
       </h1>
 
       <div className="text-center text-xs font-display text-muted-foreground mb-4 uppercase tracking-wider">
-        {today}
+        {new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
       </div>
 
       {/* Rest Day */}
