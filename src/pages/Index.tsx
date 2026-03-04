@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { XPBar } from '@/components/XPBar';
 import { StatBar } from '@/components/StatBar';
 import { useGameState } from '@/hooks/useGameState';
@@ -17,6 +18,12 @@ const statKeys: StatKey[] = ['int', 'str', 'agi', 'vit', 'end'];
 const Index = () => {
   const { state, todayQuest, restDay, timeWarning, dismissTimeWarning } = useGameState();
   const navigate = useNavigate();
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const interval = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const currentClass = getClassTitle(state.level, state.classTitles);
   const nextClass = getNextClassTitle(state.level, state.classTitles);
@@ -32,6 +39,16 @@ const Index = () => {
           ⚠️ Time manipulation detected. Progress may be locked.
         </div>
       )}
+
+      {/* Time display */}
+      <div className="text-center mb-4">
+        <div className="text-xs font-display text-muted-foreground uppercase tracking-wider">
+          {currentTime.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+        </div>
+        <div className="text-lg font-display text-primary text-glow-primary">
+          {currentTime.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+        </div>
+      </div>
 
       {/* Level & XP */}
       <XPBar xp={state.xp} xpToNext={state.xpToNext} level={state.level} />
