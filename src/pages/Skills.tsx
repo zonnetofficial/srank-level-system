@@ -1,38 +1,43 @@
+import { useState } from 'react';
 import { useGameState } from '@/hooks/useGameState';
 import { STAT_LABELS, STAT_ICONS, StatKey } from '@/lib/gameData';
 
-const skillDescriptions: Record<StatKey, { tasks: string[]; reward: string; cooldown: string }> = {
-  int: {
-    tasks: ['Test de conocimiento', 'Resolver problemas lógicos'],
-    reward: 'Hasta +10 INT',
-    cooldown: 'Diario (1 test)',
-  },
-  str: {
-    tasks: ['Reto de repeticiones máximas', 'Prueba por tiempo'],
-    reward: 'Éxito: +4 STR / Fallo: +1 STR',
-    cooldown: 'Cada 4 días',
-  },
-  agi: {
-    tasks: ['Estiramientos', 'Saltos', 'Coordinación'],
-    reward: '+1 AGI',
-    cooldown: '3 veces por semana',
-  },
-  vit: {
-    tasks: ['Meditación', 'Respiración', 'Reflexión'],
-    reward: '+1 VIT',
-    cooldown: '4 veces por semana',
-  },
-  end: {
-    tasks: ['Prueba continua por tiempo', 'Resistencia prolongada'],
-    reward: 'Éxito: +4 END / Fallo: +1 END',
-    cooldown: 'Cada 4 días',
-  },
+const skillTasks: Record<StatKey, string[]> = {
+  int: ['Test de conocimiento', 'Resolver problemas lógicos'],
+  str: ['Reto de repeticiones máximas', 'Prueba por tiempo'],
+  agi: ['Estiramientos', 'Saltos', 'Coordinación'],
+  vit: ['Meditación', 'Respiración', 'Reflexión'],
+  end: ['Prueba continua por tiempo', 'Resistencia prolongada'],
+};
+
+const skillPoints: Record<StatKey, { success: number; fail: number }> = {
+  int: { success: 1, fail: 0 },
+  str: { success: 4, fail: 1 },
+  agi: { success: 1, fail: 0 },
+  vit: { success: 1, fail: 0 },
+  end: { success: 4, fail: 1 },
 };
 
 const statKeys: StatKey[] = ['int', 'str', 'agi', 'vit', 'end'];
 
 const Skills = () => {
-  const { state, completeSkillTask } = useGameState();
+  const { completeSkillTask, isSkillAvailable } = useGameState();
+  const [confirming, setConfirming] = useState<StatKey | null>(null);
+
+  const handleStart = (key: StatKey) => {
+    setConfirming(key);
+  };
+
+  const handleResult = (key: StatKey, success: boolean) => {
+    const pts = success ? skillPoints[key].success : skillPoints[key].fail;
+    if (pts > 0) {
+      completeSkillTask(key, pts);
+    } else {
+      // Still consume the cooldown even on fail with 0 points
+      completeSkillTask(key, 0);
+    }
+    setConfirming(null);
+  };
 
   return (
     <div className="min-h-screen bg-background pb-20 px-4 pt-6 max-w-lg mx-auto">
@@ -45,8 +50,10 @@ const Skills = () => {
 
       <div className="space-y-4">
         {statKeys.map(key => {
-          const info = skillDescriptions[key];
-          const glowClass = `glow-${key}` as string;
+          const tasks = skillTasks[key];
+          const available = isSkillAvailable(key);
+          const isConfirming = confirming === key;
+          const glowClass = `glow-${key}`;
 
           return (
             <div key={key} className={`rpg-panel ${glowClass}`}>
@@ -58,22 +65,50 @@ const Skills = () => {
               </div>
 
               <div className="space-y-1 mb-3">
-                {info.tasks.map((task, i) => (
+                {tasks.map((task, i) => (
                   <div key={i} className="text-sm text-muted-foreground">• {task}</div>
                 ))}
               </div>
 
-              <div className="flex justify-between items-center text-xs mb-3">
-                <span className="text-accent font-display">{info.reward}</span>
-                <span className="text-muted-foreground">{info.cooldown}</span>
-              </div>
-
-              <button
-                onClick={() => completeSkillTask(key, 1)}
-                className="w-full py-2 rounded bg-secondary text-secondary-foreground font-display text-xs uppercase tracking-wider hover:bg-secondary/80 transition-colors"
-              >
-                Completar Tarea
-              </button>
+              {isConfirming ? (
+                <div className="space-y-2">
+                  <p className="text-xs text-center text-foreground font-display">
+                    ¿Completaste la tarea?
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleResult(key, true)}
+                      className="flex-1 py-2 rounded bg-primary text-primary-foreground font-display text-xs uppercase tracking-wider hover:bg-primary/80 transition-colors"
+                    >
+                      ✅ Sí, completada
+                    </button>
+                    <button
+                      onClick={() => handleResult(key, false)}
+                      className="flex-1 py-2 rounded bg-destructive text-destructive-foreground font-display text-xs uppercase tracking-wider hover:bg-destructive/80 transition-colors"
+                    >
+                      ❌ No pude
+                    </button>
+                  </div>
+                  <button
+                    onClick={() => setConfirming(null)}
+                    className="w-full py-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => handleStart(key)}
+                  disabled={!available}
+                  className={`w-full py-2 rounded font-display text-xs uppercase tracking-wider transition-colors ${
+                    available
+                      ? 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                      : 'bg-muted text-muted-foreground cursor-not-allowed opacity-50'
+                  }`}
+                >
+                  {available ? 'Iniciar Tarea' : 'No disponible'}
+                </button>
+              )}
             </div>
           );
         })}

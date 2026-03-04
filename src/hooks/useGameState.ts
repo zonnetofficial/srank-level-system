@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   GameState,
+  StatKey,
   createInitialState,
   getToday,
+  getWeekStart,
   xpForLevel,
   getQuestXP,
   getNextExercises,
@@ -163,13 +165,69 @@ export function useGameState() {
     });
   }, [today, restDay]);
 
-  const completeSkillTask = useCallback((stat: keyof GameState['stats'], points: number) => {
+  const isSkillAvailable = useCallback((stat: StatKey): boolean => {
+    const cooldown = state.skillCooldowns[stat];
+    const currentWeekStart = getWeekStart(today);
+
+    // Reset weekly counter if new week
+    const weeklyUses = cooldown.weekStart === currentWeekStart ? cooldown.usesThisWeek : 0;
+
+    if (stat === 'int') {
+      // Daily, 1 per day
+      return cooldown.lastUsed !== today;
+    }
+    if (stat === 'str' || stat === 'end') {
+      // Every 4 days
+      if (!cooldown.lastUsed) return true;
+      const last = new Date(cooldown.lastUsed);
+      const now = new Date(today);
+      const diffDays = Math.floor((now.getTime() - last.getTime()) / (1000 * 60 * 60 * 24));
+      return diffDays >= 4;
+    }
+    if (stat === 'agi') {
+      // 3 times per week
+      return weeklyUses < 3;
+    }
+    if (stat === 'vit') {
+      // 4 times per week
+      return weeklyUses < 4;
+    }
+    return false;
+  }, [state.skillCooldowns, today]);
+
+  const completeSkillTask = useCallback((stat: StatKey, points: number) => {
     setState(prev => {
+      const currentWeekStart = getWeekStart(today);
+      const cooldown = prev.skillCooldowns[stat];
+
+      // Reset weekly counter if new week
+      const weeklyUses = cooldown.weekStart === currentWeekStart ? cooldown.usesThisWeek : 0;
+
+      // Check cooldown
+      if (stat === 'int' && cooldown.lastUsed === today) return prev;
+      if ((stat === 'str' || stat === 'end') && cooldown.lastUsed) {
+        const last = new Date(cooldown.lastUsed);
+        const now = new Date(today);
+        const diffDays = Math.floor((now.getTime() - last.getTime()) / (1000 * 60 * 60 * 24));
+        if (diffDays < 4) return prev;
+      }
+      if (stat === 'agi' && weeklyUses >= 3) return prev;
+      if (stat === 'vit' && weeklyUses >= 4) return prev;
+
       const newStats = { ...prev.stats, [stat]: prev.stats[stat] + points };
       const newPoints = { ...prev.statPoints, [stat]: prev.statPoints[stat] + points };
-      return { ...prev, stats: newStats, statPoints: newPoints };
+      const newCooldowns = {
+        ...prev.skillCooldowns,
+        [stat]: {
+          ...cooldown,
+          lastUsed: today,
+          usesThisWeek: (cooldown.weekStart === currentWeekStart ? cooldown.usesThisWeek : 0) + 1,
+          weekStart: currentWeekStart,
+        },
+      };
+      return { ...prev, stats: newStats, statPoints: newPoints, skillCooldowns: newCooldowns };
     });
-  }, []);
+  }, [today]);
 
   const dismissTimeWarning = useCallback(() => setTimeWarning(false), []);
 
@@ -188,6 +246,7 @@ export function useGameState() {
     startQuest,
     completeQuest,
     completeSkillTask,
+    isSkillAvailable,
     dismissTimeWarning,
     resetGame,
   };
