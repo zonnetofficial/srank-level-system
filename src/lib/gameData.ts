@@ -18,6 +18,7 @@ export interface DailyQuestLog {
   runMinutes?: number;
   runDistanceKm?: number;
   runTimeSeconds?: number;
+  runCompleted?: boolean;
   exercises?: { name: string; reps: number; completed: boolean }[];
 }
 
