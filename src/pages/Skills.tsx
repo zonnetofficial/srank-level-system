@@ -2,28 +2,44 @@ import { useState } from 'react';
 import { useGameState } from '@/hooks/useGameState';
 import { STAT_LABELS, STAT_ICONS, StatKey, getSkillTitle } from '@/lib/gameData';
 import { getTasksForStat, getTitleIndex } from '@/lib/skillTasks';
-import { getTestForTier, getTierFromPoints, evaluateTest, TestQuestion } from '@/lib/intTests';
+import { getTestForTier, getTierFromPoints, evaluateTest, TestQuestion, TestTheme } from '@/lib/intTests';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 const statKeys: StatKey[] = ['int', 'str', 'agi', 'vit', 'end'];
 
 const Skills = () => {
   const { state, completeSkillTask, completeIntTest, isSkillAvailable } = useGameState();
-  const [confirming, setConfirming] = useState<StatKey | null>(null);
 
   // INT test state
   const [testActive, setTestActive] = useState(false);
+  const [testTheme, setTestTheme] = useState<TestTheme | null>(null);
   const [testQuestions, setTestQuestions] = useState<TestQuestion[]>([]);
   const [testAnswers, setTestAnswers] = useState<number[]>([]);
   const [currentQ, setCurrentQ] = useState(0);
+  const [showIntro, setShowIntro] = useState(true);
   const [testResult, setTestResult] = useState<{ score: number; perfect: boolean; totalPoints: number } | null>(null);
-  const [perfectsToday, setPerfectsToday] = useState((state as any).intPerfectsToday || 0);
+  const perfectsToday = (state as any).intPerfectsToday || 0;
+  const intTestsToday = (state as any).intTestsToday || 0;
+
+  // Skill task dialog state
+  const [taskDialogStat, setTaskDialogStat] = useState<StatKey | null>(null);
+  const [taskDialogTask, setTaskDialogTask] = useState<{ name: string; description: string } | null>(null);
 
   const handleStartInt = () => {
     const tier = getTierFromPoints(state.statPoints.int);
-    const questions = getTestForTier(tier);
+    const answeredCorrectly: string[] = (state as any).answeredCorrectly || [];
+    const { theme, questions } = getTestForTier(tier, answeredCorrectly);
+    if (questions.length === 0) return;
+    setTestTheme(theme);
     setTestQuestions(questions);
     setTestAnswers([]);
     setCurrentQ(0);
+    setShowIntro(true);
     setTestResult(null);
     setTestActive(true);
   };
@@ -33,25 +49,28 @@ const Skills = () => {
     setTestAnswers(newAnswers);
 
     if (newAnswers.length >= testQuestions.length) {
-      // Evaluate
       const result = evaluateTest(testQuestions, newAnswers);
       setTestResult(result);
 
+      // Collect correctly answered question IDs
+      const newCorrect: string[] = [];
+      for (let i = 0; i < testQuestions.length; i++) {
+        if (newAnswers[i] === testQuestions[i].correctIndex) {
+          newCorrect.push(testQuestions[i].id);
+        }
+      }
+
       if (result.score === 0) {
-        // Failed completely
-        completeIntTest(0, true, 0);
-        setPerfectsToday(0);
+        completeIntTest(0, true, 0, newCorrect);
       } else if (result.perfect) {
         const newPerfects = perfectsToday + 1;
-        setPerfectsToday(newPerfects);
         let bonus = result.totalPoints;
         if (newPerfects >= 5) {
-          bonus += 10; // 5 perfect bonus
+          bonus += 10;
         }
-        completeIntTest(bonus, false, newPerfects);
+        completeIntTest(bonus, false, newPerfects, newCorrect);
       } else {
-        // Passed but not perfect
-        completeIntTest(result.totalPoints, false, 0);
+        completeIntTest(result.totalPoints, false, 0, newCorrect);
       }
     } else {
       setCurrentQ(newAnswers.length);
@@ -61,14 +80,33 @@ const Skills = () => {
   const handleCloseTest = () => {
     setTestActive(false);
     setTestResult(null);
+    setTestTheme(null);
   };
 
-  const handleStart = (key: StatKey) => {
+  const canDoAnotherTest = () => {
+    if (!testResult) return false;
+    // Max 6 tests: 5 perfects + 1 superior
+    if (intTestsToday >= 6) return false;
+    // Can only continue if perfect and under 5 perfects
+    if (testResult.perfect && perfectsToday < 5) return true;
+    // 5th perfect unlocks 1 superior test (6th total)
+    if (testResult.perfect && perfectsToday === 5 && intTestsToday < 6) return true;
+    return false;
+  };
+
+  // Skill task handling
+  const handleStartSkill = (key: StatKey) => {
     if (key === 'int') {
       handleStartInt();
       return;
     }
-    setConfirming(key);
+    const titleIdx = getTitleIndex(key, state.statPoints[key]);
+    const tasks = getTasksForStat(key, titleIdx);
+    if (tasks.length === 0) return;
+    // Pick a random task
+    const task = tasks[Math.floor(Math.random() * tasks.length)];
+    setTaskDialogTask(task);
+    setTaskDialogStat(key);
   };
 
   const skillPoints: Record<string, { success: number; fail: number }> = {
@@ -78,31 +116,31 @@ const Skills = () => {
     end: { success: 4, fail: 1 },
   };
 
-  const handleResult = (key: StatKey, success: boolean) => {
-    const pts = success ? (skillPoints[key]?.success || 0) : (skillPoints[key]?.fail || 0);
-    completeSkillTask(key, pts);
-    setConfirming(null);
+  const handleTaskResult = (success: boolean) => {
+    if (!taskDialogStat) return;
+    const pts = success ? (skillPoints[taskDialogStat]?.success || 0) : (skillPoints[taskDialogStat]?.fail || 0);
+    completeSkillTask(taskDialogStat, pts);
+    setTaskDialogStat(null);
+    setTaskDialogTask(null);
   };
 
-  // INT Test Modal
-  if (testActive) {
-    return (
-      <div className="min-h-screen bg-background pb-20 px-4 pt-6 max-w-lg mx-auto">
-        <h1 className="font-display text-xl font-bold text-center text-stat-int text-glow-primary mb-6">
-          🧠 Test de Inteligencia
-        </h1>
+  // INT Test Dialog
+  const intTestDialog = (
+    <Dialog open={testActive} onOpenChange={(o) => { if (!o && !testResult && testAnswers.length === 0) handleCloseTest(); }}>
+      <DialogContent className="bg-background border-border max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="font-display text-center text-stat-int text-glow-primary">
+            🧠 Test de Inteligencia
+          </DialogTitle>
+        </DialogHeader>
 
         {testResult ? (
-          <div className="rpg-panel-glow text-center py-8 space-y-4">
+          <div className="text-center py-6 space-y-4">
             <div className="text-5xl mb-2">
               {testResult.perfect ? '🌟' : testResult.score > 0 ? '✅' : '❌'}
             </div>
             <h2 className="font-display text-lg font-bold text-foreground">
-              {testResult.perfect
-                ? '¡Perfecto!'
-                : testResult.score > 0
-                ? 'Test Aprobado'
-                : 'Test Reprobado'}
+              {testResult.perfect ? '¡Perfecto!' : testResult.score > 0 ? 'Test Aprobado' : 'Test Reprobado'}
             </h2>
             <p className="text-sm text-muted-foreground">
               {testResult.score}/{testQuestions.length} respuestas correctas
@@ -112,23 +150,18 @@ const Skills = () => {
                 🏆 ¡5 Perfectos! Bonificación especial obtenida
               </div>
             )}
-            {testResult.perfect && perfectsToday < 5 && (
-              <p className="text-xs text-primary font-display">
-                ⚡ Has desbloqueado otro test hoy
-              </p>
-            )}
             {testResult.score === 0 && (
               <p className="text-xs text-destructive font-display">
                 El próximo test estará disponible en 2 días
               </p>
             )}
             <div className="flex gap-2 mt-4">
-              {testResult.perfect && perfectsToday < 5 && (
+              {canDoAnotherTest() && (
                 <button
                   onClick={handleStartInt}
                   className="flex-1 py-3 rounded-lg bg-primary text-primary-foreground font-display text-xs uppercase tracking-wider"
                 >
-                  Siguiente Test
+                  {perfectsToday >= 5 ? 'Test de Título Superior' : 'Siguiente Test'}
                 </button>
               )}
               <button
@@ -139,14 +172,26 @@ const Skills = () => {
               </button>
             </div>
           </div>
+        ) : showIntro && testTheme ? (
+          <div className="space-y-4 py-2">
+            <h3 className="font-display text-sm text-primary uppercase tracking-wider text-center">
+              📖 {testTheme.name}
+            </h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              {testTheme.intro}
+            </p>
+            <button
+              onClick={() => setShowIntro(false)}
+              className="w-full py-3 rounded-lg bg-primary text-primary-foreground font-display text-xs uppercase tracking-wider"
+            >
+              Comenzar Test
+            </button>
+          </div>
         ) : (
-          <div className="rpg-panel space-y-6">
+          <div className="space-y-5 py-2">
             <div className="flex justify-between items-center">
               <span className="text-xs font-display text-muted-foreground uppercase tracking-wider">
                 Pregunta {currentQ + 1} de {testQuestions.length}
-              </span>
-              <span className="text-xs font-display text-primary">
-                {perfectsToday}/5 perfectos hoy
               </span>
             </div>
 
@@ -174,9 +219,58 @@ const Skills = () => {
             </div>
           </div>
         )}
-      </div>
-    );
-  }
+      </DialogContent>
+    </Dialog>
+  );
+
+  // Skill Task Dialog
+  const skillTaskDialog = (
+    <Dialog open={!!taskDialogStat} onOpenChange={(o) => { if (!o) { setTaskDialogStat(null); setTaskDialogTask(null); } }}>
+      <DialogContent className="bg-background border-border max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="font-display text-center">
+            {taskDialogStat && (
+              <span className={`text-stat-${taskDialogStat}`}>
+                {STAT_ICONS[taskDialogStat]} {STAT_LABELS[taskDialogStat]}
+              </span>
+            )}
+          </DialogTitle>
+        </DialogHeader>
+
+        {taskDialogTask && (
+          <div className="space-y-6 py-4">
+            <div className="rpg-panel text-center">
+              <h3 className="font-display text-base font-bold text-foreground mb-2">
+                {taskDialogTask.name}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {taskDialogTask.description}
+              </p>
+            </div>
+
+            <p className="text-xs text-center text-muted-foreground font-display">
+              ¿Completaste esta tarea?
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => handleTaskResult(true)}
+                className="flex-1 py-3 rounded-lg bg-primary text-primary-foreground font-display text-sm uppercase tracking-wider hover:bg-primary/80 transition-colors"
+              >
+                ✅ Sí
+              </button>
+              <button
+                onClick={() => handleTaskResult(false)}
+                className="flex-1 py-3 rounded-lg bg-destructive text-destructive-foreground font-display text-sm uppercase tracking-wider hover:bg-destructive/80 transition-colors"
+              >
+                ❌ No
+              </button>
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
 
   return (
     <div className="min-h-screen bg-background pb-20 px-4 pt-6 max-w-lg mx-auto">
@@ -187,13 +281,8 @@ const Skills = () => {
       <div className="space-y-4">
         {statKeys.map(key => {
           const available = isSkillAvailable(key);
-          const isConfirming = confirming === key;
           const glowClass = `glow-${key}`;
-          const titleIdx = getTitleIndex(key, state.statPoints[key]);
           const currentTitle = getSkillTitle(key, state.statPoints[key]);
-
-          // Get tasks for non-INT stats
-          const tasks = key === 'int' ? [] : getTasksForStat(key, titleIdx);
 
           return (
             <div key={key} className={`rpg-panel ${glowClass}`}>
@@ -209,64 +298,30 @@ const Skills = () => {
                 </span>
               </div>
 
-              {key === 'int' ? (
-                // INT: show test prompt
-                <div className="space-y-2 mb-3">
-                  <div className="text-sm text-muted-foreground">• Test de conocimiento</div>
-                  <div className="text-xs text-muted-foreground/70">Responde preguntas para demostrar tu intelecto</div>
+              <div className="mb-3">
+                <div className="text-sm text-muted-foreground">
+                  {key === 'int' ? '• Test de conocimiento' : '• Prueba de habilidad'}
                 </div>
-              ) : (
-                // Other stats: show assigned tasks
-                <div className="space-y-1 mb-3">
-                  {tasks.map((task, i) => (
-                    <div key={i} className="text-sm text-muted-foreground">• {task.name}</div>
-                  ))}
-                </div>
-              )}
+              </div>
 
-              {isConfirming ? (
-                <div className="space-y-2">
-                  <p className="text-xs text-center text-foreground font-display">
-                    ¿Completaste la tarea?
-                  </p>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleResult(key, true)}
-                      className="flex-1 py-2 rounded bg-primary text-primary-foreground font-display text-xs uppercase tracking-wider hover:bg-primary/80 transition-colors"
-                    >
-                      ✅ Sí
-                    </button>
-                    <button
-                      onClick={() => handleResult(key, false)}
-                      className="flex-1 py-2 rounded bg-destructive text-destructive-foreground font-display text-xs uppercase tracking-wider hover:bg-destructive/80 transition-colors"
-                    >
-                      ❌ No
-                    </button>
-                  </div>
-                  <button
-                    onClick={() => setConfirming(null)}
-                    className="w-full py-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => handleStart(key)}
-                  disabled={!available}
-                  className={`w-full py-2 rounded font-display text-xs uppercase tracking-wider transition-colors ${
-                    available
-                      ? 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-                      : 'bg-muted text-muted-foreground cursor-not-allowed opacity-50'
-                  }`}
-                >
-                  {available ? (key === 'int' ? 'Iniciar Test' : 'Iniciar Tarea') : 'No disponible'}
-                </button>
-              )}
+              <button
+                onClick={() => handleStartSkill(key)}
+                disabled={!available}
+                className={`w-full py-2 rounded font-display text-xs uppercase tracking-wider transition-colors ${
+                  available
+                    ? 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                    : 'bg-muted text-muted-foreground cursor-not-allowed opacity-50'
+                }`}
+              >
+                {available ? (key === 'int' ? 'Iniciar Test' : 'Iniciar Tarea') : 'No disponible'}
+              </button>
             </div>
           );
         })}
       </div>
+
+      {intTestDialog}
+      {skillTaskDialog}
     </div>
   );
 };

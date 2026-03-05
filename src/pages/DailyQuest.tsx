@@ -1,12 +1,18 @@
+import { useState } from 'react';
 import { useGameState } from '@/hooks/useGameState';
 import { useNavigate } from 'react-router-dom';
+import RunTimer from '@/components/RunTimer';
 
 const DailyQuest = () => {
-  const { state, today, todayQuest, restDay, startQuest, completeQuest } = useGameState();
+  const { state, today, todayQuest, restDay, startQuest, completeQuest, completeExercise, completeRun } = useGameState();
   const navigate = useNavigate();
+  const [timerOpen, setTimerOpen] = useState(false);
 
-  // Auto-start if no quest today
   const hasQuest = !!todayQuest;
+
+  const allExercisesDone = todayQuest?.exercises?.every(e => e.completed) ?? false;
+  const runDone = todayQuest?.runCompleted ?? false;
+  const canComplete = allExercisesDone && runDone;
 
   return (
     <div className="min-h-screen bg-background pb-20 px-4 pt-6 max-w-lg mx-auto">
@@ -39,7 +45,6 @@ const DailyQuest = () => {
           <div className="text-5xl mb-3 animate-float">⚔️</div>
           <h2 className="font-display text-lg font-bold text-foreground mb-4">Misión Disponible</h2>
 
-          {/* Quest details */}
           <div className="text-left rpg-panel mb-4 space-y-2">
             <div className="text-xs font-display uppercase tracking-wider text-muted-foreground mb-2">
               🏃 Carrera
@@ -72,38 +77,74 @@ const DailyQuest = () => {
       {/* Quest in progress */}
       {todayQuest?.status === 'pending' && (
         <div className="space-y-4">
-          <div className="rpg-panel animate-pulse-glow">
-            <div className="text-xs font-display uppercase tracking-wider text-primary mb-3">
-              🏃 Carrera
+          {/* Run section - clickable */}
+          <div
+            className="rpg-panel animate-pulse-glow cursor-pointer hover:border-primary/60 transition-colors"
+            onClick={() => setTimerOpen(true)}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-xs font-display uppercase tracking-wider text-primary">
+                🏃 Carrera
+              </div>
+              {runDone ? (
+                <span className="text-xs font-display text-accent">✅ Completado</span>
+              ) : (
+                <span className="text-xs font-display text-muted-foreground">Toca para iniciar →</span>
+              )}
             </div>
-            <div className="text-sm text-foreground mb-1">
+            <div className="text-sm text-foreground mb-2">
               {state.runMode === 'time'
                 ? `Correr ${state.runProgression} minutos`
                 : 'Correr 5 km'}
             </div>
             <div className="stat-bar-track h-2">
-              <div className="stat-bar-fill bg-primary animate-shimmer" style={{ width: '0%' }} />
+              <div
+                className="stat-bar-fill bg-primary"
+                style={{ width: runDone ? '100%' : '0%', transition: 'width 0.5s ease' }}
+              />
             </div>
           </div>
 
+          {/* Exercises with checkboxes */}
           <div className="rpg-panel">
             <div className="text-xs font-display uppercase tracking-wider text-stat-str mb-3">
               💪 Ejercicios
             </div>
-            {state.exerciseProgression.map((ex, i) => (
-              <div key={i} className="flex justify-between items-center py-2 border-b border-border last:border-0">
-                <span className="text-sm text-foreground">{ex.name}</span>
-                <span className="text-sm font-display text-muted-foreground">{ex.reps} reps</span>
+            {todayQuest.exercises?.map((ex, i) => (
+              <div
+                key={i}
+                className="flex justify-between items-center py-2 border-b border-border last:border-0 cursor-pointer"
+                onClick={() => !ex.completed && completeExercise(i)}
+              >
+                <span className={`text-sm ${ex.completed ? 'text-accent line-through' : 'text-foreground'}`}>
+                  {ex.name}
+                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-display text-muted-foreground">{ex.reps} reps</span>
+                  <span className="text-lg">{ex.completed ? '✅' : '⬜'}</span>
+                </div>
               </div>
             ))}
           </div>
 
           <button
             onClick={completeQuest}
-            className="w-full py-4 rounded-lg bg-primary text-primary-foreground font-display text-sm uppercase tracking-[0.2em] glow-primary hover:opacity-90 transition-opacity"
+            disabled={!canComplete}
+            className={`w-full py-4 rounded-lg font-display text-sm uppercase tracking-[0.2em] transition-opacity ${
+              canComplete
+                ? 'bg-primary text-primary-foreground glow-primary hover:opacity-90'
+                : 'bg-muted text-muted-foreground cursor-not-allowed opacity-50'
+            }`}
           >
-            ✅ Misión Completada
+            {canComplete ? '✅ Misión Completada' : '⏳ Completa todas las tareas'}
           </button>
+
+          <RunTimer
+            totalMinutes={state.runMode === 'time' ? state.runProgression : 30}
+            open={timerOpen}
+            onClose={() => setTimerOpen(false)}
+            onComplete={completeRun}
+          />
         </div>
       )}
 
