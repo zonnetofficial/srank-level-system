@@ -218,6 +218,8 @@ const Skills = () => {
               ))}
             </div>
           </div>
+        ) : (
+          <div className="text-center py-6 text-muted-foreground">Cargando...</div>
         )}
       </DialogContent>
     </Dialog>
