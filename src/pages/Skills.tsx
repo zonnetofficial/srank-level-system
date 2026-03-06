@@ -177,14 +177,19 @@ const Skills = () => {
             <h3 className="font-display text-sm text-primary uppercase tracking-wider text-center">
               📖 {testTheme.name}
             </h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              {testTheme.intro}
+            <div className="rpg-panel max-h-[50vh] overflow-y-auto">
+              <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
+                {testTheme.intro}
+              </p>
+            </div>
+            <p className="text-xs text-center text-muted-foreground font-display">
+              Lee atentamente, las preguntas se basarán en este texto
             </p>
             <button
               onClick={() => setShowIntro(false)}
               className="w-full py-3 rounded-lg bg-primary text-primary-foreground font-display text-xs uppercase tracking-wider"
             >
-              Comenzar Test
+              Estoy listo – Comenzar Preguntas
             </button>
           </div>
         ) : testQuestions[currentQ] ? (
