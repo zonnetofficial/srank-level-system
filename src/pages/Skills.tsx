@@ -187,7 +187,7 @@ const Skills = () => {
               Comenzar Test
             </button>
           </div>
-        ) : (
+        ) : testQuestions[currentQ] ? (
           <div className="space-y-5 py-2">
             <div className="flex justify-between items-center">
               <span className="text-xs font-display text-muted-foreground uppercase tracking-wider">
@@ -218,6 +218,8 @@ const Skills = () => {
               ))}
             </div>
           </div>
+        ) : (
+          <div className="text-center py-6 text-muted-foreground">Cargando...</div>
         )}
       </DialogContent>
     </Dialog>
