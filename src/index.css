@@ -7,59 +7,59 @@
 @layer base {
   :root {
     --background: 225 25% 6%;
-    --foreground: 210 40% 92%;
+    --foreground: 210 50% 96%;
 
     --card: 225 25% 9%;
-    --card-foreground: 210 40% 92%;
+    --card-foreground: 210 50% 96%;
 
     --popover: 225 25% 9%;
-    --popover-foreground: 210 40% 92%;
+    --popover-foreground: 210 50% 96%;
 
-    --primary: 195 100% 50%;
+    --primary: 195 100% 55%;
     --primary-foreground: 225 25% 6%;
 
-    --secondary: 225 20% 16%;
-    --secondary-foreground: 210 40% 85%;
+    --secondary: 225 20% 18%;
+    --secondary-foreground: 210 45% 92%;
 
     --muted: 225 20% 14%;
-    --muted-foreground: 215 15% 50%;
+    --muted-foreground: 215 25% 62%;
 
-    --accent: 45 100% 55%;
+    --accent: 45 100% 60%;
     --accent-foreground: 225 25% 6%;
 
-    --destructive: 0 72% 51%;
+    --destructive: 0 80% 58%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 225 20% 18%;
-    --input: 225 20% 18%;
-    --ring: 195 100% 50%;
+    --border: 225 25% 25%;
+    --input: 225 25% 25%;
+    --ring: 195 100% 55%;
 
     --radius: 0.5rem;
 
     /* Stat colors */
-    --stat-int: 195 100% 50%;
-    --stat-str: 0 85% 55%;
-    --stat-agi: 150 80% 45%;
-    --stat-vit: 340 80% 55%;
-    --stat-end: 35 95% 55%;
+    --stat-int: 195 100% 58%;
+    --stat-str: 0 90% 62%;
+    --stat-agi: 150 85% 52%;
+    --stat-vit: 340 85% 62%;
+    --stat-end: 35 100% 62%;
 
     /* Glow effects */
-    --glow-primary: 0 0 20px hsl(195 100% 50% / 0.4);
-    --glow-accent: 0 0 20px hsl(45 100% 55% / 0.4);
-    --glow-int: 0 0 15px hsl(195 100% 50% / 0.3);
-    --glow-str: 0 0 15px hsl(0 85% 55% / 0.3);
-    --glow-agi: 0 0 15px hsl(150 80% 45% / 0.3);
-    --glow-vit: 0 0 15px hsl(340 80% 55% / 0.3);
-    --glow-end: 0 0 15px hsl(35 95% 55% / 0.3);
+    --glow-primary: 0 0 20px hsl(195 100% 55% / 0.5);
+    --glow-accent: 0 0 20px hsl(45 100% 60% / 0.5);
+    --glow-int: 0 0 15px hsl(195 100% 58% / 0.4);
+    --glow-str: 0 0 15px hsl(0 90% 62% / 0.4);
+    --glow-agi: 0 0 15px hsl(150 85% 52% / 0.4);
+    --glow-vit: 0 0 15px hsl(340 85% 62% / 0.4);
+    --glow-end: 0 0 15px hsl(35 100% 62% / 0.4);
 
     --sidebar-background: 225 25% 8%;
-    --sidebar-foreground: 210 40% 92%;
-    --sidebar-primary: 195 100% 50%;
+    --sidebar-foreground: 210 50% 96%;
+    --sidebar-primary: 195 100% 55%;
     --sidebar-primary-foreground: 225 25% 6%;
-    --sidebar-accent: 225 20% 16%;
-    --sidebar-accent-foreground: 210 40% 92%;
-    --sidebar-border: 225 20% 18%;
-    --sidebar-ring: 195 100% 50%;
+    --sidebar-accent: 225 20% 18%;
+    --sidebar-accent-foreground: 210 50% 96%;
+    --sidebar-border: 225 25% 25%;
+    --sidebar-ring: 195 100% 55%;
   }
 }
 
@@ -101,10 +101,10 @@
   }
 
   .text-glow-primary {
-    text-shadow: 0 0 10px hsl(195 100% 50% / 0.6);
+    text-shadow: 0 0 12px hsl(195 100% 55% / 0.7);
   }
   .text-glow-accent {
-    text-shadow: 0 0 10px hsl(45 100% 55% / 0.6);
+    text-shadow: 0 0 12px hsl(45 100% 60% / 0.7);
   }
 
   .stat-bar-track {
@@ -128,8 +128,17 @@
 
 /* Pulse animation for active quest */
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 15px hsl(195 100% 50% / 0.2); }
-  50% { box-shadow: 0 0 30px hsl(195 100% 50% / 0.5); }
+  0%, 100% { box-shadow: 0 0 15px hsl(195 100% 55% / 0.3); }
+  50% { box-shadow: 0 0 30px hsl(195 100% 55% / 0.6); }
+}
+
+@keyframes fade-in {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.8s ease-out;
 }
 
 @keyframes shimmer {

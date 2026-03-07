@@ -12,6 +12,7 @@ import {
   QuestStatus,
   DailyQuestLog,
   parseLocalDate,
+  formatLocalDate,
 } from '@/lib/gameData';
 
 const STORAGE_KEY = 'daily-quest-rpg-state';
@@ -20,7 +21,11 @@ function loadState(): GameState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return createInitialState();
-    return JSON.parse(raw) as GameState;
+    const parsed = JSON.parse(raw) as GameState;
+    // Backward compat
+    if (parsed.pendingPunishments === undefined) parsed.pendingPunishments = 0;
+    if (!parsed.lastCheckedDate) parsed.lastCheckedDate = getToday();
+    return parsed;
   } catch {
     return createInitialState();
   }
@@ -31,8 +36,81 @@ function saveState(state: GameState) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
+function getObtainedTitleIndex(state: GameState): number {
+  let idx = 0;
+  for (let i = 0; i < state.classTitles.length; i++) {
+    if (state.classTitles[i].obtained) idx = i;
+  }
+  return idx;
+}
+
+function getStatPenalty(state: GameState): number {
+  return (getObtainedTitleIndex(state) + 1) * 5;
+}
+
+function detectAndApplyPunishments(state: GameState): GameState {
+  const today = getToday();
+  const lastChecked = state.lastCheckedDate || today;
+
+  if (lastChecked >= today) return { ...state, lastCheckedDate: today };
+
+  const startDate = parseLocalDate(lastChecked);
+  startDate.setDate(startDate.getDate() + 1);
+  const todayDate = parseLocalDate(today);
+
+  let failedDays = 0;
+  const updatedLog = [...state.questLog];
+  const currentDate = new Date(startDate);
+
+  while (currentDate < todayDate) {
+    const dateStr = formatLocalDate(currentDate);
+    const isSunday = currentDate.getDay() === 0;
+
+    if (!isSunday) {
+      const existing = updatedLog.find(q => q.date === dateStr);
+      if (!existing) {
+        failedDays++;
+        updatedLog.push({ date: dateStr, status: 'failed' });
+      } else if (existing.status === 'pending') {
+        failedDays++;
+        const idx = updatedLog.findIndex(q => q.date === dateStr);
+        updatedLog[idx] = { ...existing, status: 'failed' };
+      }
+    }
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
+  if (failedDays === 0) {
+    return { ...state, questLog: updatedLog, lastCheckedDate: today };
+  }
+
+  const penalty = getStatPenalty(state);
+  const totalPenalty = penalty * failedDays;
+  const newStats = { ...state.stats };
+  const newPoints = { ...state.statPoints };
+
+  for (const key of ['int', 'str', 'agi', 'vit', 'end'] as StatKey[]) {
+    newStats[key] = Math.max(1, newStats[key] - totalPenalty);
+    newPoints[key] = Math.max(0, newPoints[key] - totalPenalty);
+  }
+
+  return {
+    ...state,
+    stats: newStats,
+    statPoints: newPoints,
+    questLog: updatedLog,
+    currentStreak: 0,
+    totalFailed: state.totalFailed + failedDays,
+    pendingPunishments: state.pendingPunishments + failedDays,
+    lastCheckedDate: today,
+  };
+}
+
 export function useGameState() {
-  const [state, setState] = useState<GameState>(loadState);
+  const [state, setState] = useState<GameState>(() => {
+    const loaded = loadState();
+    return detectAndApplyPunishments(loaded);
+  });
   const [timeWarning, setTimeWarning] = useState(false);
 
   useEffect(() => {
@@ -54,6 +132,37 @@ export function useGameState() {
       setState(prev => ({ ...prev, intTestsToday: 0, intPerfectsToday: 0, intTestsDate: today } as any));
     }
   }, [today]);
+
+  // Midnight notification
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+
+    const scheduleCheck = () => {
+      const now = new Date();
+      const midnight = new Date(now);
+      midnight.setHours(24, 0, 0, 0);
+      const msToMidnight = midnight.getTime() - now.getTime();
+
+      return setTimeout(() => {
+        const quest = state.questLog.find(q => q.date === getToday());
+        if (!quest || quest.status === 'pending' || !quest) {
+          if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification('⚔️ Daily Quest', {
+              body: 'Misión diaria fallida. Tu castigo te espera.',
+              icon: '/favicon.ico',
+            });
+          }
+        }
+        // Schedule next check
+        scheduleCheck();
+      }, msToMidnight + 1000);
+    };
+
+    const timerId = scheduleCheck();
+    return () => clearTimeout(timerId);
+  }, []);
 
   const completeExercise = useCallback((exerciseIndex: number) => {
     setState(prev => {
@@ -82,7 +191,6 @@ export function useGameState() {
     setState(prev => {
       const quest = prev.questLog.find(q => q.date === today);
       if (!quest || quest.status !== 'pending') return prev;
-      // Check all exercises and run complete
       if (!quest.exercises?.every(e => e.completed)) return prev;
       if (!quest.runCompleted) return prev;
 
@@ -188,14 +296,11 @@ export function useGameState() {
         const todayDate = parseLocalDate(today);
         if (todayDate < cooldownDate) return false;
       }
-      // Check max 6 tests per day
       const testsToday = (state as any).intTestsToday || 0;
       const testsDate = (state as any).intTestsDate;
       if (testsDate === today && testsToday >= 6) return false;
-      // Check if last non-perfect test was today (blocks further tests)
       return cooldown.lastUsed !== today;
     }
-    // STR & END: every 4 days, 1 per day
     if (stat === 'str' || stat === 'end') {
       if (cooldown.lastUsed === today) return false;
       if (!cooldown.lastUsed) return true;
@@ -204,12 +309,10 @@ export function useGameState() {
       const diffDays = Math.floor((now.getTime() - last.getTime()) / (1000 * 60 * 60 * 24));
       return diffDays >= 4;
     }
-    // AGI: 3 times per week, max 1 per day
     if (stat === 'agi') {
       if (cooldown.lastUsed === today) return false;
       return weeklyUses < 3;
     }
-    // VIT: 4 times per week, max 1 per day
     if (stat === 'vit') {
       if (cooldown.lastUsed === today) return false;
       return weeklyUses < 4;
@@ -263,15 +366,12 @@ export function useGameState() {
         intTestCooldown = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       }
 
-      // Track answered correctly
       const prevCorrect: string[] = (prev as any).answeredCorrectly || [];
       const mergedCorrect = [...new Set([...prevCorrect, ...newCorrectIds])];
 
       const prevTestsToday = ((prev as any).intTestsDate === today) ? ((prev as any).intTestsToday || 0) : 0;
       const newTestsToday = prevTestsToday + 1;
 
-      // If perfect and under limit, allow another test (don't set lastUsed to today)
-      // If not perfect or failed, block for today
       const canContinue = !failed && perfectCount > 0 && newTestsToday < 6;
 
       const newCooldowns = {
@@ -298,6 +398,48 @@ export function useGameState() {
     });
   }, [today]);
 
+  // Punishment handlers
+  const completePunishment = useCallback(() => {
+    setState(prev => {
+      const newPunishments = Math.max(0, prev.pendingPunishments - 1);
+      // Recover INT +1
+      const newStats = { ...prev.stats, int: prev.stats.int + 1 };
+      const newPoints = { ...prev.statPoints, int: prev.statPoints.int + 1 };
+      // Gain 1/4 of current XP
+      const xpBonus = Math.floor(prev.xp / 4);
+      let newXp = prev.xp + xpBonus;
+      let newLevel = prev.level;
+      let newXpToNext = prev.xpToNext;
+      while (newXp >= newXpToNext) {
+        newXp -= newXpToNext;
+        newLevel++;
+        newXpToNext = xpForLevel(newLevel);
+      }
+      return {
+        ...prev,
+        pendingPunishments: newPunishments,
+        stats: newStats,
+        statPoints: newPoints,
+        xp: newXp,
+        level: newLevel,
+        xpToNext: newXpToNext,
+      };
+    });
+  }, []);
+
+  const failPunishment = useCallback(() => {
+    setState(prev => {
+      const newPunishments = Math.max(0, prev.pendingPunishments - 1);
+      // Lose half of current XP
+      const newXp = Math.floor(prev.xp / 2);
+      return {
+        ...prev,
+        pendingPunishments: newPunishments,
+        xp: newXp,
+      };
+    });
+  }, []);
+
   const dismissTimeWarning = useCallback(() => setTimeWarning(false), []);
 
   const resetGame = useCallback(() => {
@@ -321,5 +463,7 @@ export function useGameState() {
     isSkillAvailable,
     dismissTimeWarning,
     resetGame,
+    completePunishment,
+    failPunishment,
   };
 }

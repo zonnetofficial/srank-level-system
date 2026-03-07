@@ -62,6 +62,8 @@ export interface GameState {
     fastestRun?: number; // seconds for 5km
     maxLevel: number;
   };
+  pendingPunishments: number;
+  lastCheckedDate: string; // YYYY-MM-DD
 }
 
 // ==================== CONSTANTS ====================
@@ -246,6 +248,8 @@ export function createInitialState(): GameState {
     runMode: 'time',
     exerciseProgression: [...BASE_EXERCISES],
     personalRecords: { longestStreak: 0, maxLevel: 1 },
+    pendingPunishments: 0,
+    lastCheckedDate: getToday(),
   };
 }
 
