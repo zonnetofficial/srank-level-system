@@ -147,7 +147,7 @@ const RunTimer = ({ totalMinutes, open, onClose, onComplete }: RunTimerProps) =>
 
             {/* Center text */}
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="font-display text-3xl font-bold" style={{ color: 'hsl(210, 100%, 55%)' }}>
+              <span className="font-display text-3xl font-bold" style={{ color: 'hsl(210, 100%, 75%)' }}>
                 {String(minutesDisplay).padStart(2, '0')}:{String(secondsDisplay).padStart(2, '0')}
               </span>
               {completed && (
