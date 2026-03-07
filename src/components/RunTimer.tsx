@@ -127,8 +127,8 @@ const RunTimer = ({ totalMinutes, open, onClose, onComplete }: RunTimerProps) =>
                     {/* Fill */}
                     <path
                       d={d}
-                      fill={isDimmed ? 'hsl(var(--muted))' : 'hsl(210, 100%, 92%)'}
-                      opacity={isDimmed ? 0.2 : 1}
+                      fill={isDimmed ? 'hsl(var(--muted))' : 'hsl(210, 100%, 95%)'}
+                      opacity={isDimmed ? 0.25 : 1}
                       style={{ transition: 'fill 0.5s ease, opacity 0.5s ease' }}
                     />
                     {/* Thin border/perimeter stroke */}
