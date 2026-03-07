@@ -135,9 +135,9 @@ const RunTimer = ({ totalMinutes, open, onClose, onComplete }: RunTimerProps) =>
                     <path
                       d={d}
                       fill="none"
-                      stroke="hsl(210, 100%, 55%)"
+                      stroke="hsl(210, 100%, 70%)"
                       strokeWidth={1.5}
-                      opacity={isDimmed ? 0.2 : 0.9}
+                      opacity={isDimmed ? 0.3 : 1}
                       style={{ transition: 'opacity 0.5s ease' }}
                     />
                   </g>
