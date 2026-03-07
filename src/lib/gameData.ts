@@ -248,6 +248,8 @@ export function createInitialState(): GameState {
     runMode: 'time',
     exerciseProgression: [...BASE_EXERCISES],
     personalRecords: { longestStreak: 0, maxLevel: 1 },
+    pendingPunishments: 0,
+    lastCheckedDate: getToday(),
   };
 }
 
