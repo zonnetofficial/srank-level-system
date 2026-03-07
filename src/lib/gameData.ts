@@ -62,6 +62,8 @@ export interface GameState {
     fastestRun?: number; // seconds for 5km
     maxLevel: number;
   };
+  pendingPunishments: number;
+  lastCheckedDate: string; // YYYY-MM-DD
 }
 
 // ==================== CONSTANTS ====================
