@@ -101,10 +101,10 @@
   }
 
   .text-glow-primary {
-    text-shadow: 0 0 10px hsl(195 100% 50% / 0.6);
+    text-shadow: 0 0 12px hsl(195 100% 55% / 0.7);
   }
   .text-glow-accent {
-    text-shadow: 0 0 10px hsl(45 100% 55% / 0.6);
+    text-shadow: 0 0 12px hsl(45 100% 60% / 0.7);
   }
 
   .stat-bar-track {
