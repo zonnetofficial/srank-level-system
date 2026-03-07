@@ -455,8 +455,8 @@ export function getTestForTier(tier: number, answeredCorrectly: string[] = []): 
   // Filter out correctly answered questions
   const available = theme.questions.filter(q => !answeredCorrectly.includes(q.id));
   
-  // Variable question count: between 3 and 7
-  const questionCount = 3 + Math.floor(Math.random() * 5); // 3, 4, 5, 6, or 7
+  // Variable question count: between 15 and 20
+  const questionCount = 15 + Math.floor(Math.random() * 6); // 15, 16, 17, 18, 19, or 20
   
   // If not enough available questions in this theme, try another theme
   if (available.length < questionCount) {

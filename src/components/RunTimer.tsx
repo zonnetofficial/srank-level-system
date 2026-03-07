@@ -127,17 +127,17 @@ const RunTimer = ({ totalMinutes, open, onClose, onComplete }: RunTimerProps) =>
                     {/* Fill */}
                     <path
                       d={d}
-                      fill={isDimmed ? 'hsl(var(--muted))' : 'hsl(210, 100%, 92%)'}
-                      opacity={isDimmed ? 0.2 : 1}
+                      fill={isDimmed ? 'hsl(var(--muted))' : 'hsl(210, 100%, 95%)'}
+                      opacity={isDimmed ? 0.25 : 1}
                       style={{ transition: 'fill 0.5s ease, opacity 0.5s ease' }}
                     />
                     {/* Thin border/perimeter stroke */}
                     <path
                       d={d}
                       fill="none"
-                      stroke="hsl(210, 100%, 55%)"
+                      stroke="hsl(210, 100%, 70%)"
                       strokeWidth={1.5}
-                      opacity={isDimmed ? 0.2 : 0.9}
+                      opacity={isDimmed ? 0.3 : 1}
                       style={{ transition: 'opacity 0.5s ease' }}
                     />
                   </g>
@@ -147,7 +147,7 @@ const RunTimer = ({ totalMinutes, open, onClose, onComplete }: RunTimerProps) =>
 
             {/* Center text */}
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="font-display text-3xl font-bold" style={{ color: 'hsl(210, 100%, 55%)' }}>
+              <span className="font-display text-3xl font-bold" style={{ color: 'hsl(210, 100%, 75%)' }}>
                 {String(minutesDisplay).padStart(2, '0')}:{String(secondsDisplay).padStart(2, '0')}
               </span>
               {completed && (
@@ -163,7 +163,7 @@ const RunTimer = ({ totalMinutes, open, onClose, onComplete }: RunTimerProps) =>
             <button
               onClick={handleStart}
               className="px-8 py-3 rounded-lg font-display text-sm uppercase tracking-wider transition-opacity hover:opacity-90"
-              style={{ backgroundColor: 'hsl(210, 100%, 55%)', color: '#fff' }}
+              style={{ backgroundColor: 'hsl(210, 100%, 65%)', color: '#fff' }}
             >
               Iniciar Carrera
             </button>
