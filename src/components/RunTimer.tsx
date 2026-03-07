@@ -163,7 +163,7 @@ const RunTimer = ({ totalMinutes, open, onClose, onComplete }: RunTimerProps) =>
             <button
               onClick={handleStart}
               className="px-8 py-3 rounded-lg font-display text-sm uppercase tracking-wider transition-opacity hover:opacity-90"
-              style={{ backgroundColor: 'hsl(210, 100%, 55%)', color: '#fff' }}
+              style={{ backgroundColor: 'hsl(210, 100%, 65%)', color: '#fff' }}
             >
               Iniciar Carrera
             </button>
