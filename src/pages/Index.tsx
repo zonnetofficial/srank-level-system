@@ -88,6 +88,7 @@ const Index = () => {
             key={key}
             stat={key}
             value={state.stats[key]}
+            points={state.statPoints[key]}
             label={STAT_LABELS[key]}
             icon={STAT_ICONS[key]}
           />
