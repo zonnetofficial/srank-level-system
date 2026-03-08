@@ -226,8 +226,8 @@
     opacity: 0;
     mix-blend-mode: screen;
     animation:
-      glitch-static-burst 13.3s ease-in-out infinite 1s,
-      glitch-block-shift 16.7s ease-in-out infinite 6s;
+      glitch-static-burst 20s ease-in-out infinite 5s,
+      glitch-block-shift 25s ease-in-out infinite 10s;
   }
 
   /* HUD label */
