@@ -3,8 +3,8 @@ import { NavLink as RouterNavLink } from 'react-router-dom';
 const navItems = [
   { to: '/', icon: '🏠', label: 'Home' },
   { to: '/quest', icon: '⚔️', label: 'Quest' },
+  { to: '/dungeons', icon: '🏰', label: 'Mazmorras' },
   { to: '/skills', icon: '✨', label: 'Skills' },
-  { to: '/titles', icon: '🏷️', label: 'Títulos' },
   { to: '/shop', icon: '🏪', label: 'Tienda' },
   { to: '/history', icon: '📜', label: 'Historial' },
 ];
