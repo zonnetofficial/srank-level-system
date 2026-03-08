@@ -32,10 +32,6 @@ export function StatBar({ stat, value, points, label, icon }: StatBarProps) {
     pct = Math.min((progress / range) * 100, 100);
   }
 
-  // Different delay per stat for non-synchronized glitch
-  const glitchDelays: Record<StatKey, string> = {
-    int: '3s', str: '7s', agi: '11s', vit: '5s', end: '9s',
-  };
 
   return (
     <div className="flex items-center gap-3 group">
