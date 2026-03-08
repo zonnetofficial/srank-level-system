@@ -202,7 +202,7 @@ export function useShop() {
   const buyListing = useCallback(async (listing: MarketplaceListing) => {
     if (!user) return false;
     if (listing.seller_id === user.id) {
-      toast({ title: 'Error', description: 'No puedes comprar tu propio item', variant: 'destructive' });
+      toast({ title: 'Error', description: 'No puedes comprar tu propio listing', variant: 'destructive' });
       return false;
     }
     if (tpBalance < listing.price) {
@@ -210,7 +210,7 @@ export function useShop() {
       return false;
     }
 
-    // Deduct TP
+    // Deduct TP from buyer
     const newBalance = tpBalance - listing.price;
     await supabase.from('t_points' as any)
       .update({ balance: newBalance, total_spent: (tpBalance - newBalance), updated_at: new Date().toISOString() } as any)
@@ -218,18 +218,32 @@ export function useShop() {
 
     // Mark listing as sold
     await supabase.from('marketplace_listings')
-      .update({ status: 'sold', buyer_id: user.id, sold_at: new Date().toISOString() })
+      .update({ status: 'sold', buyer_id: user.id, sold_at: new Date().toISOString() } as any)
       .eq('id', listing.id);
 
-    // Add item to buyer inventory
-    const existing = inventory.find(i => i.item_id === listing.item_id);
-    if (existing) {
-      await supabase.from('user_inventory').update({ quantity: existing.quantity + 1 }).eq('id', existing.id);
-    } else {
-      await supabase.from('user_inventory').insert({ user_id: user.id, item_id: listing.item_id, quantity: 1, source: 'marketplace' });
+    if (listing.listing_type === 'dp' && listing.dp_amount) {
+      // Transfer DP to buyer
+      const { data: buyerDP } = await supabase.from('dark_points').select('balance, total_earned').eq('user_id', user.id).single();
+      if (buyerDP) {
+        await supabase.from('dark_points').update({
+          balance: buyerDP.balance + listing.dp_amount,
+          total_earned: buyerDP.total_earned + listing.dp_amount,
+          updated_at: new Date().toISOString(),
+        }).eq('user_id', user.id);
+      }
+      toast({ title: '¡Compra exitosa!', description: `💎 ${listing.dp_amount} DP adquiridos del mercado` });
+    } else if (listing.item_id) {
+      // Add item to buyer inventory
+      const existing = inventory.find(i => i.item_id === listing.item_id);
+      if (existing) {
+        await supabase.from('user_inventory').update({ quantity: existing.quantity + 1 }).eq('id', existing.id);
+      } else {
+        await supabase.from('user_inventory').insert({ user_id: user.id, item_id: listing.item_id, quantity: 1, source: 'marketplace' });
+      }
+      toast({ title: '¡Compra exitosa!', description: 'Item adquirido del mercado' });
     }
 
-    // Credit seller TP (seller gets the listing price)
+    // Credit seller TP (no commission on P2P)
     const { data: sellerTP } = await supabase.from('t_points' as any).select('balance, total_earned').eq('user_id', listing.seller_id).single();
     if (sellerTP) {
       await supabase.from('t_points' as any)
@@ -240,7 +254,6 @@ export function useShop() {
     await supabase.from('tp_transactions' as any)
       .insert({ user_id: user.id, amount: -listing.price, type: 'market_buy', description: `Compra mercado`, reference_id: listing.id } as any);
 
-    toast({ title: '¡Compra exitosa!', description: 'Item adquirido del mercado' });
     await fetchAll();
     return true;
   }, [user, tpBalance, inventory, fetchAll]);
