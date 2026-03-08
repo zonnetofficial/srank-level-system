@@ -60,7 +60,7 @@ const AGI_TASKS: SkillTask[][] = [
   [
     { name: 'Estiramientos básicos', description: 'Realiza: tocarse los pies 15s, estiramiento de cuádriceps 15s por pierna, estiramiento de hombros 15s por lado, giro de cadera 10 por lado', durationSeconds: 600 },
     { name: 'Saltos en el lugar', description: 'Haz 30 saltos seguidos con rodillas al pecho alternando velocidad: 10 lentos, 10 rápidos, 10 explosivos' },
-    { name: 'Equilibrio a un pie', description: 'Mantente en un pie 30 segundos, luego cambia. Ojos cerrados para mayor dificultad', durationSeconds: 60 },
+    { name: 'Equilibrio a un pie', description: 'Mantente en un pie 30 segundos, luego cambia. Ojos cerrados para mayor dificultad', durationSeconds: 60, timerRounds: 2 },
     { name: 'Caminata lateral', description: 'Da 20 pasos laterales por lado en posición de media sentadilla, manteniendo la espalda recta' },
     { name: 'Rodillas altas', description: 'Eleva las rodillas al pecho alternando piernas, 40 repeticiones totales lo más rápido posible' },
   ],
