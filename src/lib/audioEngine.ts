@@ -623,6 +623,122 @@ function houseHat(ctx: AudioContext, time: number, vel: number, open: boolean, d
   src.start(time);
 }
 
+// DARK TRAP KIT: deep 808 kick, dry clap/snare, crispy rolling hats
+function darkTrapKick(ctx: AudioContext, time: number, vel: number, dest: GainNode) {
+  // Very deep, long 808 kick — clean sub with slow pitch drop
+  const body = ctx.createOscillator();
+  const bg = ctx.createGain();
+  body.type = 'sine';
+  body.frequency.setValueAtTime(150, time);
+  body.frequency.exponentialRampToValueAtTime(28, time + 0.25);
+  bg.gain.setValueAtTime(0.45 * vel, time);
+  bg.gain.setValueAtTime(0.4 * vel, time + 0.2);
+  bg.gain.exponentialRampToValueAtTime(0.001, time + 0.8);
+  body.connect(bg); bg.connect(dest);
+  body.start(time); body.stop(time + 0.85);
+  // Subtle click layer
+  const clickBuf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.004), ctx.sampleRate);
+  const cd = clickBuf.getChannelData(0);
+  for (let i = 0; i < cd.length; i++) cd[i] = (Math.random() * 2 - 1) * (1 - i / cd.length);
+  const click = ctx.createBufferSource();
+  click.buffer = clickBuf;
+  const cg = ctx.createGain();
+  cg.gain.setValueAtTime(0.08 * vel, time);
+  const cf = ctx.createBiquadFilter();
+  cf.type = 'bandpass'; cf.frequency.setValueAtTime(3000, time); cf.Q.setValueAtTime(1.5, time);
+  click.connect(cf); cf.connect(cg); cg.connect(dest);
+  click.start(time);
+}
+
+function darkTrapSnare(ctx: AudioContext, time: number, vel: number, dest: GainNode) {
+  // Dry, crisp clap/snare — short, no reverb feel
+  const dur = 0.12;
+  const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur), ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const bp = ctx.createBiquadFilter();
+  bp.type = 'bandpass'; bp.frequency.setValueAtTime(3500, time); bp.Q.setValueAtTime(1, time);
+  const hp = ctx.createBiquadFilter();
+  hp.type = 'highpass'; hp.frequency.setValueAtTime(800, time);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.15 * vel, time);
+  g.gain.exponentialRampToValueAtTime(0.001, time + dur);
+  src.connect(bp); bp.connect(hp); hp.connect(g); g.connect(dest);
+  src.start(time);
+  // Tonal snap
+  const t1 = ctx.createOscillator();
+  const t1g = ctx.createGain();
+  t1.type = 'triangle'; t1.frequency.setValueAtTime(200, time);
+  t1g.gain.setValueAtTime(0.08 * vel, time);
+  t1g.gain.exponentialRampToValueAtTime(0.001, time + 0.05);
+  t1.connect(t1g); t1g.connect(dest);
+  t1.start(time); t1.stop(time + 0.06);
+}
+
+function darkTrapHat(ctx: AudioContext, time: number, vel: number, open: boolean, dest: GainNode) {
+  const dur = open ? 0.3 : 0.03;
+  const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur * 1.5), ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  // Crispy metallic character
+  const bp1 = ctx.createBiquadFilter();
+  bp1.type = 'bandpass'; bp1.frequency.setValueAtTime(9000, time); bp1.Q.setValueAtTime(2.5, time);
+  const hp = ctx.createBiquadFilter();
+  hp.type = 'highpass'; hp.frequency.setValueAtTime(6500, time);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.055 * vel, time);
+  g.gain.exponentialRampToValueAtTime(0.001, time + dur);
+  src.connect(bp1); bp1.connect(hp); hp.connect(g); g.connect(dest);
+  src.start(time);
+}
+
+// DEEP 808 SUB BASS for dark trap — clean, sustained, massive sub
+function scheduleDeep808(ctx: AudioContext, time: number, midi: number, duration: number, dest: GainNode) {
+  const freq = NOTE(midi);
+  // Very long sustained sine with gentle pitch intro
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(freq * 1.5, time);
+  osc.frequency.exponentialRampToValueAtTime(freq, time + 0.08);
+  // Gentle saturation
+  const shaper = ctx.createWaveShaper();
+  const curve = new Float32Array(256);
+  for (let i = 0; i < 256; i++) {
+    const x = (i / 128) - 1;
+    curve[i] = Math.tanh(x * 1.5); // soft saturation
+  }
+  shaper.curve = curve;
+  shaper.oversample = '2x';
+  // Keep it sub-heavy
+  const lp = ctx.createBiquadFilter();
+  lp.type = 'lowpass';
+  lp.frequency.setValueAtTime(freq * 3, time);
+  lp.frequency.exponentialRampToValueAtTime(freq * 1.2, time + duration * 0.5);
+  // Long sustain envelope
+  g.gain.setValueAtTime(0.001, time);
+  g.gain.linearRampToValueAtTime(0.28, time + 0.02);
+  g.gain.setValueAtTime(0.25, time + duration * 0.7);
+  g.gain.exponentialRampToValueAtTime(0.001, time + duration);
+  osc.connect(shaper); shaper.connect(lp); lp.connect(g); g.connect(dest);
+  osc.start(time); osc.stop(time + duration + 0.05);
+  // Pure sub harmonic
+  const sub = ctx.createOscillator();
+  const sg = ctx.createGain();
+  sub.type = 'sine';
+  sub.frequency.setValueAtTime(freq / 2, time);
+  sg.gain.setValueAtTime(0.001, time);
+  sg.gain.linearRampToValueAtTime(0.12, time + 0.03);
+  sg.gain.setValueAtTime(0.1, time + duration * 0.6);
+  sg.gain.exponentialRampToValueAtTime(0.001, time + duration);
+  sub.connect(sg); sg.connect(dest);
+  sub.start(time); sub.stop(time + duration + 0.05);
+}
+
 // AMBIENT KIT: soft textural hits
 function ambientKick(ctx: AudioContext, time: number, vel: number, dest: GainNode) {
   const osc = ctx.createOscillator();
