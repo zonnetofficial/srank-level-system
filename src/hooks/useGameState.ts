@@ -26,6 +26,7 @@ function loadState(): GameState {
     if (parsed.pendingPunishments === undefined) parsed.pendingPunishments = 0;
     if (!parsed.lastCheckedDate) parsed.lastCheckedDate = getToday();
     if (!parsed.classChangeProgress) parsed.classChangeProgress = {};
+    if (!parsed.statBank) parsed.statBank = { int: 0, str: 0, agi: 0, vit: 0, end: 0 };
     return parsed;
   } catch {
     return createInitialState();
@@ -117,14 +118,19 @@ export function useGameState() {
     if (!loaded.questLog.find(q => q.date === today)) {
       const rest = isRestDay(loaded.questLog);
       const newLog = [...loaded.questLog];
+      const isFirstLogin = loaded.questLog.length === 0;
       if (rest) {
         newLog.push({ date: today, status: 'rest' });
-        loaded = {
-          ...loaded,
-          questLog: newLog,
-          stats: { ...loaded.stats, int: loaded.stats.int + 1, vit: loaded.stats.vit + 1 },
-          statPoints: { ...loaded.statPoints, int: loaded.statPoints.int + 1, vit: loaded.statPoints.vit + 1 },
-        };
+        // First-time users on rest day: no free stat points
+        if (!isFirstLogin) {
+          loaded = {
+            ...loaded,
+            questLog: newLog,
+            statBank: { ...loaded.statBank, int: loaded.statBank.int + 1, vit: loaded.statBank.vit + 1 },
+          };
+        } else {
+          loaded = { ...loaded, questLog: newLog };
+        }
       } else {
         newLog.push({
           date: today,
@@ -240,15 +246,14 @@ export function useGameState() {
 
       const newStats = { ...prev.stats };
       const newPoints = { ...prev.statPoints };
+      const newBank = { ...prev.statBank };
 
-      // Physical stats grow faster (real body progression)
-      if (newCompleted % 3 === 0) { newStats.str++; newPoints.str++; }
-      if (newCompleted % 3 === 0) { newStats.agi++; newPoints.agi++; }
-      // Endurance/vitality grow moderately
-      if (newCompleted % 4 === 0) { newStats.end++; newPoints.end++; }
-      if (newCompleted % 5 === 0) { newStats.vit++; newPoints.vit++; }
-      // INT grows slowest from quests (boosted by skill tasks)
-      if (newStreak % 7 === 0) { newStats.int++; newPoints.int++; }
+      // Stat gains go to bank (not auto-assigned)
+      if (newCompleted % 3 === 0) { newBank.str++; }
+      if (newCompleted % 3 === 0) { newBank.agi++; }
+      if (newCompleted % 4 === 0) { newBank.end++; }
+      if (newCompleted % 5 === 0) { newBank.vit++; }
+      if (newStreak % 7 === 0) { newBank.int++; }
 
       const newExercises = getNextExercises(prev.exerciseProgression);
       const newRunProg = prev.runMode === 'time'
@@ -269,6 +274,7 @@ export function useGameState() {
         xpToNext: newXpToNext,
         stats: newStats,
         statPoints: newPoints,
+        statBank: newBank,
         questLog: newLog,
         classTitles: newTitles,
         currentStreak: newStreak,
@@ -291,10 +297,9 @@ export function useGameState() {
       const newLog = [...prev.questLog];
       if (restDay) {
         newLog.push({ date: today, status: 'rest' });
-        // Rest day bonus: +1 INT, +1 VIT
-        const newStats = { ...prev.stats, int: prev.stats.int + 1, vit: prev.stats.vit + 1 };
-        const newPoints = { ...prev.statPoints, int: prev.statPoints.int + 1, vit: prev.statPoints.vit + 1 };
-        return { ...prev, questLog: newLog, stats: newStats, statPoints: newPoints };
+        // Rest day bonus goes to bank
+        const newBank = { ...prev.statBank, int: prev.statBank.int + 1, vit: prev.statBank.vit + 1 };
+        return { ...prev, questLog: newLog, statBank: newBank };
       } else {
         newLog.push({
           date: today,
@@ -361,8 +366,7 @@ export function useGameState() {
       if (stat === 'agi' && weeklyUses >= 3) return prev;
       if (stat === 'vit' && weeklyUses >= 4) return prev;
 
-      const newStats = { ...prev.stats, [stat]: prev.stats[stat] + points };
-      const newPoints = { ...prev.statPoints, [stat]: prev.statPoints[stat] + points };
+      const newBank = { ...prev.statBank, [stat]: prev.statBank[stat] + points };
 
       // XP from skill task
       const skillXp = Math.floor(getQuestXP(prev.level) * 0.5);
@@ -387,8 +391,7 @@ export function useGameState() {
       };
       return {
         ...prev,
-        stats: newStats,
-        statPoints: newPoints,
+        statBank: newBank,
         skillCooldowns: newCooldowns,
         xp: newXp,
         level: newLevel,
@@ -404,8 +407,7 @@ export function useGameState() {
 
   const completeIntTest = useCallback((points: number, failed: boolean, perfectCount: number, newCorrectIds: string[]) => {
     setState(prev => {
-      const newStats = { ...prev.stats, int: prev.stats.int + points };
-      const newPoints = { ...prev.statPoints, int: prev.statPoints.int + points };
+      const newBank = { ...prev.statBank, int: prev.statBank.int + points };
       const currentWeekStart = getWeekStart(today);
       const cooldown = prev.skillCooldowns.int;
 
@@ -448,8 +450,7 @@ export function useGameState() {
 
       return {
         ...prev,
-        stats: newStats,
-        statPoints: newPoints,
+        statBank: newBank,
         skillCooldowns: newCooldowns,
         xp: newXp,
         level: newLevel,
@@ -472,9 +473,8 @@ export function useGameState() {
   const completePunishment = useCallback(() => {
     setState(prev => {
       const newPunishments = Math.max(0, prev.pendingPunishments - 1);
-      // Recover INT +1
-      const newStats = { ...prev.stats, int: prev.stats.int + 1 };
-      const newPoints = { ...prev.statPoints, int: prev.statPoints.int + 1 };
+      // Recover INT +1 to bank
+      const newBank = { ...prev.statBank, int: prev.statBank.int + 1 };
       // Gain 1/4 of current XP
       const xpBonus = Math.floor(prev.xp / 4);
       let newXp = prev.xp + xpBonus;
@@ -488,8 +488,7 @@ export function useGameState() {
       return {
         ...prev,
         pendingPunishments: newPunishments,
-        stats: newStats,
-        statPoints: newPoints,
+        statBank: newBank,
         xp: newXp,
         level: newLevel,
         xpToNext: newXpToNext,
@@ -520,7 +519,7 @@ export function useGameState() {
 
   const simulateDays = useCallback((days: number) => {
     setState(prev => {
-      let s = { ...prev, stats: { ...prev.stats }, statPoints: { ...prev.statPoints }, questLog: [...prev.questLog] };
+      let s = { ...prev, stats: { ...prev.stats }, statPoints: { ...prev.statPoints }, statBank: { ...prev.statBank }, questLog: [...prev.questLog] };
       const todayDate = parseLocalDate(getToday());
 
       for (let i = days; i >= 1; i--) {
@@ -532,8 +531,7 @@ export function useGameState() {
         const dayOfWeek = d.getDay();
         if (dayOfWeek === 0 || dayOfWeek === 4) {
           s.questLog.push({ date: dateStr, status: 'rest' });
-          s.stats = { ...s.stats, int: s.stats.int + 1, vit: s.stats.vit + 1 };
-          s.statPoints = { ...s.statPoints, int: s.statPoints.int + 1, vit: s.statPoints.vit + 1 };
+          s.statBank = { ...s.statBank, int: s.statBank.int + 1, vit: s.statBank.vit + 1 };
           continue;
         }
 
@@ -549,11 +547,11 @@ export function useGameState() {
           s.xpToNext = xpForLevel(s.level);
         }
 
-        if (s.totalCompleted % 3 === 0) { s.stats.str++; s.statPoints.str++; }
-        if (s.totalCompleted % 3 === 0) { s.stats.agi++; s.statPoints.agi++; }
-        if (s.totalCompleted % 4 === 0) { s.stats.end++; s.statPoints.end++; }
-        if (s.totalCompleted % 5 === 0) { s.stats.vit++; s.statPoints.vit++; }
-        if (s.currentStreak % 7 === 0) { s.stats.int++; s.statPoints.int++; }
+        if (s.totalCompleted % 3 === 0) { s.statBank.str++; }
+        if (s.totalCompleted % 3 === 0) { s.statBank.agi++; }
+        if (s.totalCompleted % 4 === 0) { s.statBank.end++; }
+        if (s.totalCompleted % 5 === 0) { s.statBank.vit++; }
+        if (s.currentStreak % 7 === 0) { s.statBank.int++; }
       }
 
       s.classTitles = s.classTitles || prev.classTitles;
@@ -593,6 +591,28 @@ export function useGameState() {
     });
   }, []);
 
+  const assignBankPoints = useCallback(() => {
+    setState(prev => {
+      const bank = prev.statBank;
+      const totalBank = bank.int + bank.str + bank.agi + bank.vit + bank.end;
+      if (totalBank === 0) return prev;
+
+      const newStats = { ...prev.stats };
+      const newPoints = { ...prev.statPoints };
+      for (const key of ['int', 'str', 'agi', 'vit', 'end'] as StatKey[]) {
+        newStats[key] += bank[key];
+        newPoints[key] += bank[key];
+      }
+
+      return {
+        ...prev,
+        stats: newStats,
+        statPoints: newPoints,
+        statBank: { int: 0, str: 0, agi: 0, vit: 0, end: 0 },
+      };
+    });
+  }, []);
+
   return {
     state,
     today,
@@ -612,5 +632,6 @@ export function useGameState() {
     failPunishment,
     simulateDays,
     completeClassChallengeTask,
+    assignBankPoints,
   };
 }

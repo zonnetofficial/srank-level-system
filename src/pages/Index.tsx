@@ -20,7 +20,7 @@ import { LogOut } from 'lucide-react';
 const statKeys: StatKey[] = ['int', 'str', 'agi', 'vit', 'end'];
 
 const Index = () => {
-  const { state, todayQuest, restDay, timeWarning, dismissTimeWarning } = useGameState();
+  const { state, todayQuest, restDay, timeWarning, dismissTimeWarning, assignBankPoints } = useGameState();
   const { signOut } = useAuth();
   const { currentNotification, acceptTitle, rejectTitle } = useTitleNotifications(state);
   const navigate = useNavigate();
@@ -124,6 +124,37 @@ const Index = () => {
           </div>
         ))}
       </div>
+
+      {/* Stat Bank */}
+      {(() => {
+        const bank = state.statBank;
+        const totalBank = bank.int + bank.str + bank.agi + bank.vit + bank.end;
+        if (totalBank === 0) return null;
+        return (
+          <div className="rpg-panel mt-3 animate-slide-up" style={{ animationDelay: '850ms' }}>
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="hud-label animate-text-slide-return">Puntos Pendientes</h2>
+              <span className="hud-data text-xs text-accent text-glow-accent">
+                <SlotNumber value={totalBank} delay={800} />
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-2 mb-3">
+              {statKeys.map(key => bank[key] > 0 ? (
+                <span key={key} className="text-[10px] font-display uppercase tracking-wider text-muted-foreground">
+                  {STAT_ICONS[key]} +{bank[key]}
+                </span>
+              ) : null)}
+            </div>
+            <button
+              onClick={assignBankPoints}
+              className="w-full py-2 text-[10px] font-display uppercase tracking-[0.2em] text-primary border border-primary/30 hover:border-primary/60 hover:bg-primary/10 transition-all duration-200"
+              style={{ clipPath: 'polygon(0 4px, 4px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px))' }}
+            >
+              Asignar Puntos
+            </button>
+          </div>
+        );
+      })()}
 
       <div className="hud-divider animate-hud-boot delay-700" />
 
