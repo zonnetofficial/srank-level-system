@@ -657,15 +657,19 @@ const THEMES: Record<MusicTheme, ThemeConfig> = {
   home: {
     bpm: 140,
     genre: 'trap',
+    // Dark minor progression — Cm, Abmaj, Fm, Gm, Cm, Ebm, Abmaj, Bdim
     chords: [
-      [48,51,55],[44,48,51],[41,44,48],[43,47,50],
-      [48,51,55],[39,43,46],[44,48,51],[46,50,53],
+      [36,48,51,55],[44,48,51],[41,44,48],[43,46,50],
+      [36,48,51,55],[39,42,46],[44,48,51],[42,45,47],
     ],
-    bassPattern: [1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0, 0,0,1,0,0,0,0,1,0,0,0,0,1,0,0,0],
-    keyPattern:  [0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0, 0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
-    arpPattern:  [0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0, 0,0,0,0,0,0,0,0,1,0,0,0,1,0,1,0],
-    padBrightness: 1100,
-    padGain: 0.045,
+    // Bouncy 808 pattern with slides — heavy on downbeats, syncopated hits
+    bassPattern: [1,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0, 1,0,0,1,0,0,0,0,0,0,1,0,0,0,1,0],
+    // Sparse dark key stabs
+    keyPattern:  [0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0],
+    // Minimal arps — dark melodic touches
+    arpPattern:  [0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0, 0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0],
+    padBrightness: 700,
+    padGain: 0.035,
     bassOctave: -1,
   },
   quest: {
