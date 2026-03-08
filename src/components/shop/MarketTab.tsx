@@ -14,7 +14,8 @@ interface Props {
   onCancel: (listing: MarketplaceListing) => void;
 }
 
-export default function MarketTab({ listings, getItemById, tpBalance, dpBalance, buying, onBuy, onSellDP }: Props) {
+export default function MarketTab({ listings, getItemById, tpBalance, dpBalance, buying, onBuy, onSellDP, onCancel }: Props) {
+  const { user } = useAuth();
   const [dpSellAmount, setDpSellAmount] = useState('');
   const tpPreview = dpSellAmount ? Math.floor(Number(dpSellAmount) * 0.7) : 0;
 
