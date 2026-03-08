@@ -183,7 +183,7 @@ const DailyQuest = () => {
             <h2 className="font-display text-2xl font-bold text-accent text-glow-accent mb-2 animate-glitch-in delay-300">
               ¡Misión Completada!
             </h2>
-            <div className="inline-block mt-2 px-4 py-1.5 rounded-full bg-accent/10 border border-accent/20 animate-number-pop delay-500">
+            <div className="inline-block mt-2 px-4 py-1.5 rounded-full bg-accent/10 border border-accent/20 animate-fade-in delay-500">
               <span className="text-sm font-display text-accent">
                 +{10 + Math.floor(state.level * 2)} XP
               </span>

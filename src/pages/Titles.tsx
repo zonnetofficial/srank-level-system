@@ -153,7 +153,7 @@ const Titles = () => {
                       {current.name}
                     </span>
                   </span>
-                  <span className="text-xs text-muted-foreground animate-number-pop" style={{ animationDelay: `${700 + i * 100}ms` }}>
+                  <span className="text-xs text-muted-foreground" style={{ animationDelay: `${700 + i * 100}ms` }}>
                     {state.statPoints[key]} pts
                   </span>
                 </div>
