@@ -359,7 +359,13 @@ export default function Dungeons() {
           {/* LOBBY */}
           {view === 'lobby' && (
             <div className="space-y-3 animate-slide-up">
-              <div className="text-center mb-2">
+              <div className="flex items-center justify-between mb-2">
+                <button
+                  onClick={() => navigate('/')}
+                  className="text-[10px] font-display uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  ← Volver
+                </button>
                 <p className="text-xs text-muted-foreground">Selecciona una mazmorra</p>
               </div>
 
