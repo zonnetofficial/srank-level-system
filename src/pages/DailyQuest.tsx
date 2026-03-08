@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useGameState } from '@/hooks/useGameState';
 import { useNavigate } from 'react-router-dom';
 import RunTimer from '@/components/RunTimer';
+import VictorianFrame from '@/components/VictorianFrame';
 
 const DailyQuest = () => {
   const { state, today, todayQuest, restDay, startQuest, completeQuest, completeExercise, completeRun } = useGameState();
