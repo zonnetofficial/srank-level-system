@@ -16,8 +16,10 @@ import MandatoryMission from "./pages/MandatoryMission";
 import Dungeons from "./pages/Dungeons";
 import NotFound from "./pages/NotFound";
 import PunishmentOverlay from "./components/PunishmentOverlay";
+import AudioSettings from "./components/AudioSettings";
 import { useGameState } from "./hooks/useGameState";
 import { useAuth } from "./hooks/useAuth";
+import { useAudio } from "./hooks/useAudio";
 
 const queryClient = new QueryClient();
 
