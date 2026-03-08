@@ -67,7 +67,7 @@ const AGI_TASKS: SkillTask[][] = [
   [
     { name: 'Movilidad dinámica', description: 'Circuito: 10 círculos de brazos, 10 balanceos de pierna por lado, 10 rotaciones de cadera, 10 giros de tobillo por pie', durationSeconds: 900 },
     { name: 'Saltos de cuerda', description: 'Simula o usa cuerda real: 50 saltos sin parar alternando pies juntos y alternados cada 10 saltos' },
-    { name: 'Skipping lateral', description: '3 series de 30 segundos de desplazamiento lateral rápido, cambiando dirección en cada serie', durationSeconds: 90 },
+    { name: 'Skipping lateral', description: '3 series de 30 segundos de desplazamiento lateral rápido, cambiando dirección en cada serie', durationSeconds: 90, timerRounds: 3 },
     { name: 'Toe touches dinámicos', description: 'De pie, lanza una pierna al frente y toca la punta con la mano opuesta. 15 por pierna alternando' },
     { name: 'Bear crawl', description: 'Desplázate en cuadrupedia (manos y pies) hacia adelante y atrás durante 2 minutos sin detenerte', durationSeconds: 120 },
   ],
