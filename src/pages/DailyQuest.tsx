@@ -61,8 +61,9 @@ const DailyQuest = () => {
         <div className="animate-fade-in">
           <div className="rpg-panel-glow text-center py-8 mb-5">
             <div className="text-6xl mb-3 animate-float">⚔️</div>
-            <h2 className="font-display text-xl font-bold text-foreground mb-1">Misión Disponible</h2>
-            <p className="text-xs text-muted-foreground font-display">Acepta la misión para comenzar</p>
+            <h2 className="font-display text-xs font-bold text-muted-foreground uppercase tracking-[0.3em] mb-2">Quest Info</h2>
+            <p className="text-sm text-foreground/80 font-body italic mb-4">(Daily Quest: Strength Training has arrived!)</p>
+            <h3 className="font-display text-xs font-bold text-primary uppercase tracking-[0.3em]">Goal</h3>
           </div>
 
           {/* Mission preview */}
