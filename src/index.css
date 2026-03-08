@@ -198,7 +198,7 @@
     z-index: 1;
   }
 
-  /* Ambient glitch effect */
+  /* Ambient glitch effect - uses multiple overlapping pseudo-elements */
   .hud-glitch {
     position: relative;
   }
@@ -211,7 +211,23 @@
     z-index: 3;
     opacity: 0;
     mix-blend-mode: screen;
-    animation: ambient-glitch 8s ease-in-out infinite;
+    animation: 
+      glitch-horizontal 7.3s ease-in-out infinite,
+      glitch-chromatic 11.7s ease-in-out infinite 2s,
+      glitch-scanline-tear 9.1s ease-in-out infinite 4s;
+  }
+
+  .hud-glitch::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 3;
+    opacity: 0;
+    mix-blend-mode: screen;
+    animation:
+      glitch-static-burst 13.3s ease-in-out infinite 1s,
+      glitch-block-shift 16.7s ease-in-out infinite 6s;
   }
 
   /* HUD label */
