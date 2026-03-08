@@ -114,8 +114,10 @@ const Skills = () => {
     const titleIdx = getTitleIndex(key, state.statPoints[key]);
     const tasks = getTasksForStat(key, titleIdx);
     if (tasks.length === 0) return;
-    // Pick a random task
-    const task = tasks[Math.floor(Math.random() * tasks.length)];
+    // Deterministic daily task: seed from date + stat key
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const seed = Array.from(dateStr + key).reduce((acc, c) => acc + c.charCodeAt(0), 0);
+    const task = tasks[seed % tasks.length];
     setTaskDialogTask(task);
     setTaskDialogStat(key);
   };
