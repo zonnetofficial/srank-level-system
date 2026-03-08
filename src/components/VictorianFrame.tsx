@@ -8,8 +8,8 @@ interface VictorianFrameProps {
 const VictorianFrame: React.FC<VictorianFrameProps> = ({ children, className = '' }) => {
   return (
     <div className={`relative min-h-screen px-4 pt-6 pb-6 max-w-lg mx-auto ${className}`}>
-      {/* Victorian border frame */}
-      <div className="victorian-frame pointer-events-none" aria-hidden="true">
+      {/* Victorian border frame - part of the background, scrolls with content */}
+      <div className="victorian-frame" aria-hidden="true">
         {/* Corner ornaments */}
         <div className="victorian-corner victorian-corner-tl" />
         <div className="victorian-corner victorian-corner-tr" />
