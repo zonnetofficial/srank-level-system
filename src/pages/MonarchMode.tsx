@@ -38,7 +38,7 @@ const MonarchMode = () => {
 
       <div className="text-center mb-6">
         <h1 className="font-display text-xl font-bold text-accent text-glow-accent">
-          👑 Ruta del Monarca de las Sombras
+          👑 Ruta del Monarca
         </h1>
         <p className="text-xs text-muted-foreground font-body mt-2">
           Modo de alta exigencia con penalización real por fallo

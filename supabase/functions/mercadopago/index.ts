@@ -75,7 +75,7 @@ serve(async (req) => {
           'Authorization': `Bearer ${MP_ACCESS_TOKEN}`,
         },
         body: JSON.stringify({
-          reason: 'Ruta del Monarca de las Sombras - Penalización diaria',
+          reason: 'Ruta del Monarca - Penalización diaria',
           external_reference: `monarch_${userId}`,
           payer_email: payer_email,
           auto_recurring: {
