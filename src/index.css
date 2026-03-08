@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -30,11 +30,11 @@
     --destructive: 0 80% 58%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 225 25% 25%;
+    --border: 195 60% 25%;
     --input: 225 25% 25%;
     --ring: 195 100% 55%;
 
-    --radius: 0.5rem;
+    --radius: 0.25rem;
 
     /* Stat colors */
     --stat-int: 195 100% 58%;
@@ -84,52 +84,136 @@
   .glow-accent {
     box-shadow: var(--glow-accent);
   }
-  .glow-int {
-    box-shadow: var(--glow-int);
-  }
-  .glow-str {
-    box-shadow: var(--glow-str);
-  }
-  .glow-agi {
-    box-shadow: var(--glow-agi);
-  }
-  .glow-vit {
-    box-shadow: var(--glow-vit);
-  }
-  .glow-end {
-    box-shadow: var(--glow-end);
-  }
+  .glow-int { box-shadow: var(--glow-int); }
+  .glow-str { box-shadow: var(--glow-str); }
+  .glow-agi { box-shadow: var(--glow-agi); }
+  .glow-vit { box-shadow: var(--glow-vit); }
+  .glow-end { box-shadow: var(--glow-end); }
 
   .text-glow-primary {
-    text-shadow: 0 0 12px hsl(195 100% 55% / 0.7);
+    text-shadow: 0 0 12px hsl(195 100% 55% / 0.7), 0 0 24px hsl(195 100% 55% / 0.3);
   }
   .text-glow-accent {
-    text-shadow: 0 0 12px hsl(45 100% 60% / 0.7);
+    text-shadow: 0 0 12px hsl(45 100% 60% / 0.7), 0 0 24px hsl(45 100% 60% / 0.3);
   }
 
+  /* HUD stat bar - angular, digital */
   .stat-bar-track {
-    @apply h-2 rounded-full bg-secondary overflow-hidden;
+    @apply h-2 overflow-hidden relative;
+    background: hsl(225 25% 12%);
+    clip-path: polygon(0 0, calc(100% - 4px) 0, 100% 50%, calc(100% - 4px) 100%, 0 100%);
+    border: 1px solid hsl(195 60% 20%);
   }
 
   .stat-bar-fill {
-    @apply h-full rounded-full transition-all duration-700 ease-out;
+    @apply h-full transition-all duration-700 ease-out relative;
+    clip-path: polygon(0 0, calc(100% - 3px) 0, 100% 50%, calc(100% - 3px) 100%, 0 100%);
   }
 
+  /* HUD Panel - angular cut corners */
   .rpg-panel {
-    @apply bg-card border border-border rounded-lg p-4;
-    background: linear-gradient(135deg, hsl(225 25% 9%), hsl(225 25% 7%));
+    @apply p-4 relative;
+    background: linear-gradient(180deg, hsl(225 30% 10% / 0.95), hsl(225 25% 7% / 0.95));
+    border: 1px solid hsl(195 60% 25% / 0.4);
+    clip-path: polygon(
+      0 8px, 8px 0, calc(100% - 8px) 0, 100% 8px,
+      100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px)
+    );
+  }
+
+  .rpg-panel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, hsl(195 100% 55% / 0.05), transparent 40%, transparent 60%, hsl(195 100% 55% / 0.03));
+    pointer-events: none;
+    clip-path: inherit;
   }
 
   .rpg-panel-glow {
-    @apply rpg-panel glow-primary;
-    border-color: hsl(195 100% 50% / 0.3);
+    @apply rpg-panel;
+    border-color: hsl(195 100% 50% / 0.5);
+    box-shadow: 
+      0 0 15px hsl(195 100% 55% / 0.15),
+      inset 0 0 30px hsl(195 100% 55% / 0.05);
+  }
+
+  /* HUD nav button */
+  .hud-nav-btn {
+    @apply relative p-4 flex flex-col items-center gap-2 transition-all duration-200;
+    background: linear-gradient(180deg, hsl(225 30% 11% / 0.9), hsl(225 25% 7% / 0.9));
+    border: 1px solid hsl(195 60% 20% / 0.3);
+    clip-path: polygon(
+      0 6px, 6px 0, calc(100% - 6px) 0, 100% 6px,
+      100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px)
+    );
+  }
+
+  .hud-nav-btn:hover {
+    border-color: hsl(195 100% 55% / 0.5);
+    background: linear-gradient(180deg, hsl(225 30% 13% / 0.95), hsl(225 25% 9% / 0.95));
+    box-shadow: 0 0 12px hsl(195 100% 55% / 0.15);
+  }
+
+  .hud-nav-btn:active {
+    transform: scale(0.97);
+  }
+
+  /* Digital separator line */
+  .hud-divider {
+    @apply relative my-3;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, hsl(195 100% 55% / 0.4), hsl(195 100% 55% / 0.15), transparent);
+  }
+
+  .hud-divider::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: -2px;
+    transform: translateX(-50%) rotate(45deg);
+    width: 5px;
+    height: 5px;
+    background: hsl(195 100% 55% / 0.6);
+    box-shadow: 0 0 6px hsl(195 100% 55% / 0.5);
+  }
+
+  /* Scanline overlay */
+  .hud-scanlines {
+    position: relative;
+  }
+
+  .hud-scanlines::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      hsl(195 100% 55% / 0.015) 2px,
+      hsl(195 100% 55% / 0.015) 4px
+    );
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* HUD label */
+  .hud-label {
+    @apply text-[10px] font-display uppercase tracking-[0.25em] text-muted-foreground;
+    letter-spacing: 0.25em;
+  }
+
+  /* Data readout style */
+  .hud-data {
+    font-family: 'Share Tech Mono', 'Orbitron', monospace;
   }
 }
 
 /* Pulse animation for active quest */
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 15px hsl(195 100% 55% / 0.3); }
-  50% { box-shadow: 0 0 30px hsl(195 100% 55% / 0.6); }
+  0%, 100% { box-shadow: 0 0 10px hsl(195 100% 55% / 0.2), inset 0 0 10px hsl(195 100% 55% / 0.05); }
+  50% { box-shadow: 0 0 25px hsl(195 100% 55% / 0.4), inset 0 0 20px hsl(195 100% 55% / 0.1); }
 }
 
 @keyframes fade-in {
@@ -151,8 +235,21 @@
   50% { transform: translateY(-4px); }
 }
 
+@keyframes data-flicker {
+  0%, 95%, 100% { opacity: 1; }
+  96% { opacity: 0.8; }
+  97% { opacity: 1; }
+  98% { opacity: 0.6; }
+  99% { opacity: 1; }
+}
+
+@keyframes border-scan {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 200% 0%; }
+}
+
 .animate-pulse-glow {
-  animation: pulse-glow 2s ease-in-out infinite;
+  animation: pulse-glow 2.5s ease-in-out infinite;
 }
 
 .animate-shimmer {
@@ -165,8 +262,12 @@
   animation: float 3s ease-in-out infinite;
 }
 
-/* Victorian Frame */
-.victorian-frame {
+.animate-data-flicker {
+  animation: data-flicker 4s ease-in-out infinite;
+}
+
+/* HUD Frame */
+.hud-frame {
   position: absolute;
   top: 0;
   left: 0;
@@ -176,175 +277,71 @@
   pointer-events: none;
 }
 
-/* Corner ornaments - Victorian flourish */
-.victorian-corner {
+/* Corner brackets - techy L-shaped */
+.hud-corner {
   position: absolute;
-  width: 28px;
-  height: 28px;
+  width: 20px;
+  height: 20px;
 }
 
-.victorian-corner::before,
-.victorian-corner::after {
+.hud-corner::before,
+.hud-corner::after {
   content: '';
   position: absolute;
   background: hsl(195 100% 55%);
-  box-shadow: 0 0 8px hsl(195 100% 55% / 0.8), 0 0 16px hsl(195 100% 55% / 0.4);
+  box-shadow: 0 0 6px hsl(195 100% 55% / 0.6);
 }
 
-/* Top-left corner */
-.victorian-corner-tl {
-  top: 8px;
-  left: 8px;
-}
-.victorian-corner-tl::before {
-  width: 28px;
-  height: 1px;
-  top: 0;
-  left: 0;
-}
-.victorian-corner-tl::after {
-  width: 1px;
-  height: 28px;
-  top: 0;
-  left: 0;
-}
+.hud-corner-tl { top: 4px; left: 4px; }
+.hud-corner-tl::before { width: 20px; height: 2px; top: 0; left: 0; }
+.hud-corner-tl::after { width: 2px; height: 20px; top: 0; left: 0; }
 
-/* Top-right corner */
-.victorian-corner-tr {
-  top: 8px;
-  right: 8px;
-}
-.victorian-corner-tr::before {
-  width: 28px;
-  height: 1px;
-  top: 0;
-  right: 0;
-}
-.victorian-corner-tr::after {
-  width: 1px;
-  height: 28px;
-  top: 0;
-  right: 0;
-}
+.hud-corner-tr { top: 4px; right: 4px; }
+.hud-corner-tr::before { width: 20px; height: 2px; top: 0; right: 0; }
+.hud-corner-tr::after { width: 2px; height: 20px; top: 0; right: 0; }
 
-/* Bottom-left corner */
-.victorian-corner-bl {
-  bottom: 8px;
-  left: 8px;
-}
-.victorian-corner-bl::before {
-  width: 28px;
-  height: 1px;
-  bottom: 0;
-  left: 0;
-}
-.victorian-corner-bl::after {
-  width: 1px;
-  height: 28px;
-  bottom: 0;
-  left: 0;
-}
+.hud-corner-bl { bottom: 4px; left: 4px; }
+.hud-corner-bl::before { width: 20px; height: 2px; bottom: 0; left: 0; }
+.hud-corner-bl::after { width: 2px; height: 20px; bottom: 0; left: 0; }
 
-/* Bottom-right corner */
-.victorian-corner-br {
-  bottom: 8px;
-  right: 8px;
-}
-.victorian-corner-br::before {
-  width: 28px;
-  height: 1px;
-  bottom: 0;
-  right: 0;
-}
-.victorian-corner-br::after {
-  width: 1px;
-  height: 28px;
-  bottom: 0;
-  right: 0;
-}
+.hud-corner-br { bottom: 4px; right: 4px; }
+.hud-corner-br::before { width: 20px; height: 2px; bottom: 0; right: 0; }
+.hud-corner-br::after { width: 2px; height: 20px; bottom: 0; right: 0; }
 
-/* Inner decorative diamonds at corners */
-.victorian-corner::after {
-  border-radius: 0;
-}
-
-.victorian-corner-tl::before,
-.victorian-corner-tr::before,
-.victorian-corner-bl::before,
-.victorian-corner-br::before {
-  border-radius: 0;
-}
-
-/* Diamond ornaments at each corner intersection */
-.victorian-corner::before {
-  z-index: 1;
-}
-
-/* Add small diamond at corner point */
-.victorian-corner-tl,
-.victorian-corner-tr,
-.victorian-corner-bl,
-.victorian-corner-br {
-  overflow: visible;
-}
-
-/* Side lines with Victorian style breaks */
-.victorian-line {
+/* Border lines between corners */
+.hud-border-line {
   position: absolute;
-  background: hsl(195 100% 55% / 0.25);
-  box-shadow: 0 0 6px hsl(195 100% 55% / 0.15);
+  background: linear-gradient(90deg, hsl(195 100% 55% / 0.5), hsl(195 100% 55% / 0.15), hsl(195 100% 55% / 0.5));
 }
 
-.victorian-line-top {
-  top: 8px;
-  left: 36px;
-  right: 36px;
-  height: 1px;
+.hud-border-top {
+  top: 4px; left: 24px; right: 24px; height: 1px;
 }
 
-.victorian-line-bottom {
-  bottom: 8px;
-  left: 36px;
-  right: 36px;
-  height: 1px;
+.hud-border-bottom {
+  bottom: 4px; left: 24px; right: 24px; height: 1px;
 }
 
-.victorian-line-left {
-  left: 8px;
-  top: 36px;
-  bottom: 36px;
-  width: 1px;
+.hud-border-left {
+  left: 4px; top: 24px; bottom: 24px; width: 1px;
+  background: linear-gradient(180deg, hsl(195 100% 55% / 0.5), hsl(195 100% 55% / 0.1), hsl(195 100% 55% / 0.5));
 }
 
-.victorian-line-right {
-  right: 8px;
-  top: 36px;
-  bottom: 36px;
-  width: 1px;
+.hud-border-right {
+  right: 4px; top: 24px; bottom: 24px; width: 1px;
+  background: linear-gradient(180deg, hsl(195 100% 55% / 0.5), hsl(195 100% 55% / 0.1), hsl(195 100% 55% / 0.5));
 }
 
-/* Center ornament on top line */
-.victorian-line-top::after {
-  content: '◆';
-  position: absolute;
-  left: 50%;
-  top: -6px;
-  transform: translateX(-50%);
-  font-size: 8px;
-  color: hsl(195 100% 55%);
-  text-shadow: 0 0 8px hsl(195 100% 55% / 0.8);
-  line-height: 1;
+/* Status indicator dots */
+.hud-status-dot {
+  @apply inline-block w-1.5 h-1.5 rounded-full;
+  box-shadow: 0 0 4px currentColor;
 }
 
-/* Center ornament on bottom line */
-.victorian-line-bottom::after {
-  content: '◆';
-  position: absolute;
-  left: 50%;
-  bottom: -6px;
-  transform: translateX(-50%);
-  font-size: 8px;
-  color: hsl(195 100% 55%);
-  text-shadow: 0 0 8px hsl(195 100% 55% / 0.8);
-  line-height: 1;
+/* Grid background pattern */
+.hud-grid-bg {
+  background-image: 
+    linear-gradient(hsl(195 100% 55% / 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(195 100% 55% / 0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
 }

@@ -35,13 +35,17 @@ const Index = () => {
 
   return (
     <VictorianFrame>
-      {/* Logout */}
-      <div className="flex justify-end mb-2">
+      {/* Header bar */}
+      <div className="flex justify-between items-center mb-3">
+        <div className="flex items-center gap-2">
+          <div className="hud-status-dot bg-stat-agi" />
+          <span className="hud-label">Online</span>
+        </div>
         <button
           onClick={signOut}
-          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive transition-colors font-display uppercase tracking-wider"
+          className="flex items-center gap-1.5 text-[10px] text-muted-foreground hover:text-destructive transition-colors font-display uppercase tracking-[0.2em]"
         >
-          <LogOut size={14} />
+          <LogOut size={12} />
           Salir
         </button>
       </div>
@@ -49,19 +53,20 @@ const Index = () => {
       {/* Time warning */}
       {timeWarning && (
         <div
-          className="mb-4 p-3 rounded-lg bg-destructive/20 border border-destructive/40 text-destructive text-sm font-body cursor-pointer"
+          className="mb-4 p-3 bg-destructive/10 border border-destructive/30 text-destructive text-sm font-body cursor-pointer"
           onClick={dismissTimeWarning}
+          style={{ clipPath: 'polygon(0 4px, 4px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px))' }}
         >
-          ⚠️ Time manipulation detected. Progress may be locked.
+          ⚠️ SYSTEM ALERT: Time anomaly detected
         </div>
       )}
 
       {/* Time display */}
       <div className="text-center mb-4">
-        <div className="text-xs font-display text-muted-foreground uppercase tracking-wider">
+        <div className="hud-label">
           {currentTime.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
         </div>
-        <div className="text-lg font-display text-primary text-glow-primary">
+        <div className="hud-data text-xl text-primary text-glow-primary mt-0.5">
           {currentTime.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
         </div>
       </div>
@@ -71,15 +76,13 @@ const Index = () => {
 
       {/* Class */}
       <div className="mt-4 text-center">
-        <div className="text-xs font-display uppercase tracking-[0.2em] text-muted-foreground">
-          Clase
-        </div>
+        <div className="hud-label">Clase</div>
         <div className="text-xl font-display font-bold text-accent text-glow-accent mt-1">
           {currentClass.icon} {currentClass.name}
         </div>
         {nextClass && (
           <div className="mt-2">
-            <div className="text-[10px] font-display uppercase tracking-wider text-muted-foreground">
+            <div className="hud-label">
               Siguiente: {nextClass.name} (Nv. {nextClass.requiredLevel})
             </div>
             <div className="stat-bar-track h-1.5 mt-1 max-w-48 mx-auto">
@@ -94,11 +97,18 @@ const Index = () => {
         )}
       </div>
 
+      <div className="hud-divider" />
+
       {/* Stats */}
-      <div className="mt-6 rpg-panel space-y-3">
-        <h2 className="text-xs font-display uppercase tracking-[0.3em] text-muted-foreground mb-3">
-          Stats
-        </h2>
+      <div className="rpg-panel space-y-3">
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="hud-label">
+            Estadísticas
+          </h2>
+          <span className="hud-data text-[10px] text-muted-foreground">
+            Nv.{String(state.level).padStart(2, '0')}
+          </span>
+        </div>
         {statKeys.map(key => (
           <StatBar
             key={key}
@@ -111,14 +121,16 @@ const Index = () => {
         ))}
       </div>
 
+      <div className="hud-divider" />
+
       {/* Navigation Cards */}
-      <div className="mt-6 grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2.5">
         <button
           onClick={() => navigate('/quest')}
-          className="rpg-panel animate-pulse-glow flex flex-col items-center gap-2 py-5 hover:border-primary/50 transition-colors"
+          className={`hud-nav-btn py-5 ${todayQuest?.status === 'completed' ? '' : 'animate-pulse-glow'}`}
         >
-          <span className="text-3xl">{restDay ? '💤' : '⚔️'}</span>
-          <span className="font-display text-xs uppercase tracking-wider text-primary">
+          <span className="text-2xl">{restDay ? '💤' : '⚔️'}</span>
+          <span className="font-display text-[10px] uppercase tracking-[0.15em] text-primary">
             {todayQuest?.status === 'completed'
               ? '✅ Completada'
               : restDay
@@ -128,55 +140,60 @@ const Index = () => {
         </button>
         <button
           onClick={() => navigate('/skills')}
-          className="rpg-panel flex flex-col items-center gap-2 py-5 hover:border-primary/50 transition-colors"
+          className="hud-nav-btn py-5"
         >
-          <span className="text-3xl">✨</span>
-          <span className="font-display text-xs uppercase tracking-wider text-foreground">
+          <span className="text-2xl">✨</span>
+          <span className="font-display text-[10px] uppercase tracking-[0.15em] text-foreground">
             Skills
           </span>
         </button>
         <button
           onClick={() => navigate('/titles')}
-          className="rpg-panel flex flex-col items-center gap-2 py-5 hover:border-primary/50 transition-colors"
+          className="hud-nav-btn py-5"
         >
-          <span className="text-3xl">🏷️</span>
-          <span className="font-display text-xs uppercase tracking-wider text-foreground">
+          <span className="text-2xl">🏷️</span>
+          <span className="font-display text-[10px] uppercase tracking-[0.15em] text-foreground">
             Títulos
           </span>
         </button>
         <button
           onClick={() => navigate('/history')}
-          className="rpg-panel flex flex-col items-center gap-2 py-5 hover:border-primary/50 transition-colors"
+          className="hud-nav-btn py-5"
         >
-          <span className="text-3xl">📜</span>
-          <span className="font-display text-xs uppercase tracking-wider text-foreground">
+          <span className="text-2xl">📜</span>
+          <span className="font-display text-[10px] uppercase tracking-[0.15em] text-foreground">
             Historial
           </span>
         </button>
         <button
           onClick={() => navigate('/monarch')}
-          className="rpg-panel flex flex-col items-center gap-2 py-5 hover:border-accent/50 transition-colors col-span-2"
+          className="hud-nav-btn py-4 col-span-2"
+          style={{ borderColor: 'hsl(45 100% 60% / 0.3)' }}
         >
-          <span className="text-3xl">👑</span>
-          <span className="font-display text-xs uppercase tracking-wider text-accent">
+          <span className="text-2xl">👑</span>
+          <span className="font-display text-[10px] uppercase tracking-[0.15em] text-accent">
             Ruta del Monarca
           </span>
         </button>
       </div>
 
-      {/* Streak */}
-      <div className="mt-4 flex justify-center gap-6 text-center">
-        <div>
-          <div className="font-display text-2xl font-bold text-primary">{state.currentStreak}</div>
-          <div className="text-[10px] font-display uppercase tracking-wider text-muted-foreground">Racha</div>
-        </div>
-        <div>
-          <div className="font-display text-2xl font-bold text-accent">{state.totalCompleted}</div>
-          <div className="text-[10px] font-display uppercase tracking-wider text-muted-foreground">Completadas</div>
-        </div>
-        <div>
-          <div className="font-display text-2xl font-bold text-foreground">{state.personalRecords.longestStreak}</div>
-          <div className="text-[10px] font-display uppercase tracking-wider text-muted-foreground">Mejor Racha</div>
+      {/* Streak counters */}
+      <div className="mt-4 rpg-panel">
+        <div className="flex justify-around text-center">
+          <div>
+            <div className="hud-data text-2xl font-bold text-primary text-glow-primary">{String(state.currentStreak).padStart(2, '0')}</div>
+            <div className="hud-label mt-0.5">Racha</div>
+          </div>
+          <div className="w-px bg-border/30 self-stretch" />
+          <div>
+            <div className="hud-data text-2xl font-bold text-accent text-glow-accent">{String(state.totalCompleted).padStart(3, '0')}</div>
+            <div className="hud-label mt-0.5">Completadas</div>
+          </div>
+          <div className="w-px bg-border/30 self-stretch" />
+          <div>
+            <div className="hud-data text-2xl font-bold text-foreground">{String(state.personalRecords.longestStreak).padStart(2, '0')}</div>
+            <div className="hud-label mt-0.5">Mejor Racha</div>
+          </div>
         </div>
       </div>
 

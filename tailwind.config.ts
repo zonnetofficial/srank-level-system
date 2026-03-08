@@ -16,6 +16,7 @@ export default {
       fontFamily: {
         display: ["Orbitron", "monospace"],
         body: ["Rajdhani", "sans-serif"],
+        mono: ["Share Tech Mono", "Orbitron", "monospace"],
       },
       colors: {
         border: "hsl(var(--border))",

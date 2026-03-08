@@ -8,12 +8,12 @@ interface StatBarProps {
   icon: string;
 }
 
-const statColorClasses: Record<StatKey, { bar: string; text: string }> = {
-  int: { bar: 'bg-stat-int', text: 'text-stat-int' },
-  str: { bar: 'bg-stat-str', text: 'text-stat-str' },
-  agi: { bar: 'bg-stat-agi', text: 'text-stat-agi' },
-  vit: { bar: 'bg-stat-vit', text: 'text-stat-vit' },
-  end: { bar: 'bg-stat-end', text: 'text-stat-end' },
+const statColorClasses: Record<StatKey, { bar: string; text: string; glow: string }> = {
+  int: { bar: 'bg-stat-int', text: 'text-stat-int', glow: 'glow-int' },
+  str: { bar: 'bg-stat-str', text: 'text-stat-str', glow: 'glow-str' },
+  agi: { bar: 'bg-stat-agi', text: 'text-stat-agi', glow: 'glow-agi' },
+  vit: { bar: 'bg-stat-vit', text: 'text-stat-vit', glow: 'glow-vit' },
+  end: { bar: 'bg-stat-end', text: 'text-stat-end', glow: 'glow-end' },
 };
 
 export function StatBar({ stat, value, points, label, icon }: StatBarProps) {
@@ -31,18 +31,20 @@ export function StatBar({ stat, value, points, label, icon }: StatBarProps) {
   }
 
   return (
-    <div className="flex items-center gap-3">
-      <span className="text-lg w-7 text-center">{icon}</span>
+    <div className="flex items-center gap-3 group">
+      <div className="flex items-center justify-center w-8 h-8 text-lg">
+        {icon}
+      </div>
       <div className="flex-1 min-w-0">
         <div className="flex justify-between items-baseline mb-1">
-          <span className={`text-xs font-display uppercase tracking-wider ${colors.text}`}>
+          <span className={`text-[11px] font-display uppercase tracking-[0.15em] ${colors.text}`}>
             {label}
           </span>
-          <span className={`text-sm font-display font-bold ${colors.text}`}>
-            {value}
+          <span className={`hud-data text-sm font-bold ${colors.text}`}>
+            {String(value).padStart(3, '0')}
           </span>
         </div>
-        <div className="stat-bar-track">
+        <div className="stat-bar-track h-1.5">
           <div
             className={`stat-bar-fill ${colors.bar}`}
             style={{ width: `${pct}%` }}
