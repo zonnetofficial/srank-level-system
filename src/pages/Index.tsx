@@ -6,8 +6,6 @@ import {
   STAT_LABELS,
   STAT_ICONS,
   StatKey,
-  getSkillTitle,
-  getNextSkillTitle,
   getClassTitle,
   getNextClassTitle,
 } from '@/lib/gameData';
@@ -29,7 +27,7 @@ const Index = () => {
   const nextClass = getNextClassTitle(state.level, state.classTitles);
 
   return (
-    <div className="min-h-screen bg-background pb-20 px-4 pt-6 max-w-lg mx-auto">
+    <div className="min-h-screen bg-background px-4 pt-6 pb-6 max-w-lg mx-auto">
       {/* Time warning */}
       {timeWarning && (
         <div
@@ -95,25 +93,7 @@ const Index = () => {
         ))}
       </div>
 
-      {/* Skill Titles Preview */}
-      <div className="mt-4 rpg-panel">
-        <h2 className="text-xs font-display uppercase tracking-[0.3em] text-muted-foreground mb-3">
-          Títulos de Skill
-        </h2>
-        <div className="grid grid-cols-2 gap-2">
-          {statKeys.map(key => {
-            const current = getSkillTitle(key, state.statPoints[key]);
-            return (
-              <div key={key} className="text-xs">
-                <span className="text-muted-foreground">{STAT_ICONS[key]}</span>{' '}
-                <span className="font-display font-semibold text-foreground">{current.name}</span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Quick Actions */}
+      {/* Navigation Cards */}
       <div className="mt-6 grid grid-cols-2 gap-3">
         <button
           onClick={() => navigate('/quest')}
@@ -135,6 +115,24 @@ const Index = () => {
           <span className="text-3xl">✨</span>
           <span className="font-display text-xs uppercase tracking-wider text-foreground">
             Skills
+          </span>
+        </button>
+        <button
+          onClick={() => navigate('/titles')}
+          className="rpg-panel flex flex-col items-center gap-2 py-5 hover:border-primary/50 transition-colors"
+        >
+          <span className="text-3xl">🏷️</span>
+          <span className="font-display text-xs uppercase tracking-wider text-foreground">
+            Títulos
+          </span>
+        </button>
+        <button
+          onClick={() => navigate('/history')}
+          className="rpg-panel flex flex-col items-center gap-2 py-5 hover:border-primary/50 transition-colors"
+        >
+          <span className="text-3xl">📜</span>
+          <span className="font-display text-xs uppercase tracking-wider text-foreground">
+            Historial
           </span>
         </button>
       </div>
