@@ -7,23 +7,22 @@ interface VictorianFrameProps {
 
 const VictorianFrame: React.FC<VictorianFrameProps> = ({ children, className = '' }) => {
   return (
-    <div className={`relative min-h-screen px-4 pt-6 pb-6 max-w-lg mx-auto ${className}`}>
-      {/* Victorian border frame - part of the background, scrolls with content */}
-      <div className="victorian-frame" aria-hidden="true">
-        {/* Corner ornaments */}
-        <div className="victorian-corner victorian-corner-tl" />
-        <div className="victorian-corner victorian-corner-tr" />
-        <div className="victorian-corner victorian-corner-bl" />
-        <div className="victorian-corner victorian-corner-br" />
-
-        {/* Side lines */}
-        <div className="victorian-line victorian-line-top" />
-        <div className="victorian-line victorian-line-bottom" />
-        <div className="victorian-line victorian-line-left" />
-        <div className="victorian-line victorian-line-right" />
+    <div className={`relative min-h-screen px-5 pt-8 pb-8 max-w-lg mx-auto hud-scanlines hud-grid-bg ${className}`}>
+      {/* HUD border frame */}
+      <div className="hud-frame" aria-hidden="true">
+        <div className="hud-corner hud-corner-tl" />
+        <div className="hud-corner hud-corner-tr" />
+        <div className="hud-corner hud-corner-bl" />
+        <div className="hud-corner hud-corner-br" />
+        <div className="hud-border-line hud-border-top" />
+        <div className="hud-border-line hud-border-bottom" />
+        <div className="hud-border-left" />
+        <div className="hud-border-right" />
       </div>
 
-      {children}
+      <div className="relative z-[2]">
+        {children}
+      </div>
     </div>
   );
 };
