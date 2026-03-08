@@ -131,23 +131,40 @@ export default function Dungeons() {
 
   const handleRoomComplete = (success: boolean) => {
     completeRoom(success);
+    // Use a small delay then check updated state via the setter pattern
     setTimeout(() => {
-      if (dungeonState.character && dungeonState.character.currentHp <= 0) {
-        // Died - sync profile
-        if (run) syncProfile(0, run.rank, run.xpEarned, true);
-        setView('result');
-        return;
-      }
-      if (run && run.currentRoom + 1 >= run.rooms.length) {
-        advanceRoom();
-        setXpToApply(run.xpEarned);
-        setView('reward');
-      } else {
-        advanceRoom();
-        setView('dungeon');
-      }
+      // We need to read current state - dungeonState may be stale in this closure
+      // Instead, check run status which is updated synchronously by completeRoom
     }, 1800);
   };
+
+  // Watch for death or room completion after completeRoom runs
+  useEffect(() => {
+    if (!run) return;
+    if (view !== 'dungeon') return;
+    
+    if (run.status === 'dead') {
+      syncProfile(0, run.rank, run.xpEarned, true);
+      setView('result');
+      return;
+    }
+
+    // Check if current room was just completed
+    const currentRoom = run.rooms[run.currentRoom];
+    if (currentRoom?.completed) {
+      const timer = setTimeout(() => {
+        if (run.currentRoom + 1 >= run.rooms.length) {
+          advanceRoom();
+          setXpToApply(run.xpEarned);
+          setView('reward');
+        } else {
+          advanceRoom();
+          setView('dungeon');
+        }
+      }, 1800);
+      return () => clearTimeout(timer);
+    }
+  }, [run?.status, run?.rooms, run?.currentRoom, view]);
 
   const handleRewardChoice = async (choice: 'heal' | 'luckbox') => {
     setRewardChoice(choice);
