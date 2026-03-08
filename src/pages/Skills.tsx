@@ -4,7 +4,7 @@ import VictorianFrame from '@/components/VictorianFrame';
 import SkillTaskDialog from '@/components/SkillTaskDialog';
 import { useGameState } from '@/hooks/useGameState';
 import { STAT_LABELS, STAT_ICONS, StatKey, getSkillTitle } from '@/lib/gameData';
-import { getTasksForStat, getTitleIndex } from '@/lib/skillTasks';
+import { getTasksForStat, getTitleIndex, SkillTask } from '@/lib/skillTasks';
 import { getTestForTier, getTierFromPoints, evaluateTest, TestQuestion, TestTheme } from '@/lib/intTests';
 import {
   Dialog,
@@ -33,7 +33,7 @@ const Skills = () => {
 
   // Skill task dialog state
   const [taskDialogStat, setTaskDialogStat] = useState<StatKey | null>(null);
-  const [taskDialogTask, setTaskDialogTask] = useState<{ name: string; description: string } | null>(null);
+  const [taskDialogTask, setTaskDialogTask] = useState<SkillTask | null>(null);
 
   // Show skill intro first, then launch the actual INT test
   const handleShowIntSkillIntro = () => {

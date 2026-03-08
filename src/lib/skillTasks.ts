@@ -58,14 +58,14 @@ const STR_TASKS: SkillTask[][] = [
 
 const AGI_TASKS: SkillTask[][] = [
   [
-    { name: 'Estiramientos básicos', description: 'Realiza: tocarse los pies 15s, estiramiento de cuádriceps 15s por pierna, estiramiento de hombros 15s por lado, giro de cadera 10 por lado', durationSeconds: 600 },
+    { name: 'Estiramientos básicos', description: 'Realiza: tocarse los pies 20s, estiramiento de cuádriceps 20s por pierna, estiramiento de hombros 20s por lado, giro de cadera 20s por lado', durationSeconds: 120, timerRounds: 4 },
     { name: 'Saltos en el lugar', description: 'Haz 30 saltos seguidos con rodillas al pecho alternando velocidad: 10 lentos, 10 rápidos, 10 explosivos' },
     { name: 'Equilibrio a un pie', description: 'Mantente en un pie 30 segundos, luego cambia. Ojos cerrados para mayor dificultad', durationSeconds: 60, timerRounds: 2 },
     { name: 'Caminata lateral', description: 'Da 20 pasos laterales por lado en posición de media sentadilla, manteniendo la espalda recta' },
     { name: 'Rodillas altas', description: 'Eleva las rodillas al pecho alternando piernas, 40 repeticiones totales lo más rápido posible' },
   ],
   [
-    { name: 'Movilidad dinámica', description: 'Circuito: 10 círculos de brazos, 10 balanceos de pierna por lado, 10 rotaciones de cadera, 10 giros de tobillo por pie', durationSeconds: 900 },
+    { name: 'Movilidad dinámica', description: 'Circuito: 10 círculos de brazos, 10 balanceos de pierna por lado, 10 rotaciones de cadera, 10 giros de tobillo por pie', durationSeconds: 120, timerRounds: 4 },
     { name: 'Saltos de cuerda', description: 'Simula o usa cuerda real: 50 saltos sin parar alternando pies juntos y alternados cada 10 saltos' },
     { name: 'Skipping lateral', description: '3 series de 30 segundos de desplazamiento lateral rápido, cambiando dirección en cada serie', durationSeconds: 90, timerRounds: 3 },
     { name: 'Toe touches dinámicos', description: 'De pie, lanza una pierna al frente y toca la punta con la mano opuesta. 15 por pierna alternando' },
