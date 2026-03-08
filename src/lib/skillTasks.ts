@@ -126,7 +126,7 @@ const VIT_TASKS: SkillTask[][] = [
   [
     { name: 'Meditación avanzada', description: '20 minutos sin distracciones', durationSeconds: 1200 },
     { name: 'Visualización', description: 'Sesión de visualización positiva' },
-    { name: 'Pranayama completo', description: '4 técnicas de respiración, 15 min', durationSeconds: 900 },
+    { name: 'Pranayama completo', description: '4 técnicas de respiración, 15 min', durationSeconds: 900, timerRounds: 4 },
     { name: 'Yoga restaurativo', description: 'Secuencia de relajación profunda 20 min', durationSeconds: 1200 },
     { name: 'Autocompasión', description: 'Práctica de bondad hacia ti mismo 15 min', durationSeconds: 900 },
   ],
