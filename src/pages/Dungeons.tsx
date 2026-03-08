@@ -463,7 +463,7 @@ export default function Dungeons() {
               <div className="space-y-2">
                 {loadout.map(l => (
                   <div key={l.inventoryId} className={`flex items-center gap-2 p-2 border border-border/30 ${SHOP_RARITY_COLORS[l.rarity]}`}>
-                    <span className="text-lg">{l.icon}</span>
+                    <ItemIcon name={l.name} fallbackEmoji={l.icon} size="md" />
                     <div className="flex-1 min-w-0">
                       <div className="font-display text-[10px] truncate">{l.name}</div>
                       <div className="text-[8px] text-muted-foreground">{RARITY_LABELS[l.rarity]} · x{l.quantity}</div>
