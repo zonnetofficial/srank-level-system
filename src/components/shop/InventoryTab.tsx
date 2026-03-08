@@ -33,7 +33,7 @@ export default function InventoryTab({ inventory, getItemById, onSell }: Props) 
             className={`rpg-panel p-3 flex items-center gap-3 ${RARITY_COLORS[item.rarity]}`}
             style={{ animationDelay: `${i * 60}ms` }}
           >
-            <span className="text-2xl">{item.icon}</span>
+            <ItemIcon name={item.name} fallbackEmoji={item.icon} size="lg" />
             <div className="flex-1 min-w-0">
               <div className="font-display text-xs font-bold truncate">{item.name}</div>
               <div className="text-[9px] text-muted-foreground">{RARITY_LABELS[item.rarity]} · ×{inv.quantity}</div>
