@@ -249,6 +249,7 @@ export function createInitialState(): GameState {
     personalRecords: { longestStreak: 0, maxLevel: 1 },
     pendingPunishments: 0,
     lastCheckedDate: getToday(),
+    classChangeProgress: {},
   };
 }
 
