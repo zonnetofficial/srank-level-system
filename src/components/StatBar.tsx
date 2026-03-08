@@ -1,11 +1,11 @@
-import { StatKey } from '@/lib/gameData';
+import { StatKey, getSkillTitle, getNextSkillTitle } from '@/lib/gameData';
 
 interface StatBarProps {
   stat: StatKey;
   value: number;
+  points: number;
   label: string;
   icon: string;
-  maxDisplay?: number;
 }
 
 const statColorClasses: Record<StatKey, { bar: string; text: string }> = {
@@ -16,9 +16,19 @@ const statColorClasses: Record<StatKey, { bar: string; text: string }> = {
   end: { bar: 'bg-stat-end', text: 'text-stat-end' },
 };
 
-export function StatBar({ stat, value, label, icon, maxDisplay = 100 }: StatBarProps) {
+export function StatBar({ stat, value, points, label, icon }: StatBarProps) {
   const colors = statColorClasses[stat];
-  const pct = Math.min((value / maxDisplay) * 100, 100);
+  const currentTitle = getSkillTitle(stat, points);
+  const nextTitle = getNextSkillTitle(stat, points);
+
+  let pct = 100;
+  if (nextTitle) {
+    const rangeStart = currentTitle.requiredPoints;
+    const rangeEnd = nextTitle.requiredPoints;
+    const progress = points - rangeStart;
+    const range = rangeEnd - rangeStart;
+    pct = Math.min((progress / range) * 100, 100);
+  }
 
   return (
     <div className="flex items-center gap-3">
