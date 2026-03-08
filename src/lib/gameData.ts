@@ -231,6 +231,7 @@ export function createInitialState(): GameState {
     xpToNext: xpForLevel(1),
     stats: { int: 1, str: 1, agi: 1, vit: 1, end: 1 },
     statPoints: { int: 0, str: 0, agi: 0, vit: 0, end: 0 },
+    statBank: { int: 0, str: 0, agi: 0, vit: 0, end: 0 },
     questLog: [],
     classTitles: CLASS_TITLES.map(t => ({ ...t, obtained: t.requiredLevel <= 1 })),
     lastSavedTime: new Date().toISOString(),
