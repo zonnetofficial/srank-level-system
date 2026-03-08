@@ -11,6 +11,7 @@ import Titles from "./pages/Titles";
 import History from "./pages/History";
 import Auth from "./pages/Auth";
 import MonarchMode from "./pages/MonarchMode";
+import Shop from "./pages/Shop";
 import NotFound from "./pages/NotFound";
 import PunishmentOverlay from "./components/PunishmentOverlay";
 import { useGameState } from "./hooks/useGameState";
