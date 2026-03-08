@@ -187,6 +187,7 @@ const Index = () => {
           { path: '/skills', icon: '✨', label: 'Skills' },
           { path: '/shop', icon: '🏪', label: 'Tienda' },
           { path: '/titles', icon: '🏷️', label: 'Títulos' },
+          { path: '/dungeons', icon: '🏰', label: 'Mazmorras' },
         ].map((item, i) => (
           <button
             key={item.path}

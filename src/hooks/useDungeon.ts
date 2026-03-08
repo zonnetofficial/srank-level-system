@@ -1,0 +1,199 @@
+import { useState, useCallback, useEffect } from 'react';
+import {
+  DungeonState,
+  DungeonCharacter,
+  DungeonRun,
+  DungeonRank,
+  CharacterClass,
+  loadDungeonState,
+  saveDungeonState,
+  calculateCharacterHP,
+  calculateCharacterStamina,
+  generateDungeonRooms,
+  applyHPRegen,
+  getEscapeCost,
+  isDungeonAvailable,
+  DUNGEON_RANKS,
+  getCooldownReduction,
+} from '@/lib/dungeonData';
+import type { PlayerStats } from '@/lib/gameData';
+
+export function useDungeon(stats: PlayerStats, playerLevel: number) {
+  const [dungeonState, setDungeonState] = useState<DungeonState>(() => loadDungeonState());
+
+  useEffect(() => { saveDungeonState(dungeonState); }, [dungeonState]);
+
+  // Periodic HP regen
+  useEffect(() => {
+    if (!dungeonState.character) return;
+    const interval = setInterval(() => {
+      setDungeonState(prev => {
+        if (!prev.character) return prev;
+        const updated = applyHPRegen(prev.character);
+        if (updated.currentHp === prev.character.currentHp) return prev;
+        return { ...prev, character: updated };
+      });
+    }, 60000); // check every minute
+    return () => clearInterval(interval);
+  }, [dungeonState.character?.name]);
+
+  const createCharacter = useCallback((name: string, charClass: CharacterClass, sprite: string) => {
+    const maxHp = calculateCharacterHP(stats, charClass);
+    const maxStamina = calculateCharacterStamina(stats, charClass);
+    const character: DungeonCharacter = {
+      name,
+      className: charClass,
+      sprite,
+      maxHp,
+      currentHp: maxHp,
+      maxStamina,
+      currentStamina: maxStamina,
+      lastHpUpdate: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      dungeonsCleared: 0,
+    };
+    setDungeonState(prev => ({ ...prev, character }));
+  }, [stats]);
+
+  const startDungeon = useCallback((rank: DungeonRank) => {
+    if (!isDungeonAvailable(rank, dungeonState.cooldowns)) return;
+    const rooms = generateDungeonRooms(rank);
+    const run: DungeonRun = {
+      rank,
+      rooms,
+      currentRoom: 0,
+      startedAt: new Date().toISOString(),
+      status: 'active',
+      xpEarned: 0,
+    };
+    setDungeonState(prev => ({ ...prev, currentRun: run }));
+  }, [dungeonState.cooldowns]);
+
+  const completeRoom = useCallback((success: boolean) => {
+    setDungeonState(prev => {
+      if (!prev.currentRun || !prev.character) return prev;
+      const run = { ...prev.currentRun };
+      const room = run.rooms[run.currentRoom];
+      let character = { ...prev.character };
+
+      if (success) {
+        run.xpEarned += room.xpReward;
+        run.rooms = run.rooms.map((r, i) => i === run.currentRoom ? { ...r, completed: true } : r);
+      } else {
+        character.currentHp = Math.max(0, character.currentHp - room.damage);
+        run.rooms = run.rooms.map((r, i) => i === run.currentRoom ? { ...r, completed: true } : r);
+      }
+
+      // Check death
+      if (character.currentHp <= 0) {
+        return {
+          ...prev,
+          character: null,
+          currentRun: { ...run, status: 'dead' },
+        };
+      }
+
+      return { ...prev, currentRun: run, character };
+    });
+  }, []);
+
+  const advanceRoom = useCallback(() => {
+    setDungeonState(prev => {
+      if (!prev.currentRun) return prev;
+      const run = { ...prev.currentRun };
+      const nextRoom = run.currentRoom + 1;
+
+      if (nextRoom >= run.rooms.length) {
+        // Dungeon complete!
+        const config = DUNGEON_RANKS[run.rank];
+        const reduction = getCooldownReduction(playerLevel, config.recommendedLevel);
+        const cooldownMs = config.cooldownHours * 3600000 * reduction;
+        const nextAvailable = new Date(Date.now() + cooldownMs).toISOString();
+
+        return {
+          ...prev,
+          currentRun: { ...run, status: 'completed' },
+          cooldowns: { ...prev.cooldowns, [run.rank]: nextAvailable },
+          totalCleared: prev.totalCleared + 1,
+          character: prev.character ? { ...prev.character, dungeonsCleared: prev.character.dungeonsCleared + 1 } : null,
+        };
+      }
+
+      return { ...prev, currentRun: { ...run, currentRoom: nextRoom } };
+    });
+  }, [playerLevel]);
+
+  const escapeDungeon = useCallback(() => {
+    setDungeonState(prev => {
+      if (!prev.currentRun || !prev.character) return prev;
+      const cost = getEscapeCost(prev.character);
+      if (prev.character.currentStamina < cost) return prev;
+
+      const config = DUNGEON_RANKS[prev.currentRun.rank];
+      const reduction = getCooldownReduction(playerLevel, config.recommendedLevel);
+      const cooldownMs = config.cooldownHours * 3600000 * reduction * 0.5; // half cooldown on escape
+      const nextAvailable = new Date(Date.now() + cooldownMs).toISOString();
+
+      return {
+        ...prev,
+        character: { ...prev.character, currentStamina: prev.character.currentStamina - cost },
+        currentRun: { ...prev.currentRun, status: 'fled' },
+        cooldowns: { ...prev.cooldowns, [prev.currentRun.rank]: nextAvailable },
+      };
+    });
+  }, [playerLevel]);
+
+  const healCharacter = useCallback(() => {
+    setDungeonState(prev => {
+      if (!prev.character) return prev;
+      return {
+        ...prev,
+        character: {
+          ...prev.character,
+          currentHp: prev.character.maxHp,
+          lastHpUpdate: new Date().toISOString(),
+        },
+      };
+    });
+  }, []);
+
+  const clearRun = useCallback(() => {
+    setDungeonState(prev => ({ ...prev, currentRun: null }));
+  }, []);
+
+  const usePotion = useCallback((type: 'hp' | 'stamina') => {
+    setDungeonState(prev => {
+      if (!prev.character) return prev;
+      if (type === 'hp') {
+        return {
+          ...prev,
+          character: {
+            ...prev.character,
+            currentHp: Math.min(prev.character.maxHp, prev.character.currentHp + Math.floor(prev.character.maxHp * 0.3)),
+            lastHpUpdate: new Date().toISOString(),
+          },
+        };
+      } else {
+        return {
+          ...prev,
+          character: {
+            ...prev.character,
+            currentStamina: Math.min(prev.character.maxStamina, prev.character.currentStamina + Math.floor(prev.character.maxStamina * 0.3)),
+          },
+        };
+      }
+    });
+  }, []);
+
+  return {
+    dungeonState,
+    createCharacter,
+    startDungeon,
+    completeRoom,
+    advanceRoom,
+    escapeDungeon,
+    healCharacter,
+    clearRun,
+    usePotion,
+  };
+}
