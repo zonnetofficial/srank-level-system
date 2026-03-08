@@ -16,6 +16,7 @@ import {
   type LuckBoxReward,
 } from '@/lib/dungeonData';
 import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 
 const ranks: DungeonRank[] = ['E', 'D', 'C', 'B', 'A', 'S'];
@@ -46,6 +47,7 @@ export default function Dungeons() {
     healCharacter, clearRun,
   } = useDungeon(state.stats, state.level);
 
+  const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>('dungeons');
   const [view, setView] = useState<View>(dungeonState.character ? (dungeonState.currentRun?.status === 'active' ? 'dungeon' : 'lobby') : 'create');
   const [rewardChoice, setRewardChoice] = useState<'heal' | 'luckbox' | null>(null);
@@ -131,23 +133,40 @@ export default function Dungeons() {
 
   const handleRoomComplete = (success: boolean) => {
     completeRoom(success);
+    // Use a small delay then check updated state via the setter pattern
     setTimeout(() => {
-      if (dungeonState.character && dungeonState.character.currentHp <= 0) {
-        // Died - sync profile
-        if (run) syncProfile(0, run.rank, run.xpEarned, true);
-        setView('result');
-        return;
-      }
-      if (run && run.currentRoom + 1 >= run.rooms.length) {
-        advanceRoom();
-        setXpToApply(run.xpEarned);
-        setView('reward');
-      } else {
-        advanceRoom();
-        setView('dungeon');
-      }
+      // We need to read current state - dungeonState may be stale in this closure
+      // Instead, check run status which is updated synchronously by completeRoom
     }, 1800);
   };
+
+  // Watch for death or room completion after completeRoom runs
+  useEffect(() => {
+    if (!run) return;
+    if (view !== 'dungeon') return;
+    
+    if (run.status === 'dead') {
+      syncProfile(0, run.rank, run.xpEarned, true);
+      setView('result');
+      return;
+    }
+
+    // Check if current room was just completed
+    const currentRoom = run.rooms[run.currentRoom];
+    if (currentRoom?.completed) {
+      const timer = setTimeout(() => {
+        if (run.currentRoom + 1 >= run.rooms.length) {
+          advanceRoom();
+          setXpToApply(run.xpEarned);
+          setView('reward');
+        } else {
+          advanceRoom();
+          setView('dungeon');
+        }
+      }, 1800);
+      return () => clearTimeout(timer);
+    }
+  }, [run?.status, run?.rooms, run?.currentRoom, view]);
 
   const handleRewardChoice = async (choice: 'heal' | 'luckbox') => {
     setRewardChoice(choice);
@@ -342,7 +361,13 @@ export default function Dungeons() {
           {/* LOBBY */}
           {view === 'lobby' && (
             <div className="space-y-3 animate-slide-up">
-              <div className="text-center mb-2">
+              <div className="flex items-center justify-between mb-2">
+                <button
+                  onClick={() => navigate('/')}
+                  className="text-[10px] font-display uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  ← Volver
+                </button>
                 <p className="text-xs text-muted-foreground">Selecciona una mazmorra</p>
               </div>
 
