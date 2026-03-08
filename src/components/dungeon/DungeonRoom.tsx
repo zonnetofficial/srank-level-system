@@ -12,6 +12,8 @@ interface Props {
   roomNumber: number;
   totalRooms: number;
   charClass: CharacterClass;
+  extraTime?: number;
+  damageReduction?: number;
   onComplete: (success: boolean) => void;
 }
 
@@ -23,7 +25,7 @@ const ROOM_TYPE_LABELS: Record<DungeonRoomType['type'], { label: string; icon: s
   logic: { label: 'Acertijo Lógico', icon: '🧠' },
 };
 
-export default function DungeonRoom({ room, roomNumber, totalRooms, charClass, onComplete }: Props) {
+export default function DungeonRoom({ room, roomNumber, totalRooms, charClass, extraTime = 0, damageReduction = 0, onComplete }: Props) {
   const [started, setStarted] = useState(false);
   const [result, setResult] = useState<boolean | null>(null);
 
@@ -34,6 +36,9 @@ export default function DungeonRoom({ room, roomNumber, totalRooms, charClass, o
 
   const typeInfo = ROOM_TYPE_LABELS[room.type];
   const timeMultiplier = getTimeBonusMultiplier(charClass);
+  // Extra time from equipment adds to time multiplier
+  const effectiveTimeMultiplier = timeMultiplier + (extraTime / 10); // each 2s ≈ 0.2 multiplier
+  const effectiveDamage = Math.max(1, Math.floor(room.damage * (1 - damageReduction / 100)));
 
   return (
     <div className="space-y-4">
@@ -58,8 +63,9 @@ export default function DungeonRoom({ room, roomNumber, totalRooms, charClass, o
           </p>
 
           <div className="flex justify-center gap-4 text-[10px] font-display uppercase tracking-wider">
-            <span className="text-destructive">Daño: {room.damage} HP</span>
+            <span className="text-destructive">Daño: {effectiveDamage} HP{damageReduction > 0 ? ` (-${damageReduction}%)` : ''}</span>
             <span className="text-accent">XP: +{room.xpReward}</span>
+            {extraTime > 0 && <span className="text-primary">+{extraTime}s</span>}
           </div>
 
           <button
@@ -74,15 +80,15 @@ export default function DungeonRoom({ room, roomNumber, totalRooms, charClass, o
         <div className={`text-center py-8 font-display uppercase tracking-wider text-lg ${
           result ? 'text-accent' : 'text-destructive'
         } animate-scale-up`}>
-          {result ? '✓ Sala Superada' : `✗ -${room.damage} HP`}
+          {result ? '✓ Sala Superada' : `✗ -${effectiveDamage} HP`}
         </div>
       ) : (
         <div className="animate-slide-up">
           {room.type === 'math' && <MathGame difficulty={room.difficulty} onComplete={handleComplete} />}
           {room.type === 'memory' && <MemoryGame difficulty={room.difficulty} onComplete={handleComplete} />}
           {room.type === 'reaction' && <ReactionGame difficulty={room.difficulty} onComplete={handleComplete} />}
-          {room.type === 'pattern' && <PatternGame difficulty={room.difficulty} onComplete={handleComplete} timeMultiplier={timeMultiplier} />}
-          {room.type === 'logic' && <LogicGame difficulty={room.difficulty} onComplete={handleComplete} timeMultiplier={timeMultiplier} />}
+          {room.type === 'pattern' && <PatternGame difficulty={room.difficulty} onComplete={handleComplete} timeMultiplier={effectiveTimeMultiplier} />}
+          {room.type === 'logic' && <LogicGame difficulty={room.difficulty} onComplete={handleComplete} timeMultiplier={effectiveTimeMultiplier} />}
         </div>
       )}
     </div>

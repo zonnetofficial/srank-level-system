@@ -4,8 +4,10 @@ import CharacterCreation from '@/components/dungeon/CharacterCreation';
 import DungeonRoom from '@/components/dungeon/DungeonRoom';
 import { useGameState } from '@/hooks/useGameState';
 import { useDungeon } from '@/hooks/useDungeon';
+import { useShop } from '@/hooks/useShop';
 import {
   DungeonRank,
+  DungeonLoadoutItem,
   DUNGEON_RANKS,
   isDungeonAvailable,
   getCooldownRemaining,
@@ -13,8 +15,10 @@ import {
   rollLuckBox,
   RARITY_COLORS,
   CLASS_INFO,
+  getLoadoutBonuses,
   type LuckBoxReward,
 } from '@/lib/dungeonData';
+import { RARITY_COLORS as SHOP_RARITY_COLORS, RARITY_LABELS } from '@/components/shop/shopConstants';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -23,7 +27,7 @@ const ranks: DungeonRank[] = ['E', 'D', 'C', 'B', 'A', 'S'];
 const RANK_ORDER: Record<string, number> = { E: 1, D: 2, C: 3, B: 4, A: 5, S: 6 };
 
 type View = 'lobby' | 'create' | 'dungeon' | 'reward' | 'result';
-type Tab = 'dungeons' | 'ranking';
+type Tab = 'dungeons' | 'equipo' | 'ranking';
 
 interface LeaderboardEntry {
   id: string;
@@ -41,10 +45,11 @@ interface LeaderboardEntry {
 export default function Dungeons() {
   const { state } = useGameState();
   const { user } = useAuth();
+  const shop = useShop();
   const {
     dungeonState, createCharacter, startDungeon,
     completeRoom, advanceRoom, escapeDungeon,
-    healCharacter, clearRun,
+    healCharacter, clearRun, usePotion, setLoadout,
   } = useDungeon(state.stats, state.level);
 
   const navigate = useNavigate();
@@ -60,6 +65,19 @@ export default function Dungeons() {
 
   const char = dungeonState.character;
   const run = dungeonState.currentRun;
+  const loadout = dungeonState.loadout;
+  const bonuses = getLoadoutBonuses(loadout);
+
+  // Get dungeon items from inventory
+  const dungeonInventoryItems = shop.inventory
+    .filter(inv => {
+      const item = shop.getItemById(inv.item_id);
+      return item && item.category === 'dungeon' && inv.quantity > 0;
+    })
+    .map(inv => ({
+      inv,
+      item: shop.getItemById(inv.item_id)!,
+    }));
 
   // Fetch leaderboard
   const fetchLeaderboard = useCallback(async () => {
@@ -81,11 +99,9 @@ export default function Dungeons() {
   const syncProfile = useCallback(async (dungeonsCleared: number, rank: DungeonRank, xpEarned: number, died: boolean) => {
     if (!user || !char) return;
     try {
-      // Get display name from profiles
       const { data: profile } = await supabase.from('profiles').select('display_name').eq('id', user.id).single();
       const displayName = profile?.display_name || 'Cazador';
 
-      // Upsert dungeon profile
       const { data: existing } = await supabase
         .from('dungeon_profiles')
         .select('dungeons_cleared, highest_rank, total_xp_earned, deaths')
@@ -121,6 +137,18 @@ export default function Dungeons() {
     } catch { /* ignore */ }
   }, [user, char]);
 
+  // Remove equipped items from real inventory on death
+  const removeLoadoutFromInventory = useCallback(async () => {
+    if (!user || loadout.length === 0) return;
+    for (const equipped of loadout) {
+      const invItem = shop.inventory.find(i => i.id === equipped.inventoryId);
+      if (!invItem) continue;
+      const newQty = Math.max(0, invItem.quantity - equipped.quantity);
+      await supabase.from('user_inventory').update({ quantity: newQty }).eq('id', invItem.id);
+    }
+    await shop.refreshShop();
+  }, [user, loadout, shop]);
+
   const handleCreateCharacter = async (name: string, cls: any, sprite: string) => {
     createCharacter(name, cls, sprite);
     setView('lobby');
@@ -133,25 +161,20 @@ export default function Dungeons() {
 
   const handleRoomComplete = (success: boolean) => {
     completeRoom(success);
-    // Use a small delay then check updated state via the setter pattern
-    setTimeout(() => {
-      // We need to read current state - dungeonState may be stale in this closure
-      // Instead, check run status which is updated synchronously by completeRoom
-    }, 1800);
   };
 
-  // Watch for death or room completion after completeRoom runs
+  // Watch for death or room completion
   useEffect(() => {
     if (!run) return;
     if (view !== 'dungeon') return;
     
     if (run.status === 'dead') {
       syncProfile(0, run.rank, run.xpEarned, true);
+      removeLoadoutFromInventory();
       setView('result');
       return;
     }
 
-    // Check if current room was just completed
     const currentRoom = run.rooms[run.currentRoom];
     if (currentRoom?.completed) {
       const timer = setTimeout(() => {
@@ -197,7 +220,6 @@ export default function Dungeons() {
   };
 
   const handleAfterReward = async () => {
-    // Sync completed dungeon to leaderboard
     if (run) await syncProfile(1, run.rank, run.xpEarned, false);
     setView('result');
   };
@@ -219,7 +241,42 @@ export default function Dungeons() {
     setXpToApply(0);
   };
 
-  // When in dungeon or result, hide tabs
+  // Equipment management
+  const addToLoadout = (invItem: typeof dungeonInventoryItems[0]) => {
+    const existing = loadout.find(l => l.inventoryId === invItem.inv.id);
+    const currentQty = existing?.quantity || 0;
+    const availableQty = invItem.inv.quantity;
+    const isConsumable = ['hp_potion', 'stamina_potion'].includes(invItem.item.effect_type || '');
+
+    if (currentQty >= availableQty) return;
+    if (!isConsumable && currentQty >= 1) return; // non-consumables: max 1
+
+    if (existing) {
+      setLoadout(loadout.map(l => l.inventoryId === invItem.inv.id ? { ...l, quantity: l.quantity + 1 } : l));
+    } else {
+      setLoadout([...loadout, {
+        inventoryId: invItem.inv.id,
+        itemId: invItem.item.id,
+        name: invItem.item.name,
+        icon: invItem.item.icon,
+        effect_type: invItem.item.effect_type || '',
+        effect_value: invItem.item.effect_value || 0,
+        rarity: invItem.item.rarity,
+        quantity: 1,
+      }]);
+    }
+  };
+
+  const removeFromLoadout = (inventoryId: string) => {
+    const existing = loadout.find(l => l.inventoryId === inventoryId);
+    if (!existing) return;
+    if (existing.quantity <= 1) {
+      setLoadout(loadout.filter(l => l.inventoryId !== inventoryId));
+    } else {
+      setLoadout(loadout.map(l => l.inventoryId === inventoryId ? { ...l, quantity: l.quantity - 1 } : l));
+    }
+  };
+
   const showTabs = view === 'lobby' || view === 'create';
 
   return (
@@ -233,27 +290,26 @@ export default function Dungeons() {
       {/* Tabs */}
       {showTabs && (
         <div className="flex border-b border-border mb-4">
-          <button
-            onClick={() => setTab('dungeons')}
-            className={`flex-1 py-2 text-[10px] font-display uppercase tracking-wider transition-all ${
-              tab === 'dungeons' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground'
-            }`}
-          >
-            🏰 Mazmorras
-          </button>
-          <button
-            onClick={() => setTab('ranking')}
-            className={`flex-1 py-2 text-[10px] font-display uppercase tracking-wider transition-all ${
-              tab === 'ranking' ? 'text-accent border-b-2 border-accent' : 'text-muted-foreground'
-            }`}
-          >
-            🏆 Ranking
-          </button>
+          {([
+            { key: 'dungeons' as Tab, label: '🏰 Mazmorras', color: 'primary' },
+            { key: 'equipo' as Tab, label: '🎒 Equipo', color: 'accent' },
+            { key: 'ranking' as Tab, label: '🏆 Ranking', color: 'accent' },
+          ]).map(t => (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={`flex-1 py-2 text-[10px] font-display uppercase tracking-wider transition-all ${
+                tab === t.key ? `text-${t.color} border-b-2 border-${t.color}` : 'text-muted-foreground'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
         </div>
       )}
 
       {/* Character HUD */}
-      {char && view !== 'create' && tab === 'dungeons' && (
+      {char && view !== 'create' && tab !== 'ranking' && (
         <div className="rpg-panel mb-4 animate-slide-up">
           <div className="flex items-center gap-3">
             <span className="text-3xl">{char.sprite}</span>
@@ -292,6 +348,47 @@ export default function Dungeons() {
               </div>
             </div>
           </div>
+
+          {/* Loadout summary when in dungeon */}
+          {loadout.length > 0 && (view === 'dungeon' || view === 'lobby') && (
+            <div className="mt-2 pt-2 border-t border-border/30">
+              <div className="flex items-center gap-1 flex-wrap">
+                <span className="text-[8px] font-display text-muted-foreground uppercase tracking-wider mr-1">Equipo:</span>
+                {loadout.map(l => (
+                  <span key={l.inventoryId} className="text-sm" title={`${l.name} x${l.quantity}`}>
+                    {l.icon}{l.quantity > 1 && <span className="text-[8px] text-muted-foreground">x{l.quantity}</span>}
+                  </span>
+                ))}
+              </div>
+              {bonuses.extraTime > 0 && <span className="text-[8px] text-primary">+{bonuses.extraTime}s tiempo </span>}
+              {bonuses.damageReduction > 0 && <span className="text-[8px] text-stat-agi">-{bonuses.damageReduction}% daño </span>}
+              {bonuses.hasRevive && <span className="text-[8px] text-accent">💍 Revive </span>}
+            </div>
+          )}
+
+          {/* Potion buttons during dungeon */}
+          {view === 'dungeon' && run?.status === 'active' && (
+            <div className="mt-2 pt-2 border-t border-border/30 flex gap-2">
+              {loadout.filter(l => l.effect_type === 'hp_potion').map(l => (
+                <button
+                  key={l.inventoryId}
+                  onClick={() => usePotion('hp')}
+                  className="text-[9px] font-display px-2 py-1 border border-stat-vit/30 text-stat-vit hover:bg-stat-vit/10 transition-all"
+                >
+                  {l.icon} HP x{l.quantity}
+                </button>
+              ))}
+              {loadout.filter(l => l.effect_type === 'stamina_potion').map(l => (
+                <button
+                  key={l.inventoryId}
+                  onClick={() => usePotion('stamina')}
+                  className="text-[9px] font-display px-2 py-1 border border-primary/30 text-primary hover:bg-primary/10 transition-all"
+                >
+                  {l.icon} STA x{l.quantity}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -347,6 +444,117 @@ export default function Dungeons() {
               );
             })
           )}
+        </div>
+      )}
+
+      {/* EQUIPO TAB */}
+      {tab === 'equipo' && showTabs && (
+        <div className="space-y-4 animate-slide-up">
+          {/* Current loadout */}
+          <div className="rpg-panel">
+            <h3 className="hud-label mb-2">🎒 Equipo Actual</h3>
+            {loadout.length === 0 ? (
+              <p className="text-[10px] text-muted-foreground text-center py-3">
+                Sin equipamiento. Selecciona items de tu inventario.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {loadout.map(l => (
+                  <div key={l.inventoryId} className={`flex items-center gap-2 p-2 border border-border/30 ${SHOP_RARITY_COLORS[l.rarity]}`}>
+                    <span className="text-lg">{l.icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-display text-[10px] truncate">{l.name}</div>
+                      <div className="text-[8px] text-muted-foreground">{RARITY_LABELS[l.rarity]} · x{l.quantity}</div>
+                    </div>
+                    <button
+                      onClick={() => removeFromLoadout(l.inventoryId)}
+                      className="text-[9px] font-display text-destructive hover:text-destructive/80 px-2"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Bonuses summary */}
+            {loadout.length > 0 && (
+              <div className="mt-3 pt-2 border-t border-border/30 flex flex-wrap gap-2">
+                {bonuses.extraTime > 0 && (
+                  <span className="text-[9px] font-display text-primary bg-primary/10 px-2 py-0.5">
+                    ⏱️ +{bonuses.extraTime}s tiempo
+                  </span>
+                )}
+                {bonuses.damageReduction > 0 && (
+                  <span className="text-[9px] font-display text-stat-agi bg-stat-agi/10 px-2 py-0.5">
+                    🛡️ -{bonuses.damageReduction}% daño
+                  </span>
+                )}
+                {bonuses.luckBoost > 0 && (
+                  <span className="text-[9px] font-display text-accent bg-accent/10 px-2 py-0.5">
+                    🍀 +{bonuses.luckBoost}% suerte
+                  </span>
+                )}
+                {bonuses.hasRevive && (
+                  <span className="text-[9px] font-display text-accent bg-accent/10 px-2 py-0.5">
+                    💍 Revive
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Available dungeon items */}
+          <div>
+            <h3 className="hud-label mb-2">📦 Items de Mazmorra</h3>
+            {dungeonInventoryItems.length === 0 ? (
+              <div className="text-center py-6 text-muted-foreground">
+                <span className="text-3xl block mb-2">🏪</span>
+                <p className="text-[10px] font-display uppercase tracking-wider">Sin items de mazmorra</p>
+                <p className="text-[9px] font-body mt-1">Compra equipamiento en la tienda</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {dungeonInventoryItems.map(({ inv, item }) => {
+                  const equipped = loadout.find(l => l.inventoryId === inv.id);
+                  const equippedQty = equipped?.quantity || 0;
+                  const availableQty = inv.quantity - equippedQty;
+                  const isConsumable = ['hp_potion', 'stamina_potion'].includes(item.effect_type || '');
+
+                  return (
+                    <div
+                      key={inv.id}
+                      className={`rpg-panel p-3 flex items-center gap-3 ${SHOP_RARITY_COLORS[item.rarity]}`}
+                    >
+                      <span className="text-2xl">{item.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-display text-xs font-bold truncate">{item.name}</div>
+                        <div className="text-[9px] text-muted-foreground">
+                          {RARITY_LABELS[item.rarity]} · Tienes: {inv.quantity}
+                          {equippedQty > 0 && <span className="text-primary"> (Equipado: {equippedQty})</span>}
+                        </div>
+                        <div className="text-[8px] text-muted-foreground mt-0.5">{item.description}</div>
+                      </div>
+                      <button
+                        onClick={() => addToLoadout({ inv, item })}
+                        disabled={availableQty <= 0 || (!isConsumable && equippedQty >= 1)}
+                        className="text-[9px] font-display uppercase tracking-wider px-2 py-1 border border-primary/30 text-primary hover:bg-primary/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                      >
+                        +Equipar
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="rpg-panel p-3">
+            <p className="text-[9px] text-muted-foreground text-center font-body">
+              ⚠️ Al morir en una mazmorra, <span className="text-destructive font-bold">perderás todos los items equipados</span>. 
+              Los items que no equipes permanecen seguros en tu inventario.
+            </p>
+          </div>
         </div>
       )}
 
@@ -436,6 +644,8 @@ export default function Dungeons() {
                 roomNumber={run.currentRoom + 1}
                 totalRooms={run.rooms.length}
                 charClass={char.className}
+                extraTime={bonuses.extraTime}
+                damageReduction={bonuses.damageReduction}
                 onComplete={handleRoomComplete}
               />
 
@@ -529,6 +739,11 @@ export default function Dungeons() {
                     <div className="text-xs text-muted-foreground">
                       Tu personaje ha caído. Deberás crear uno nuevo.
                     </div>
+                    {loadout.length > 0 && (
+                      <div className="text-xs text-destructive mt-1">
+                        ⚠️ Items equipados perdidos: {loadout.map(l => `${l.icon} ${l.name}`).join(', ')}
+                      </div>
+                    )}
                     <div className="text-xs text-destructive">-50% XP del nivel actual</div>
                   </>
                 ) : run?.status === 'fled' ? (

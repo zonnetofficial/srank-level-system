@@ -38,11 +38,23 @@ export interface DungeonRun {
   xpEarned: number;
 }
 
+export interface DungeonLoadoutItem {
+  inventoryId: string;
+  itemId: string;
+  name: string;
+  icon: string;
+  effect_type: string;
+  effect_value: number;
+  rarity: string;
+  quantity: number; // how many of this item are in loadout
+}
+
 export interface DungeonState {
   character: DungeonCharacter | null;
   currentRun: DungeonRun | null;
   cooldowns: Partial<Record<DungeonRank, string>>; // rank -> next available ISO date
   totalCleared: number;
+  loadout: DungeonLoadoutItem[];
 }
 
 export type RewardChoice = 'heal' | 'luckbox';
@@ -286,7 +298,28 @@ export function createInitialDungeonState(): DungeonState {
     currentRun: null,
     cooldowns: {},
     totalCleared: 0,
+    loadout: [],
   };
+}
+
+export function getLoadoutBonuses(loadout: DungeonLoadoutItem[]) {
+  let extraTime = 0;
+  let damageReduction = 0;
+  let luckBoost = 0;
+  let hasRevive = false;
+
+  for (const item of loadout) {
+    const qty = item.quantity || 1;
+    switch (item.effect_type) {
+      case 'extra_time': extraTime += item.effect_value * qty; break;
+      case 'damage_reduction': damageReduction += item.effect_value; break;
+      case 'luck_boost': luckBoost += item.effect_value; break;
+      case 'revive': hasRevive = true; break;
+    }
+  }
+  // Cap damage reduction at 80%
+  damageReduction = Math.min(80, damageReduction);
+  return { extraTime, damageReduction, luckBoost, hasRevive };
 }
 
 const DUNGEON_STORAGE_KEY = 'dungeon-state';

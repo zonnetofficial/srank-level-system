@@ -5,6 +5,7 @@ import {
   DungeonRun,
   DungeonRank,
   CharacterClass,
+  DungeonLoadoutItem,
   loadDungeonState,
   saveDungeonState,
   calculateCharacterHP,
@@ -15,6 +16,7 @@ import {
   isDungeonAvailable,
   DUNGEON_RANKS,
   getCooldownReduction,
+  getLoadoutBonuses,
 } from '@/lib/dungeonData';
 import type { PlayerStats } from '@/lib/gameData';
 
@@ -33,7 +35,7 @@ export function useDungeon(stats: PlayerStats, playerLevel: number) {
         if (updated.currentHp === prev.character.currentHp) return prev;
         return { ...prev, character: updated };
       });
-    }, 60000); // check every minute
+    }, 60000);
     return () => clearInterval(interval);
   }, [dungeonState.character?.name]);
 
@@ -54,6 +56,10 @@ export function useDungeon(stats: PlayerStats, playerLevel: number) {
     };
     setDungeonState(prev => ({ ...prev, character }));
   }, [stats]);
+
+  const setLoadout = useCallback((loadout: DungeonLoadoutItem[]) => {
+    setDungeonState(prev => ({ ...prev, loadout }));
+  }, []);
 
   const startDungeon = useCallback((rank: DungeonRank) => {
     if (!isDungeonAvailable(rank, dungeonState.cooldowns)) return;
@@ -80,8 +86,24 @@ export function useDungeon(stats: PlayerStats, playerLevel: number) {
         run.xpEarned += room.xpReward;
         run.rooms = run.rooms.map((r, i) => i === run.currentRoom ? { ...r, completed: true } : r);
       } else {
-        character.currentHp = Math.max(0, character.currentHp - room.damage);
+        // Apply damage reduction from loadout
+        const { damageReduction, hasRevive } = getLoadoutBonuses(prev.loadout);
+        const effectiveDamage = Math.max(1, Math.floor(room.damage * (1 - damageReduction / 100)));
+        character.currentHp = Math.max(0, character.currentHp - effectiveDamage);
         run.rooms = run.rooms.map((r, i) => i === run.currentRoom ? { ...r, completed: true } : r);
+
+        // Check death - revive ring saves once
+        if (character.currentHp <= 0 && hasRevive) {
+          character.currentHp = 1;
+          // Remove revive item from loadout
+          const newLoadout = prev.loadout.filter(i => i.effect_type !== 'revive');
+          return {
+            ...prev,
+            character,
+            currentRun: run,
+            loadout: newLoadout,
+          };
+        }
       }
 
       // Check death
@@ -90,6 +112,7 @@ export function useDungeon(stats: PlayerStats, playerLevel: number) {
           ...prev,
           character: null,
           currentRun: { ...run, status: 'dead' },
+          loadout: [], // lose all equipped items
         };
       }
 
@@ -104,7 +127,6 @@ export function useDungeon(stats: PlayerStats, playerLevel: number) {
       const nextRoom = run.currentRoom + 1;
 
       if (nextRoom >= run.rooms.length) {
-        // Dungeon complete!
         const config = DUNGEON_RANKS[run.rank];
         const reduction = getCooldownReduction(playerLevel, config.recommendedLevel);
         const cooldownMs = config.cooldownHours * 3600000 * reduction;
@@ -131,7 +153,7 @@ export function useDungeon(stats: PlayerStats, playerLevel: number) {
 
       const config = DUNGEON_RANKS[prev.currentRun.rank];
       const reduction = getCooldownReduction(playerLevel, config.recommendedLevel);
-      const cooldownMs = config.cooldownHours * 3600000 * reduction * 0.5; // half cooldown on escape
+      const cooldownMs = config.cooldownHours * 3600000 * reduction * 0.5;
       const nextAvailable = new Date(Date.now() + cooldownMs).toISOString();
 
       return {
@@ -164,21 +186,38 @@ export function useDungeon(stats: PlayerStats, playerLevel: number) {
   const usePotion = useCallback((type: 'hp' | 'stamina') => {
     setDungeonState(prev => {
       if (!prev.character) return prev;
+      // Find potion in loadout
+      const potionType = type === 'hp' ? 'hp_potion' : 'stamina_potion';
+      const potionIdx = prev.loadout.findIndex(i => i.effect_type === potionType && i.quantity > 0);
+      if (potionIdx === -1) return prev;
+
+      const potion = prev.loadout[potionIdx];
+      const healPercent = potion.effect_value / 100;
+
+      const newLoadout = [...prev.loadout];
+      if (potion.quantity <= 1) {
+        newLoadout.splice(potionIdx, 1);
+      } else {
+        newLoadout[potionIdx] = { ...potion, quantity: potion.quantity - 1 };
+      }
+
       if (type === 'hp') {
         return {
           ...prev,
+          loadout: newLoadout,
           character: {
             ...prev.character,
-            currentHp: Math.min(prev.character.maxHp, prev.character.currentHp + Math.floor(prev.character.maxHp * 0.3)),
+            currentHp: Math.min(prev.character.maxHp, prev.character.currentHp + Math.floor(prev.character.maxHp * healPercent)),
             lastHpUpdate: new Date().toISOString(),
           },
         };
       } else {
         return {
           ...prev,
+          loadout: newLoadout,
           character: {
             ...prev.character,
-            currentStamina: Math.min(prev.character.maxStamina, prev.character.currentStamina + Math.floor(prev.character.maxStamina * 0.3)),
+            currentStamina: Math.min(prev.character.maxStamina, prev.character.currentStamina + Math.floor(prev.character.maxStamina * healPercent)),
           },
         };
       }
@@ -195,5 +234,6 @@ export function useDungeon(stats: PlayerStats, playerLevel: number) {
     healCharacter,
     clearRun,
     usePotion,
+    setLoadout,
   };
 }
