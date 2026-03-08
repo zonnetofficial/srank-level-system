@@ -128,7 +128,7 @@ const DailyQuest = () => {
                       : 'hover:bg-secondary/50 border border-transparent'
                   }`}
                   style={{ animationDelay: `${400 + i * 80}ms` }}
-                  onClick={() => !ex.completed && completeExercise(i)}
+                  onClick={() => { if (!ex.completed) { completeExercise(i); sfxClick(); } }}
                 >
                   <div className="flex items-center gap-3">
                     <div className={`w-6 h-6 rounded-md flex items-center justify-center text-xs transition-all ${
