@@ -79,7 +79,7 @@ const History = () => {
 
       {/* Quest Log */}
       <div className="rpg-panel animate-slide-up delay-400">
-        <h2 className="text-xs font-display uppercase tracking-[0.3em] text-muted-foreground mb-3 animate-text-glitch" style={{ animationDelay: '9s' }}>
+        <h2 className="text-xs font-display uppercase tracking-[0.3em] text-muted-foreground mb-3">
           Registro de Misiones
         </h2>
         {sortedLog.length === 0 ? (

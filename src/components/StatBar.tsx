@@ -44,7 +44,7 @@ export function StatBar({ stat, value, points, label, icon }: StatBarProps) {
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex justify-between items-baseline mb-1">
-          <span className={`text-[11px] font-display uppercase tracking-[0.15em] ${colors.text} ${statGlitchClasses[stat]}`} style={{ animationDelay: glitchDelays[stat] }}>
+          <span className={`text-[11px] font-display uppercase tracking-[0.15em] ${colors.text}`}>
             {label}
           </span>
           <span className={`hud-data text-sm font-bold ${colors.text}`}>
