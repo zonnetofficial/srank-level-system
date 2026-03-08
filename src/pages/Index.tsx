@@ -40,7 +40,7 @@ const Index = () => {
       <div className="flex justify-between items-center mb-3 animate-slide-down">
         <div className="flex items-center gap-2">
           <div className="hud-status-dot bg-stat-agi" />
-          <span className="hud-label animate-text-glitch-alt" style={{ animationDelay: '7s' }}>Online</span>
+          <span className="hud-label">Online</span>
         </div>
         <button
           onClick={signOut}
