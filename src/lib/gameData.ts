@@ -177,7 +177,7 @@ export function getWeekStart(dateStr: string): string {
 }
 
 export function xpForLevel(level: number): number {
-  return Math.floor(50 * Math.pow(level, 1.5));
+  return Math.floor(20 + 10 * level);
 }
 
 export function getSkillTitle(stat: StatKey, points: number): SkillTitle {
