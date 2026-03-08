@@ -17,7 +17,7 @@ export default function ShopTab({ items, onSelect }: Props) {
           className={`w-full rpg-panel p-3 flex items-center gap-3 text-left transition-all duration-200 hover:scale-[1.01] ${RARITY_COLORS[item.rarity]} ${RARITY_GLOW[item.rarity]}`}
           style={{ animationDelay: `${i * 60}ms` }}
         >
-          <span className="text-2xl">{item.icon}</span>
+          <ItemIcon name={item.name} fallbackEmoji={item.icon} size="lg" />
           <div className="flex-1 min-w-0">
             <div className="font-display text-xs font-bold truncate">{item.name}</div>
             <div className="text-[9px] text-muted-foreground">{CATEGORY_LABELS[item.category]} · {RARITY_LABELS[item.rarity]}</div>
