@@ -225,6 +225,39 @@
   animation: fade-in 0.8s ease-out;
 }
 
+@keyframes slide-up {
+  0% { opacity: 0; transform: translateY(24px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-down {
+  0% { opacity: 0; transform: translateY(-16px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scale-up {
+  0% { opacity: 0; transform: scale(0.9); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes glitch-in {
+  0% { opacity: 0; transform: translate(-4px, 2px) skewX(-2deg); filter: hue-rotate(40deg); }
+  20% { opacity: 0.6; transform: translate(3px, -1px) skewX(1deg); filter: hue-rotate(-20deg); }
+  40% { opacity: 0.8; transform: translate(-2px, 0) skewX(0deg); filter: hue-rotate(10deg); }
+  60% { opacity: 0.9; transform: translate(1px, 1px) skewX(-0.5deg); }
+  100% { opacity: 1; transform: translate(0) skewX(0deg); filter: hue-rotate(0deg); }
+}
+
+@keyframes hud-boot {
+  0% { opacity: 0; clip-path: inset(0 100% 0 0); }
+  50% { opacity: 0.7; clip-path: inset(0 20% 0 0); }
+  100% { opacity: 1; clip-path: inset(0 0% 0 0); }
+}
+
+@keyframes bar-fill {
+  0% { width: 0%; }
+}
+
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
@@ -248,6 +281,19 @@
   100% { background-position: 200% 0%; }
 }
 
+@keyframes number-pop {
+  0% { transform: scale(0.5); opacity: 0; }
+  60% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes icon-bounce {
+  0% { transform: scale(0) rotate(-15deg); opacity: 0; }
+  50% { transform: scale(1.2) rotate(5deg); opacity: 1; }
+  70% { transform: scale(0.95) rotate(-2deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
 .animate-pulse-glow {
   animation: pulse-glow 2.5s ease-in-out infinite;
 }
@@ -265,6 +311,48 @@
 .animate-data-flicker {
   animation: data-flicker 4s ease-in-out infinite;
 }
+
+.animate-slide-up {
+  animation: slide-up 0.6s ease-out both;
+}
+
+.animate-slide-down {
+  animation: slide-down 0.5s ease-out both;
+}
+
+.animate-scale-up {
+  animation: scale-up 0.5s ease-out both;
+}
+
+.animate-glitch-in {
+  animation: glitch-in 0.6s ease-out both;
+}
+
+.animate-hud-boot {
+  animation: hud-boot 0.8s ease-out both;
+}
+
+.animate-bar-fill {
+  animation: bar-fill 1s ease-out both;
+}
+
+.animate-number-pop {
+  animation: number-pop 0.5s ease-out both;
+}
+
+.animate-icon-bounce {
+  animation: icon-bounce 0.6s ease-out both;
+}
+
+/* Staggered delay utilities */
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+.delay-500 { animation-delay: 500ms; }
+.delay-600 { animation-delay: 600ms; }
+.delay-700 { animation-delay: 700ms; }
+.delay-800 { animation-delay: 800ms; }
 
 /* HUD Frame */
 .hud-frame {
