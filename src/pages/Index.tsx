@@ -64,6 +64,26 @@ const Index = () => {
         </div>
       )}
 
+      {/* Mandatory mission alert */}
+      {activeMission && (
+        <button
+          onClick={() => navigate('/mission')}
+          className="mb-4 w-full p-3 bg-destructive/10 border border-destructive/40 text-left animate-pulse-glow"
+          style={{ clipPath: 'polygon(0 4px, 4px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px))' }}
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-xl">{activeMission.icon}</span>
+            <div className="flex-1">
+              <div className="text-[10px] font-display uppercase tracking-wider text-destructive font-bold">
+                ⚠️ Misión Obligatoria
+              </div>
+              <div className="text-xs text-foreground font-display">{activeMission.title}</div>
+            </div>
+            <span className="text-[10px] font-display text-destructive">→</span>
+          </div>
+        </button>
+      )}
+
       {/* Time display */}
       <div className="text-center mb-4 animate-slide-up delay-100">
         <div className="hud-label">
