@@ -4,8 +4,10 @@ import { StatKey } from './gameData';
 export interface SkillTask {
   name: string;
   description: string;
-  /** Duration in seconds for timed tasks. If undefined, task uses manual confirm only. */
+  /** Total duration in seconds for timed tasks. */
   durationSeconds?: number;
+  /** Number of timer rounds. Each round = durationSeconds / timerRounds. Defaults to 1. */
+  timerRounds?: number;
 }
 
 // Tier index maps to skill title index (0=Novato, 1=Aprendiz, etc.)
@@ -43,7 +45,7 @@ const STR_TASKS: SkillTask[][] = [
     { name: 'Prueba de potencia', description: 'Ejercicios explosivos por 5 minutos', durationSeconds: 300 },
     { name: 'Circuito guerrero', description: '5 ejercicios compuestos, 5 rondas' },
     { name: 'Resistencia bajo carga', description: 'Mantén peso corporal en posiciones 4 min', durationSeconds: 240 },
-    { name: 'Tabata de fuerza', description: '8 intervalos de 20/10 con ejercicios pesados', durationSeconds: 240 },
+    { name: 'Tabata de fuerza', description: '8 intervalos de 20/10 con ejercicios pesados', durationSeconds: 240, timerRounds: 8 },
   ],
   [
     { name: 'Desafío del Titán', description: 'Circuito extremo de fuerza pura' },
@@ -58,14 +60,14 @@ const AGI_TASKS: SkillTask[][] = [
   [
     { name: 'Estiramientos básicos', description: 'Realiza: tocarse los pies 15s, estiramiento de cuádriceps 15s por pierna, estiramiento de hombros 15s por lado, giro de cadera 10 por lado', durationSeconds: 600 },
     { name: 'Saltos en el lugar', description: 'Haz 30 saltos seguidos con rodillas al pecho alternando velocidad: 10 lentos, 10 rápidos, 10 explosivos' },
-    { name: 'Equilibrio a un pie', description: 'Mantente en un pie 30 segundos, luego cambia. Ojos cerrados para mayor dificultad', durationSeconds: 60 },
+    { name: 'Equilibrio a un pie', description: 'Mantente en un pie 30 segundos, luego cambia. Ojos cerrados para mayor dificultad', durationSeconds: 60, timerRounds: 2 },
     { name: 'Caminata lateral', description: 'Da 20 pasos laterales por lado en posición de media sentadilla, manteniendo la espalda recta' },
     { name: 'Rodillas altas', description: 'Eleva las rodillas al pecho alternando piernas, 40 repeticiones totales lo más rápido posible' },
   ],
   [
     { name: 'Movilidad dinámica', description: 'Circuito: 10 círculos de brazos, 10 balanceos de pierna por lado, 10 rotaciones de cadera, 10 giros de tobillo por pie', durationSeconds: 900 },
     { name: 'Saltos de cuerda', description: 'Simula o usa cuerda real: 50 saltos sin parar alternando pies juntos y alternados cada 10 saltos' },
-    { name: 'Skipping lateral', description: '3 series de 30 segundos de desplazamiento lateral rápido, cambiando dirección en cada serie', durationSeconds: 90 },
+    { name: 'Skipping lateral', description: '3 series de 30 segundos de desplazamiento lateral rápido, cambiando dirección en cada serie', durationSeconds: 90, timerRounds: 3 },
     { name: 'Toe touches dinámicos', description: 'De pie, lanza una pierna al frente y toca la punta con la mano opuesta. 15 por pierna alternando' },
     { name: 'Bear crawl', description: 'Desplázate en cuadrupedia (manos y pies) hacia adelante y atrás durante 2 minutos sin detenerte', durationSeconds: 120 },
   ],
@@ -74,7 +76,7 @@ const AGI_TASKS: SkillTask[][] = [
     { name: 'Circuito de agilidad', description: 'Marca 4 puntos en cuadrado (2m): toca cada punto en orden ida y vuelta, 5 rondas lo más rápido posible' },
     { name: 'Salto en caja progresivo', description: 'Salta sobre un escalón o banco a 3 alturas diferentes (bajo, medio, alto), 5 saltos cada una' },
     { name: 'Shuttle run', description: 'Marca dos líneas a 10m de distancia: corre de ida y vuelta tocando el suelo en cada extremo, 5 sprints' },
-    { name: 'Escalera de pies', description: 'Imagina una escalera en el suelo: pies adentro-afuera rápido, lateral, y zig-zag. 3 patrones x 30s cada uno', durationSeconds: 90 },
+    { name: 'Escalera de pies', description: 'Imagina una escalera en el suelo: pies adentro-afuera rápido, lateral, y zig-zag. 3 patrones x 30s cada uno', durationSeconds: 90, timerRounds: 3 },
   ],
   [
     { name: 'Sprints con cambio', description: 'Sprint 5m → giro 180° → sprint 5m → giro → repite 10 veces sin parar' },
@@ -124,7 +126,7 @@ const VIT_TASKS: SkillTask[][] = [
   [
     { name: 'Meditación avanzada', description: '20 minutos sin distracciones', durationSeconds: 1200 },
     { name: 'Visualización', description: 'Sesión de visualización positiva' },
-    { name: 'Pranayama completo', description: '4 técnicas de respiración, 15 min', durationSeconds: 900 },
+    { name: 'Pranayama completo', description: '4 técnicas de respiración, 15 min', durationSeconds: 900, timerRounds: 4 },
     { name: 'Yoga restaurativo', description: 'Secuencia de relajación profunda 20 min', durationSeconds: 1200 },
     { name: 'Autocompasión', description: 'Práctica de bondad hacia ti mismo 15 min', durationSeconds: 900 },
   ],
@@ -161,15 +163,15 @@ const END_TASKS: SkillTask[][] = [
   ],
   [
     { name: 'Circuito de resistencia', description: '15 minutos de ejercicio continuo', durationSeconds: 900 },
-    { name: 'Plancha lateral', description: '1 minuto cada lado', durationSeconds: 120 },
-    { name: 'Burpee endurance', description: '1 burpee por minuto durante 15 min', durationSeconds: 900 },
+    { name: 'Plancha lateral', description: '1 minuto cada lado', durationSeconds: 120, timerRounds: 2 },
+    { name: 'Burpee endurance', description: '1 burpee por minuto durante 15 min', durationSeconds: 900, timerRounds: 15 },
     { name: 'Trote sostenido', description: '15 minutos a ritmo constante', durationSeconds: 900 },
     { name: 'Circuito AMRAP', description: 'Máximas rondas en 12 minutos', durationSeconds: 720 },
   ],
   [
     { name: 'Resistencia prolongada', description: '20 minutos de esfuerzo constante', durationSeconds: 1200 },
     { name: 'Wall sit extremo', description: '3 minutos contra la pared', durationSeconds: 180 },
-    { name: 'EMOM de 15 min', description: 'Cada minuto al minuto, 3 ejercicios', durationSeconds: 900 },
+    { name: 'EMOM de 15 min', description: 'Cada minuto al minuto, 3 ejercicios', durationSeconds: 900, timerRounds: 15 },
     { name: 'Cardio mixto', description: '20 min alternando alta y baja intensidad', durationSeconds: 1200 },
     { name: 'Plancha dinámica', description: 'Variaciones de plancha por 5 min', durationSeconds: 300 },
   ],
@@ -177,8 +179,8 @@ const END_TASKS: SkillTask[][] = [
     { name: 'Prueba de voluntad', description: '25 minutos de cardio intenso', durationSeconds: 1500 },
     { name: 'Resistencia extrema', description: 'Circuito de 30 minutos', durationSeconds: 1800 },
     { name: 'Maratón de burpees', description: '100 burpees por tiempo' },
-    { name: 'Reto Tabata doble', description: '16 intervalos de 20/10', durationSeconds: 480 },
-    { name: 'Ironman casero', description: 'Circuito de 3 estaciones x 25 min', durationSeconds: 1500 },
+    { name: 'Reto Tabata doble', description: '16 intervalos de 20/10', durationSeconds: 480, timerRounds: 16 },
+    { name: 'Ironman casero', description: 'Circuito de 3 estaciones x 25 min', durationSeconds: 1500, timerRounds: 3 },
   ],
   [
     { name: 'Fortaleza absoluta', description: '40 minutos sin descanso', durationSeconds: 2400 },
