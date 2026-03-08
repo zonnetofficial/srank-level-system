@@ -364,6 +364,22 @@ export function useGameState() {
 
       const newStats = { ...prev.stats, [stat]: prev.stats[stat] + points };
       const newPoints = { ...prev.statPoints, [stat]: prev.statPoints[stat] + points };
+
+      // XP from skill task
+      const skillXp = Math.floor(getQuestXP(prev.level) * 0.5);
+      let newXp = prev.xp + skillXp;
+      let newLevel = prev.level;
+      let newXpToNext = prev.xpToNext;
+      while (newXp >= newXpToNext) {
+        newXp -= newXpToNext;
+        newLevel++;
+        newXpToNext = xpForLevel(newLevel);
+      }
+      const newTitles = prev.classTitles.map(t => ({
+        ...t,
+        obtained: t.obtained || newLevel >= t.requiredLevel,
+      }));
+
       const newCooldowns = {
         ...prev.skillCooldowns,
         [stat]: {
@@ -373,7 +389,20 @@ export function useGameState() {
           weekStart: currentWeekStart,
         },
       };
-      return { ...prev, stats: newStats, statPoints: newPoints, skillCooldowns: newCooldowns };
+      return {
+        ...prev,
+        stats: newStats,
+        statPoints: newPoints,
+        skillCooldowns: newCooldowns,
+        xp: newXp,
+        level: newLevel,
+        xpToNext: newXpToNext,
+        classTitles: newTitles,
+        personalRecords: {
+          ...prev.personalRecords,
+          maxLevel: Math.max(prev.personalRecords.maxLevel, newLevel),
+        },
+      };
     });
   }, [today]);
 
@@ -409,11 +438,34 @@ export function useGameState() {
         },
       };
 
+      // XP from INT test
+      const intXp = Math.floor(getQuestXP(prev.level) * 0.5);
+      let newXp = prev.xp + intXp;
+      let newLevel = prev.level;
+      let newXpToNext = prev.xpToNext;
+      while (newXp >= newXpToNext) {
+        newXp -= newXpToNext;
+        newLevel++;
+        newXpToNext = xpForLevel(newLevel);
+      }
+      const newTitles = prev.classTitles.map(t => ({
+        ...t,
+        obtained: t.obtained || newLevel >= t.requiredLevel,
+      }));
+
       return {
         ...prev,
         stats: newStats,
         statPoints: newPoints,
         skillCooldowns: newCooldowns,
+        xp: newXp,
+        level: newLevel,
+        xpToNext: newXpToNext,
+        classTitles: newTitles,
+        personalRecords: {
+          ...prev.personalRecords,
+          maxLevel: Math.max(prev.personalRecords.maxLevel, newLevel),
+        },
         intTestCooldown: failed ? intTestCooldown : (prev as any).intTestCooldown || null,
         intPerfectsToday: perfectCount,
         intTestsToday: newTestsToday,
