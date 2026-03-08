@@ -4,6 +4,8 @@ import VictorianFrame from '@/components/VictorianFrame';
 import { StatBar } from '@/components/StatBar';
 import { useGameState } from '@/hooks/useGameState';
 import { useAuth } from '@/hooks/useAuth';
+import { useTitleNotifications } from '@/hooks/useTitleNotifications';
+import { TitleUnlockModal } from '@/components/TitleUnlockModal';
 import {
   STAT_LABELS,
   STAT_ICONS,
