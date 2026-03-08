@@ -5,7 +5,7 @@ import RunTimer from '@/components/RunTimer';
 import VictorianFrame from '@/components/VictorianFrame';
 
 const DailyQuest = () => {
-  const { state, today, todayQuest, restDay, startQuest, completeQuest, completeExercise, completeRun } = useGameState();
+  const { state, today, todayQuest, restDay, completeQuest, completeExercise, completeRun } = useGameState();
   const navigate = useNavigate();
   const [timerOpen, setTimerOpen] = useState(false);
 
