@@ -23,7 +23,7 @@ export default function ItemDetailModal({ item, dpBalance, tpBalance, buying, on
         onClick={e => e.stopPropagation()}
       >
         <div className="text-center">
-          <span className="text-5xl block mb-2">{item.icon}</span>
+          <div className="flex justify-center mb-2"><ItemIcon name={item.name} fallbackEmoji={item.icon} size="lg" className="w-16 h-16" /></div>
           <h2 className="font-display text-lg font-bold">{item.name}</h2>
           <span className={`text-[10px] font-display uppercase tracking-wider ${RARITY_COLORS[item.rarity]}`}>
             {RARITY_LABELS[item.rarity]} · {CATEGORY_LABELS[item.category]}
