@@ -171,13 +171,44 @@ const Skills = () => {
                 Necesitas al menos 70% para aprobar
               </p>
             )}
+
+            {/* Retroalimentación de errores */}
+            {(() => {
+              const wrongIndices = testQuestions
+                .map((q, i) => (testAnswers[i] !== q.correctIndex ? i : -1))
+                .filter(i => i >= 0);
+              if (wrongIndices.length === 0) return null;
+              return (
+                <div className="text-left rpg-panel space-y-2 mt-2">
+                  <p className="text-xs font-display text-primary uppercase tracking-wider mb-2">
+                    📝 Retroalimentación
+                  </p>
+                  <div className="max-h-48 overflow-y-auto space-y-3">
+                    {wrongIndices.map(i => (
+                      <div key={i} className="border-b border-border/30 pb-2 last:border-0">
+                        <p className="text-xs text-muted-foreground mb-1">
+                          <span className="text-destructive font-display">✗</span> {testQuestions[i].question}
+                        </p>
+                        <p className="text-[11px] text-destructive/70 line-through">
+                          Tu respuesta: {testQuestions[i].options[testAnswers[i]]}
+                        </p>
+                        <p className="text-[11px] text-primary">
+                          Correcta: {testQuestions[i].options[testQuestions[i].correctIndex]}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+
             <div className="flex gap-2 mt-4">
               {canDoAnotherTest() && (
                 <button
                   onClick={handleStartInt}
                   className="flex-1 py-3 rounded-lg bg-primary text-primary-foreground font-display text-xs uppercase tracking-wider"
                 >
-                  {perfectsToday >= 5 ? 'Test de Título Superior' : 'Siguiente Test'}
+                  Siguiente Test
                 </button>
               )}
               <button
@@ -339,7 +370,6 @@ const Skills = () => {
                 <span className="text-primary font-display font-bold">📋 Instrucciones:</span>{' '}
                 Primero leerás un texto introductorio. Después responderás entre 15 y 20 preguntas de opción múltiple. 
                 Necesitas al menos un <span className="text-primary font-bold">70%</span> de respuestas correctas para aprobar.
-                Un resultado perfecto te permite repetir el test. 5 perfectos desbloquean un test de rango superior.
               </p>
             </div>
 
