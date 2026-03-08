@@ -55,7 +55,7 @@ const AppContent = () => {
         <Route path="*" element={<NotFound />} />
       </Routes>
 
-      {state.pendingPunishments > 0 && (
+      {(state.pendingPunishments > 0 || true) && (
         <PunishmentOverlay
           pendingCount={state.pendingPunishments}
           level={state.level}
