@@ -141,7 +141,7 @@ const Index = () => {
             className={`hud-nav-btn py-5 animate-scale-up ${item.glow ? 'animate-pulse-glow' : ''}`}
             style={{ animationDelay: `${700 + i * 100}ms` }}
           >
-            <span className="text-2xl animate-icon-bounce" style={{ animationDelay: `${900 + i * 100}ms` }}>{item.icon}</span>
+            <span className="text-2xl animate-slide-nudge" style={{ animationDelay: `${900 + i * 100}ms` }}>{item.icon}</span>
             <span className={`font-display text-[10px] uppercase tracking-[0.15em] ${item.primary ? 'text-primary' : 'text-foreground'}`}>
               {item.label}
             </span>
