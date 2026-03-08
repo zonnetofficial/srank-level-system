@@ -4,7 +4,7 @@ import VictorianFrame from '@/components/VictorianFrame';
 import SkillTaskDialog from '@/components/SkillTaskDialog';
 import { useGameState } from '@/hooks/useGameState';
 import { STAT_LABELS, STAT_ICONS, StatKey, getSkillTitle } from '@/lib/gameData';
-import { getTasksForStat, getTitleIndex } from '@/lib/skillTasks';
+import { getTasksForStat, getTitleIndex, SkillTask } from '@/lib/skillTasks';
 import { getTestForTier, getTierFromPoints, evaluateTest, TestQuestion, TestTheme } from '@/lib/intTests';
 import {
   Dialog,
