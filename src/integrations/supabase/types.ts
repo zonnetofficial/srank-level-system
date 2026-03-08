@@ -111,8 +111,10 @@ export type Database = {
         Row: {
           buyer_id: string | null
           created_at: string
+          dp_amount: number | null
           id: string
-          item_id: string
+          item_id: string | null
+          listing_type: string
           price: number
           seller_id: string
           sold_at: string | null
@@ -121,8 +123,10 @@ export type Database = {
         Insert: {
           buyer_id?: string | null
           created_at?: string
+          dp_amount?: number | null
           id?: string
-          item_id: string
+          item_id?: string | null
+          listing_type?: string
           price: number
           seller_id: string
           sold_at?: string | null
@@ -131,8 +135,10 @@ export type Database = {
         Update: {
           buyer_id?: string | null
           created_at?: string
+          dp_amount?: number | null
           id?: string
-          item_id?: string
+          item_id?: string | null
+          listing_type?: string
           price?: number
           seller_id?: string
           sold_at?: string | null
