@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { XPBar } from '@/components/XPBar';
+import VictorianFrame from '@/components/VictorianFrame';
 import { StatBar } from '@/components/StatBar';
 import { useGameState } from '@/hooks/useGameState';
 import {
