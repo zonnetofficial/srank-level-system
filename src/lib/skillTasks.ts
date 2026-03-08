@@ -60,9 +60,9 @@ const STR_TASKS: SkillTask[][] = [
 
 const AGI_TASKS: SkillTask[][] = [
   [
-    { name: 'Estiramientos básicos', description: 'Realiza: tocarse los pies 20s, estiramiento de cuádriceps 20s por pierna, estiramiento de hombros 20s por lado, giro de cadera 20s por lado', durationSeconds: 120, timerRounds: 4 },
+    { name: 'Estiramientos básicos', description: 'Tocarse los pies, estiramiento de cuádriceps por pierna, estiramiento de hombros por lado, giro de cadera por lado — 20s cada ejercicio/lado', durationSeconds: 140, timerRounds: 7, roundLabels: ['Tocarse los pies', 'Cuádriceps – pierna izquierda', 'Cuádriceps – pierna derecha', 'Hombros – lado izquierdo', 'Hombros – lado derecho', 'Giro de cadera – lado izquierdo', 'Giro de cadera – lado derecho'] },
     { name: 'Saltos en el lugar', description: 'Haz 30 saltos seguidos con rodillas al pecho alternando velocidad: 10 lentos, 10 rápidos, 10 explosivos' },
-    { name: 'Equilibrio a un pie', description: 'Mantente en un pie 30 segundos, luego cambia. Ojos cerrados para mayor dificultad', durationSeconds: 60, timerRounds: 2 },
+    { name: 'Equilibrio a un pie', description: 'Mantente en un pie 30 segundos por lado. Ojos cerrados para mayor dificultad', durationSeconds: 60, timerRounds: 2, roundLabels: ['Pie izquierdo', 'Pie derecho'] },
     { name: 'Caminata lateral', description: 'Da 20 pasos laterales por lado en posición de media sentadilla, manteniendo la espalda recta' },
     { name: 'Rodillas altas', description: 'Eleva las rodillas al pecho alternando piernas, 40 repeticiones totales lo más rápido posible' },
   ],
