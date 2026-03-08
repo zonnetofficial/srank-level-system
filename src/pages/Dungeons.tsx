@@ -51,14 +51,20 @@ export default function Dungeons() {
 
   const handleRoomComplete = (success: boolean) => {
     completeRoom(success);
-    // Show reward choice after completing room
     setTimeout(() => {
-      if (run && dungeonState.character && dungeonState.character.currentHp <= 0) {
+      // Check death
+      if (dungeonState.character && dungeonState.character.currentHp <= 0) {
         setView('result');
+        return;
+      }
+      // Auto-advance to next room or finish
+      if (run && run.currentRoom + 1 >= run.rooms.length) {
+        advanceRoom(); // marks dungeon complete
+        setXpToApply(run.xpEarned);
+        setView('reward'); // reward choice after full dungeon
       } else {
-        setRewardChoice(null);
-        setLuckBoxResult(null);
-        setView('reward');
+        advanceRoom();
+        setView('dungeon');
       }
     }, 1800);
   };
@@ -72,7 +78,6 @@ export default function Dungeons() {
       const reward = rollLuckBox(run.rank);
       setLuckBoxResult(reward);
 
-      // Apply DP reward to database
       if (reward.type === 'dp' && reward.value && user) {
         try {
           const { data: dp } = await supabase
@@ -83,9 +88,7 @@ export default function Dungeons() {
           if (dp) {
             await supabase.from('dark_points').update({ balance: dp.balance + reward.value }).eq('user_id', user.id);
             await supabase.from('dp_transactions').insert({
-              user_id: user.id,
-              amount: reward.value,
-              type: 'dungeon_reward',
+              user_id: user.id, amount: reward.value, type: 'dungeon_reward',
               description: `Recompensa de mazmorra ${run.rank}`,
             });
           }
@@ -94,17 +97,8 @@ export default function Dungeons() {
     }
   };
 
-  const handleAdvance = () => {
-    advanceRoom();
-    // Check if dungeon is complete
-    if (run && run.currentRoom + 1 >= run.rooms.length) {
-      setXpToApply(run.xpEarned);
-      setTimeout(() => setView('result'), 200);
-    } else {
-      setRewardChoice(null);
-      setLuckBoxResult(null);
-      setView('dungeon');
-    }
+  const handleAfterReward = () => {
+    setView('result');
   };
 
   const handleEscape = () => {
