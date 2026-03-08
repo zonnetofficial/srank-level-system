@@ -376,27 +376,43 @@ function schedulePluck(ctx: AudioContext, time: number, midi: number, duration: 
 // ─── INSTRUMENT: Deep 808 Sub Bass ───
 function schedule808Sub(ctx: AudioContext, time: number, midi: number, duration: number, dest: GainNode) {
   const freq = NOTE(midi);
-  // Main sine body with pitch drop
+  // Main sine body with pitch drop — longer sustain for dark trap
   const osc = ctx.createOscillator();
   const g = ctx.createGain();
   osc.type = 'sine';
-  osc.frequency.setValueAtTime(freq * 1.5, time);
-  osc.frequency.exponentialRampToValueAtTime(freq, time + 0.04);
-  // Distortion for warmth
+  osc.frequency.setValueAtTime(freq * 2, time);
+  osc.frequency.exponentialRampToValueAtTime(freq, time + 0.06);
+  // Soft-clip distortion for warmth & grit
   const shaper = ctx.createWaveShaper();
   const curve = new Float32Array(256);
   for (let i = 0; i < 256; i++) {
     const x = (i / 128) - 1;
-    curve[i] = (Math.PI + 2) * x / (Math.PI + 2 * Math.abs(x)); // soft clip
+    curve[i] = (Math.PI + 3) * x / (Math.PI + 3 * Math.abs(x)); // heavier saturation
   }
   shaper.curve = curve;
   shaper.oversample = '2x';
+  // Low-pass to keep it sub-heavy
+  const lp = ctx.createBiquadFilter();
+  lp.type = 'lowpass';
+  lp.frequency.setValueAtTime(freq * 4, time);
+  lp.frequency.exponentialRampToValueAtTime(freq * 1.5, time + duration * 0.5);
   g.gain.setValueAtTime(0.001, time);
-  g.gain.linearRampToValueAtTime(0.18, time + 0.01);
-  g.gain.setValueAtTime(0.18, time + duration * 0.5);
+  g.gain.linearRampToValueAtTime(0.25, time + 0.015);
+  g.gain.setValueAtTime(0.22, time + duration * 0.6);
   g.gain.exponentialRampToValueAtTime(0.001, time + duration);
-  osc.connect(shaper); shaper.connect(g); g.connect(dest);
+  osc.connect(shaper); shaper.connect(lp); lp.connect(g); g.connect(dest);
   osc.start(time); osc.stop(time + duration + 0.05);
+  // Sub harmonic layer
+  const sub = ctx.createOscillator();
+  const sg = ctx.createGain();
+  sub.type = 'sine';
+  sub.frequency.setValueAtTime(freq / 2, time);
+  sg.gain.setValueAtTime(0.001, time);
+  sg.gain.linearRampToValueAtTime(0.1, time + 0.02);
+  sg.gain.setValueAtTime(0.08, time + duration * 0.5);
+  sg.gain.exponentialRampToValueAtTime(0.001, time + duration);
+  sub.connect(sg); sg.connect(dest);
+  sub.start(time); sub.stop(time + duration + 0.05);
 }
 
 // ─── INSTRUMENT: House Bass (filtered saw + sub) ───
