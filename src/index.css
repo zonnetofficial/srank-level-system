@@ -198,7 +198,7 @@
     z-index: 1;
   }
 
-  /* Ambient glitch effect */
+  /* Ambient glitch effect - uses multiple overlapping pseudo-elements */
   .hud-glitch {
     position: relative;
   }
@@ -211,7 +211,23 @@
     z-index: 3;
     opacity: 0;
     mix-blend-mode: screen;
-    animation: ambient-glitch 8s ease-in-out infinite;
+    animation: 
+      glitch-horizontal 7.3s ease-in-out infinite,
+      glitch-chromatic 11.7s ease-in-out infinite 2s,
+      glitch-scanline-tear 9.1s ease-in-out infinite 4s;
+  }
+
+  .hud-glitch::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 3;
+    opacity: 0;
+    mix-blend-mode: screen;
+    animation:
+      glitch-static-burst 13.3s ease-in-out infinite 1s,
+      glitch-block-shift 16.7s ease-in-out infinite 6s;
   }
 
   /* HUD label */
@@ -450,53 +466,276 @@
   background-size: 20px 20px;
 }
 
-/* Ambient glitch keyframes */
-@keyframes ambient-glitch {
-  0%, 89%, 91%, 93%, 95%, 100% {
+/* ═══════════════════════════════════════════════════
+   GLITCH VARIATION 1: Horizontal Displacement
+   Rapid horizontal shift with color split
+   ═══════════════════════════════════════════════════ */
+@keyframes glitch-horizontal {
+  0%, 87%, 92%, 100% {
+    opacity: 0;
+    transform: none;
+    clip-path: none;
+    background: transparent;
+  }
+  88% {
+    opacity: 0.15;
+    clip-path: inset(15% 0 70% 0);
+    background: linear-gradient(90deg, hsl(195 100% 55% / 0.4), transparent 40%);
+    transform: translateX(4px);
+  }
+  89.5% {
+    opacity: 0.1;
+    clip-path: inset(55% 0 25% 0);
+    background: linear-gradient(90deg, transparent 50%, hsl(0 100% 55% / 0.2));
+    transform: translateX(-3px);
+  }
+  91% {
+    opacity: 0.08;
+    clip-path: inset(35% 0 50% 0);
+    transform: translateX(2px);
+    background: linear-gradient(90deg, hsl(195 100% 55% / 0.15), transparent);
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   GLITCH VARIATION 2: Chromatic Aberration
+   RGB split effect across full screen
+   ═══════════════════════════════════════════════════ */
+@keyframes glitch-chromatic {
+  0%, 93%, 96%, 100% {
+    opacity: 0;
+    background: transparent;
+  }
+  94% {
+    opacity: 0.06;
+    background: 
+      linear-gradient(90deg, hsl(0 100% 50% / 0.15) 0%, transparent 33%, hsl(120 100% 50% / 0.1) 66%, transparent 100%);
+    transform: translateX(-2px);
+  }
+  95% {
+    opacity: 0.08;
+    background: 
+      linear-gradient(90deg, transparent 0%, hsl(195 100% 50% / 0.12) 33%, transparent 66%, hsl(0 100% 50% / 0.1) 100%);
+    transform: translateX(3px);
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   GLITCH VARIATION 3: Scanline Tear
+   Horizontal bands that shift and flicker
+   ═══════════════════════════════════════════════════ */
+@keyframes glitch-scanline-tear {
+  0%, 90%, 94%, 100% {
     opacity: 0;
     clip-path: none;
     background: transparent;
   }
-  90% {
+  91% {
     opacity: 0.12;
-    clip-path: inset(20% 0 60% 0);
-    background: linear-gradient(90deg, hsl(195 100% 55% / 0.3), transparent 30%, hsl(0 100% 55% / 0.15) 70%, transparent);
-    transform: translateX(3px);
+    clip-path: inset(8% 0 85% 0);
+    background: hsl(195 100% 55% / 0.2);
+    transform: translateX(6px) scaleY(1.5);
   }
   92% {
-    opacity: 0.08;
-    clip-path: inset(65% 0 10% 0);
-    background: linear-gradient(90deg, transparent 20%, hsl(195 100% 55% / 0.2) 50%, transparent);
-    transform: translateX(-2px);
-  }
-  94% {
     opacity: 0.1;
-    clip-path: inset(40% 0 35% 0);
-    background: linear-gradient(90deg, hsl(45 100% 60% / 0.1), transparent 60%, hsl(195 100% 55% / 0.15));
-    transform: translateX(1px);
+    clip-path: inset(42% 0 48% 0);
+    background: hsl(45 100% 60% / 0.15);
+    transform: translateX(-4px) scaleY(2);
+  }
+  93% {
+    opacity: 0.08;
+    clip-path: inset(72% 0 18% 0);
+    background: hsl(0 90% 55% / 0.12);
+    transform: translateX(3px) scaleY(1.2);
   }
 }
 
-@keyframes text-glitch-ambient {
-  0%, 92%, 94%, 96%, 100% {
+/* ═══════════════════════════════════════════════════
+   GLITCH VARIATION 4: Static Burst
+   Noise-like burst across random areas
+   ═══════════════════════════════════════════════════ */
+@keyframes glitch-static-burst {
+  0%, 95%, 97.5%, 100% {
+    opacity: 0;
+    background: transparent;
+  }
+  96% {
+    opacity: 0.07;
+    background: 
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        hsl(195 100% 55% / 0.08) 2px,
+        hsl(195 100% 55% / 0.08) 3px,
+        transparent 3px,
+        transparent 7px
+      );
+    clip-path: inset(10% 5% 30% 0);
+    transform: translateX(1px);
+  }
+  97% {
+    opacity: 0.05;
+    background: 
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 4px,
+        hsl(0 100% 55% / 0.06) 4px,
+        hsl(0 100% 55% / 0.06) 5px,
+        transparent 5px,
+        transparent 12px
+      );
+    clip-path: inset(50% 0 10% 10%);
+    transform: translateX(-2px);
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   GLITCH VARIATION 5: Block Shift
+   Large block displacement with heavy distortion
+   ═══════════════════════════════════════════════════ */
+@keyframes glitch-block-shift {
+  0%, 94%, 97%, 100% {
+    opacity: 0;
+    clip-path: none;
+    background: transparent;
+    transform: none;
+  }
+  95% {
+    opacity: 0.14;
+    clip-path: inset(20% 0 55% 0);
+    background: linear-gradient(90deg, hsl(195 100% 55% / 0.25), transparent 50%, hsl(0 100% 55% / 0.1));
+    transform: translateX(8px) skewX(-1deg);
+  }
+  96% {
+    opacity: 0.1;
+    clip-path: inset(60% 0 15% 0);
+    background: linear-gradient(90deg, hsl(45 100% 60% / 0.15), transparent 60%);
+    transform: translateX(-5px) skewX(0.5deg);
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   TEXT GLITCH VARIATIONS
+   ═══════════════════════════════════════════════════ */
+@keyframes text-glitch-1 {
+  0%, 92%, 94.5%, 100% {
     text-shadow: none;
     transform: none;
   }
   93% {
-    text-shadow: -2px 0 hsl(0 100% 55% / 0.4), 2px 0 hsl(195 100% 55% / 0.4);
-    transform: translateX(1px) skewX(-0.5deg);
+    text-shadow: -2px 0 hsl(0 100% 55% / 0.5), 2px 0 hsl(195 100% 55% / 0.5);
+    transform: translateX(2px) skewX(-1deg);
   }
-  95% {
+  94% {
     text-shadow: 1px 0 hsl(195 100% 55% / 0.3), -1px 0 hsl(0 100% 55% / 0.3);
     transform: translateX(-1px);
   }
 }
 
+@keyframes text-glitch-2 {
+  0%, 88%, 91%, 100% {
+    text-shadow: none;
+    transform: none;
+    letter-spacing: inherit;
+  }
+  89% {
+    text-shadow: 0 2px hsl(195 100% 55% / 0.3), 0 -2px hsl(0 100% 55% / 0.2);
+    transform: translateY(1px);
+    letter-spacing: 0.15em;
+  }
+  90% {
+    text-shadow: 0 -1px hsl(45 100% 60% / 0.3);
+    transform: translateY(-1px);
+    letter-spacing: inherit;
+  }
+}
+
+@keyframes text-glitch-3 {
+  0%, 95%, 97.5%, 100% {
+    text-shadow: none;
+    transform: none;
+    opacity: 1;
+  }
+  96% {
+    opacity: 0.4;
+    text-shadow: 3px 0 hsl(195 100% 55% / 0.6), -3px 0 hsl(0 100% 55% / 0.4);
+    transform: translateX(-3px) skewX(2deg);
+  }
+  97% {
+    opacity: 0.7;
+    text-shadow: -1px 1px hsl(45 100% 60% / 0.4);
+    transform: translateX(1px) skewX(-0.5deg);
+  }
+}
+
 .animate-text-glitch {
-  animation: text-glitch-ambient 6s ease-in-out infinite;
+  animation: text-glitch-1 6.3s ease-in-out infinite;
+}
+
+.animate-text-glitch-alt {
+  animation: text-glitch-2 8.7s ease-in-out infinite;
+}
+
+.animate-text-glitch-heavy {
+  animation: text-glitch-3 11.1s ease-in-out infinite;
 }
 
 .animate-text-glitch-slow {
-  animation: text-glitch-ambient 10s ease-in-out infinite;
+  animation: text-glitch-1 10s ease-in-out infinite, text-glitch-2 14.3s ease-in-out infinite 3s;
+}
+
+/* ═══════════════════════════════════════════════════
+   SLOT MACHINE / CASINO ROLL ANIMATION
+   Vertical scroll through characters
+   ═══════════════════════════════════════════════════ */
+.slot-roll-container {
+  display: inline-flex;
+  overflow: hidden;
+  vertical-align: baseline;
+}
+
+.slot-roll-digit {
+  display: inline-block;
+  overflow: hidden;
+  height: 1em;
+  line-height: 1;
+  vertical-align: top;
+}
+
+.slot-roll-inner {
+  display: flex;
+  flex-direction: column;
+  animation: slot-roll-up 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+@keyframes slot-roll-up {
+  0% {
+    transform: translateY(-90%);
+  }
+  15% {
+    transform: translateY(-75%);
+  }
+  100% {
+    transform: translateY(0%);
+  }
+}
+
+@keyframes slot-roll-down {
+  0% {
+    transform: translateY(90%);
+  }
+  100% {
+    transform: translateY(0%);
+  }
+}
+
+.slot-roll-up {
+  animation: slot-roll-up 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+.slot-roll-down {
+  animation: slot-roll-down 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
 }
 
