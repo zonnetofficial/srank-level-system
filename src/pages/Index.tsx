@@ -105,7 +105,7 @@ const Index = () => {
       {/* Stats */}
       <div className="rpg-panel space-y-3 animate-slide-up delay-400">
         <div className="flex items-center justify-between mb-2">
-          <h2 className="hud-label animate-text-glitch" style={{ animationDelay: '15s' }}>
+          <h2 className="hud-label">
             Estadísticas
           </h2>
           <span className="hud-data text-[10px] text-muted-foreground">
