@@ -66,6 +66,7 @@ export interface GameState {
   pendingPunishments: number;
   lastCheckedDate: string; // YYYY-MM-DD
   classChangeProgress: Record<string, StatKey[]>; // className -> completed stat tasks
+  missionSchedule?: import('./mandatoryMissions').MissionSchedule;
 }
 
 // ==================== CONSTANTS ====================

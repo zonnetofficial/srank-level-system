@@ -14,6 +14,11 @@ import {
   parseLocalDate,
   formatLocalDate,
 } from '@/lib/gameData';
+import {
+  createInitialSchedule,
+  checkAndScheduleMission,
+  getXPPenalty,
+} from '@/lib/mandatoryMissions';
 
 const STORAGE_KEY = 'daily-quest-rpg-state';
 
