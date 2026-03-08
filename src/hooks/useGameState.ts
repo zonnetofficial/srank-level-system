@@ -519,7 +519,7 @@ export function useGameState() {
 
   const simulateDays = useCallback((days: number) => {
     setState(prev => {
-      let s = { ...prev, stats: { ...prev.stats }, statPoints: { ...prev.statPoints }, questLog: [...prev.questLog] };
+      let s = { ...prev, stats: { ...prev.stats }, statPoints: { ...prev.statPoints }, statBank: { ...prev.statBank }, questLog: [...prev.questLog] };
       const todayDate = parseLocalDate(getToday());
 
       for (let i = days; i >= 1; i--) {
