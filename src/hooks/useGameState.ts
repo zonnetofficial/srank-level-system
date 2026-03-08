@@ -118,14 +118,19 @@ export function useGameState() {
     if (!loaded.questLog.find(q => q.date === today)) {
       const rest = isRestDay(loaded.questLog);
       const newLog = [...loaded.questLog];
+      const isFirstLogin = loaded.questLog.length === 0;
       if (rest) {
         newLog.push({ date: today, status: 'rest' });
-        loaded = {
-          ...loaded,
-          questLog: newLog,
-          stats: { ...loaded.stats, int: loaded.stats.int + 1, vit: loaded.stats.vit + 1 },
-          statPoints: { ...loaded.statPoints, int: loaded.statPoints.int + 1, vit: loaded.statPoints.vit + 1 },
-        };
+        // First-time users on rest day: no free stat points
+        if (!isFirstLogin) {
+          loaded = {
+            ...loaded,
+            questLog: newLog,
+            statBank: { ...loaded.statBank, int: loaded.statBank.int + 1, vit: loaded.statBank.vit + 1 },
+          };
+        } else {
+          loaded = { ...loaded, questLog: newLog };
+        }
       } else {
         newLog.push({
           date: today,
