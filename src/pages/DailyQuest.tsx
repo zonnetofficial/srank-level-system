@@ -63,43 +63,49 @@ const DailyQuest = () => {
             </div>
             <p className="text-sm text-foreground/80 font-body italic mb-4">[Daily Quest: Strength Training has arrived.]</p>
             <h3 className="font-display text-sm font-bold uppercase tracking-[0.3em] text-primary text-glow-primary">Goal</h3>
-          </div>
-
-          {/* Mission preview */}
-          <div className="space-y-3 mb-6">
-            <div className="rpg-panel">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20">
-                  <span className="text-xl">🏃</span>
-                </div>
-                <div>
-                  <div className="text-xs font-display uppercase tracking-wider text-primary">Carrera</div>
-                  <div className="text-sm text-foreground font-body">
-                    {state.runMode === 'time'
-                      ? `Correr ${state.runProgression} minutos`
-                      : 'Correr 5 km (registrar tiempo)'}
-                  </div>
-                </div>
+            <div className="flex justify-center mt-1 mb-5">
+              <div className="w-16 flex flex-col gap-[2px]">
+                <div className="h-[2px] bg-primary shadow-[0_0_6px_hsl(195_100%_55%/0.7)]" />
+                <div className="h-[2px] bg-primary shadow-[0_0_6px_hsl(195_100%_55%/0.7)]" />
               </div>
             </div>
 
-            <div className="rpg-panel">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-lg bg-stat-str/10 flex items-center justify-center border border-stat-str/20">
-                  <span className="text-xl">💪</span>
-                </div>
-                <div>
-                  <div className="text-xs font-display uppercase tracking-wider text-stat-str">Ejercicios</div>
-                  <div className="text-xs text-muted-foreground">{state.exerciseProgression.length} ejercicios</div>
+            {/* Mission preview inside panel */}
+            <div className="space-y-3 text-left">
+              <div className="border border-border/40 rounded-lg p-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20">
+                    <span className="text-xl">🏃</span>
+                  </div>
+                  <div>
+                    <div className="text-xs font-display uppercase tracking-wider text-primary">Carrera</div>
+                    <div className="text-sm text-foreground font-body">
+                      {state.runMode === 'time'
+                        ? `Correr ${state.runProgression} minutos`
+                        : 'Correr 5 km (registrar tiempo)'}
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="space-y-1.5 ml-[52px]">
-                {state.exerciseProgression.map((ex, i) => (
-                  <div key={i} className="text-sm text-foreground/80 flex justify-between">
-                    <span>{ex.name}</span>
-                    <span className="text-muted-foreground font-display text-xs">{ex.reps} reps</span>
+
+              <div className="border border-border/40 rounded-lg p-3">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-lg bg-stat-str/10 flex items-center justify-center border border-stat-str/20">
+                    <span className="text-xl">💪</span>
                   </div>
-                ))}
+                  <div>
+                    <div className="text-xs font-display uppercase tracking-wider text-stat-str">Ejercicios</div>
+                    <div className="text-xs text-muted-foreground">{state.exerciseProgression.length} ejercicios</div>
+                  </div>
+                </div>
+                <div className="space-y-1.5 ml-[52px]">
+                  {state.exerciseProgression.map((ex, i) => (
+                    <div key={i} className="text-sm text-foreground/80 flex justify-between">
+                      <span>{ex.name}</span>
+                      <span className="text-muted-foreground font-display text-xs">{ex.reps} reps</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
