@@ -32,6 +32,17 @@ const Index = () => {
 
   return (
     <VictorianFrame>
+      {/* Logout */}
+      <div className="flex justify-end mb-2">
+        <button
+          onClick={signOut}
+          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive transition-colors font-display uppercase tracking-wider"
+        >
+          <LogOut size={14} />
+          Salir
+        </button>
+      </div>
+
       {/* Time warning */}
       {timeWarning && (
         <div
