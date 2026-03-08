@@ -392,8 +392,7 @@ export function useGameState() {
       };
       return {
         ...prev,
-        stats: newStats,
-        statPoints: newPoints,
+        statBank: newBank,
         skillCooldowns: newCooldowns,
         xp: newXp,
         level: newLevel,
