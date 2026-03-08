@@ -232,10 +232,8 @@ export function useGameState() {
         newXpToNext = xpForLevel(newLevel);
       }
 
-      const newTitles = prev.classTitles.map(t => ({
-        ...t,
-        obtained: t.obtained || newLevel >= t.requiredLevel,
-      }));
+      // Don't auto-obtain: class titles require completing a challenge
+      const newTitles = prev.classTitles;
 
       const newStreak = prev.currentStreak + 1;
       const newCompleted = prev.totalCompleted + 1;
