@@ -313,19 +313,17 @@ const SkillTaskDialog = ({ stat, task, open, onResult, onClose }: SkillTaskDialo
         {/* ACTIVE PHASE - WITH TIMER */}
         {phase === 'active' && hasDuration && (
           <div className="px-6 py-5 space-y-4">
-            {/* Task description + round label */}
-            <div className="rpg-panel space-y-2">
-              <h3 className="font-display text-sm font-bold text-foreground">
-                {task.name}
-              </h3>
-              {getRoundLabel(currentRound) && (
-                <p className="text-xs font-display text-primary font-bold">
-                  ▸ {getRoundLabel(currentRound)}
+            {/* Current exercise label only */}
+            <div className="rpg-panel text-center py-2">
+              {getRoundLabel(currentRound) ? (
+                <p className="font-display text-sm font-bold text-primary">
+                  {getRoundLabel(currentRound)}
+                </p>
+              ) : (
+                <p className="font-display text-sm font-bold text-foreground">
+                  {task.name}
                 </p>
               )}
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                {task.description}
-              </p>
             </div>
 
             {/* Round indicator for multi-round tasks */}
