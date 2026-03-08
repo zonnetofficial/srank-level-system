@@ -180,7 +180,7 @@ const END_TASKS: SkillTask[][] = [
     { name: 'Resistencia extrema', description: 'Circuito de 30 minutos', durationSeconds: 1800 },
     { name: 'Maratón de burpees', description: '100 burpees por tiempo' },
     { name: 'Reto Tabata doble', description: '16 intervalos de 20/10', durationSeconds: 480, timerRounds: 16 },
-    { name: 'Ironman casero', description: 'Circuito de 3 estaciones x 25 min', durationSeconds: 1500 },
+    { name: 'Ironman casero', description: 'Circuito de 3 estaciones x 25 min', durationSeconds: 1500, timerRounds: 3 },
   ],
   [
     { name: 'Fortaleza absoluta', description: '40 minutos sin descanso', durationSeconds: 2400 },
