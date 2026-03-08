@@ -40,7 +40,7 @@ const Index = () => {
       <div className="flex justify-between items-center mb-3 animate-slide-down">
         <div className="flex items-center gap-2">
           <div className="hud-status-dot bg-stat-agi" />
-          <span className="hud-label animate-text-glitch-alt" style={{ animationDelay: '7s' }}>Online</span>
+          <span className="hud-label">Online</span>
         </div>
         <button
           onClick={signOut}
@@ -64,10 +64,10 @@ const Index = () => {
 
       {/* Time display */}
       <div className="text-center mb-4 animate-slide-up delay-100">
-        <div className="hud-label animate-text-glitch-alt" style={{ animationDelay: '12s' }}>
+        <div className="hud-label">
           {currentTime.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
         </div>
-        <div className="hud-data text-xl text-primary text-glow-primary mt-0.5 animate-text-glitch" style={{ animationDelay: '5s' }}>
+        <div className="hud-data text-xl text-primary text-glow-primary mt-0.5">
           {currentTime.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
         </div>
       </div>
@@ -80,12 +80,12 @@ const Index = () => {
       {/* Class */}
       <div className="mt-4 text-center animate-slide-up delay-300">
         <div className="hud-label">Clase</div>
-        <div className="text-xl font-display font-bold text-accent text-glow-accent mt-1 animate-text-glitch-heavy" style={{ animationDelay: '3s' }}>
+        <div className="text-xl font-display font-bold text-accent text-glow-accent mt-1">
           {currentClass.icon} {currentClass.name}
         </div>
         {nextClass && (
           <div className="mt-2">
-            <div className="hud-label animate-text-glitch-alt" style={{ animationDelay: '9s' }}>
+            <div className="hud-label">
               Siguiente: {nextClass.name} (Nv. {nextClass.requiredLevel})
             </div>
             <div className="stat-bar-track h-1.5 mt-1 max-w-48 mx-auto">
@@ -105,7 +105,7 @@ const Index = () => {
       {/* Stats */}
       <div className="rpg-panel space-y-3 animate-slide-up delay-400">
         <div className="flex items-center justify-between mb-2">
-          <h2 className="hud-label animate-text-glitch" style={{ animationDelay: '15s' }}>
+          <h2 className="hud-label">
             Estadísticas
           </h2>
           <span className="hud-data text-[10px] text-muted-foreground">
@@ -153,7 +153,7 @@ const Index = () => {
           style={{ borderColor: 'hsl(45 100% 60% / 0.3)' }}
         >
           <span className="text-2xl">👑</span>
-          <span className="font-display text-[10px] uppercase tracking-[0.15em] text-accent animate-text-glitch-heavy" style={{ animationDelay: '8s' }}>
+          <span className="font-display text-[10px] uppercase tracking-[0.15em] text-accent">
             Ruta del Monarca
           </span>
         </button>
