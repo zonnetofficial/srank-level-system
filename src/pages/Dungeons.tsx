@@ -384,9 +384,9 @@ export default function Dungeons() {
                 <button
                   key={l.inventoryId}
                   onClick={() => usePotion('stamina')}
-                  className="text-[9px] font-display px-2 py-1 border border-primary/30 text-primary hover:bg-primary/10 transition-all"
+                  className="text-[9px] font-display px-2 py-1 border border-primary/30 text-primary hover:bg-primary/10 transition-all flex items-center gap-1"
                 >
-                  {l.icon} STA x{l.quantity}
+                  <ItemIcon name={l.name} fallbackEmoji={l.icon} size="sm" /> STA x{l.quantity}
                 </button>
               ))}
             </div>
