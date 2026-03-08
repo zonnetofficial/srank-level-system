@@ -279,7 +279,8 @@ export function useShop() {
       item_id: item.id,
       price,
       status: 'active',
-    });
+      listing_type: 'item',
+    } as any);
 
     toast({ title: '¡Item en venta!', description: `${item.icon} ${item.name} por 🔷${price} TP` });
     await fetchAll();
