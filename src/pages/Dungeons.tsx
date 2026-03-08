@@ -375,9 +375,9 @@ export default function Dungeons() {
                 <button
                   key={l.inventoryId}
                   onClick={() => usePotion('hp')}
-                  className="text-[9px] font-display px-2 py-1 border border-stat-vit/30 text-stat-vit hover:bg-stat-vit/10 transition-all"
+                  className="text-[9px] font-display px-2 py-1 border border-stat-vit/30 text-stat-vit hover:bg-stat-vit/10 transition-all flex items-center gap-1"
                 >
-                  {l.icon} HP x{l.quantity}
+                  <ItemIcon name={l.name} fallbackEmoji={l.icon} size="sm" /> HP x{l.quantity}
                 </button>
               ))}
               {loadout.filter(l => l.effect_type === 'stamina_potion').map(l => (
