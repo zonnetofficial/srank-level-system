@@ -27,7 +27,7 @@ const Skills = () => {
   const [testAnswers, setTestAnswers] = useState<number[]>([]);
   const [currentQ, setCurrentQ] = useState(0);
   const [showIntro, setShowIntro] = useState(true);
-  const [testResult, setTestResult] = useState<{ score: number; perfect: boolean; totalPoints: number } | null>(null);
+  const [testResult, setTestResult] = useState<{ score: number; perfect: boolean; passed: boolean; totalPoints: number } | null>(null);
   const perfectsToday = (state as any).intPerfectsToday || 0;
   const intTestsToday = (state as any).intTestsToday || 0;
 
