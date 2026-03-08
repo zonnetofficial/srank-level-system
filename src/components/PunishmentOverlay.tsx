@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import SudokuGame from './SudokuGame';
+import { sfxPunishment } from '@/lib/audioEngine';
 
 const PUNISHMENT_PHRASES = [
   'Es lamentable ver tu falta de compromiso. Si no deseas entrenar tu cuerpo, entonces entrenarás tu mente.',

@@ -156,7 +156,7 @@ const DailyQuest = () => {
 
           {/* Complete button */}
           <button
-            onClick={completeQuest}
+            onClick={() => { completeQuest(); sfxQuestComplete(); }}
             disabled={!canComplete}
             className={`w-full py-4 rounded-lg font-display text-sm uppercase tracking-[0.2em] transition-all animate-slide-up delay-500 ${
               canComplete
