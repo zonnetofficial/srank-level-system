@@ -6,8 +6,6 @@ import {
   STAT_LABELS,
   STAT_ICONS,
   StatKey,
-  getSkillTitle,
-  getNextSkillTitle,
   getClassTitle,
   getNextClassTitle,
 } from '@/lib/gameData';
