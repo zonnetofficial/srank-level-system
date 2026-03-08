@@ -85,7 +85,7 @@ const Index = () => {
         </div>
         {nextClass && (
           <div className="mt-2">
-            <div className="hud-label animate-text-glitch-alt" style={{ animationDelay: '9s' }}>
+            <div className="hud-label">
               Siguiente: {nextClass.name} (Nv. {nextClass.requiredLevel})
             </div>
             <div className="stat-bar-track h-1.5 mt-1 max-w-48 mx-auto">
