@@ -76,7 +76,7 @@ const AGI_TASKS: SkillTask[][] = [
     { name: 'Circuito de agilidad', description: 'Marca 4 puntos en cuadrado (2m): toca cada punto en orden ida y vuelta, 5 rondas lo más rápido posible' },
     { name: 'Salto en caja progresivo', description: 'Salta sobre un escalón o banco a 3 alturas diferentes (bajo, medio, alto), 5 saltos cada una' },
     { name: 'Shuttle run', description: 'Marca dos líneas a 10m de distancia: corre de ida y vuelta tocando el suelo en cada extremo, 5 sprints' },
-    { name: 'Escalera de pies', description: 'Imagina una escalera en el suelo: pies adentro-afuera rápido, lateral, y zig-zag. 3 patrones x 30s cada uno', durationSeconds: 90 },
+    { name: 'Escalera de pies', description: 'Imagina una escalera en el suelo: pies adentro-afuera rápido, lateral, y zig-zag. 3 patrones x 30s cada uno', durationSeconds: 90, timerRounds: 3 },
   ],
   [
     { name: 'Sprints con cambio', description: 'Sprint 5m → giro 180° → sprint 5m → giro → repite 10 veces sin parar' },
