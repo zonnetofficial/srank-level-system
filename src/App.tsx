@@ -49,6 +49,13 @@ const AppContent = () => {
 
   return (
     <>
+      <AudioSettings
+        settings={audioSettings}
+        onMasterChange={setMaster}
+        onMusicChange={setMusic}
+        onSfxChange={setSfx}
+        onToggleMute={toggleMute}
+      />
       <Routes>
         <Route path="/auth" element={<Auth />} />
         <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
