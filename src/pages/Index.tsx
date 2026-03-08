@@ -14,6 +14,7 @@ import {
   getClassTitle,
   getNextClassTitle,
 } from '@/lib/gameData';
+import { getActiveMission } from '@/lib/mandatoryMissions';
 import { useNavigate } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
 
