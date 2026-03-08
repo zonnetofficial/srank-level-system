@@ -109,8 +109,33 @@ function detectAndApplyPunishments(state: GameState): GameState {
 
 export function useGameState() {
   const [state, setState] = useState<GameState>(() => {
-    const loaded = loadState();
-    return detectAndApplyPunishments(loaded);
+    let loaded = loadState();
+    loaded = detectAndApplyPunishments(loaded);
+    // Auto-start quest if none exists for today
+    const today = getToday();
+    if (!loaded.questLog.find(q => q.date === today)) {
+      const rest = isRestDay(loaded.questLog);
+      const newLog = [...loaded.questLog];
+      if (rest) {
+        newLog.push({ date: today, status: 'rest' });
+        loaded = {
+          ...loaded,
+          questLog: newLog,
+          stats: { ...loaded.stats, int: loaded.stats.int + 1, vit: loaded.stats.vit + 1 },
+          statPoints: { ...loaded.statPoints, int: loaded.statPoints.int + 1, vit: loaded.statPoints.vit + 1 },
+        };
+      } else {
+        newLog.push({
+          date: today,
+          status: 'pending',
+          exercises: loaded.exerciseProgression.map(e => ({ ...e, completed: false })),
+          runMinutes: loaded.runMode === 'time' ? loaded.runProgression : undefined,
+          runCompleted: false,
+        });
+        loaded = { ...loaded, questLog: newLog };
+      }
+    }
+    return loaded;
   });
   const [timeWarning, setTimeWarning] = useState(false);
 
@@ -124,7 +149,7 @@ export function useGameState() {
 
   const today = getToday();
   const todayQuest = state.questLog.find(q => q.date === today);
-  const restDay = !todayQuest && isRestDay(state.questLog);
+  const restDay = todayQuest?.status === 'rest';
 
   // Reset daily INT counters if date changed
   useEffect(() => {
