@@ -1,5 +1,6 @@
 import { ShopItem } from '@/hooks/useShop';
 import { RARITY_COLORS, RARITY_GLOW, RARITY_LABELS, CATEGORY_LABELS } from './shopConstants';
+import ItemIcon from '@/components/ItemIcon';
 
 interface Props {
   items: ShopItem[];
