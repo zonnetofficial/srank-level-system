@@ -444,10 +444,7 @@ export function useGameState() {
         newLevel++;
         newXpToNext = xpForLevel(newLevel);
       }
-      const newTitles = prev.classTitles.map(t => ({
-        ...t,
-        obtained: t.obtained || newLevel >= t.requiredLevel,
-      }));
+      const newTitles = prev.classTitles;
 
       return {
         ...prev,
