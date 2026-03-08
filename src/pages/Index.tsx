@@ -3,6 +3,7 @@ import { XPBar } from '@/components/XPBar';
 import VictorianFrame from '@/components/VictorianFrame';
 import { StatBar } from '@/components/StatBar';
 import { useGameState } from '@/hooks/useGameState';
+import { useAuth } from '@/hooks/useAuth';
 import {
   STAT_LABELS,
   STAT_ICONS,
@@ -11,11 +12,13 @@ import {
   getNextClassTitle,
 } from '@/lib/gameData';
 import { useNavigate } from 'react-router-dom';
+import { LogOut } from 'lucide-react';
 
 const statKeys: StatKey[] = ['int', 'str', 'agi', 'vit', 'end'];
 
 const Index = () => {
   const { state, todayQuest, restDay, timeWarning, dismissTimeWarning } = useGameState();
+  const { signOut } = useAuth();
   const navigate = useNavigate();
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -29,6 +32,17 @@ const Index = () => {
 
   return (
     <VictorianFrame>
+      {/* Logout */}
+      <div className="flex justify-end mb-2">
+        <button
+          onClick={signOut}
+          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive transition-colors font-display uppercase tracking-wider"
+        >
+          <LogOut size={14} />
+          Salir
+        </button>
+      </div>
+
       {/* Time warning */}
       {timeWarning && (
         <div
