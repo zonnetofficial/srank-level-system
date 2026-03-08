@@ -83,14 +83,26 @@ export default function MarketTab({ listings, getItemById, tpBalance, dpBalance,
                   <div className="font-display text-xs font-bold">{listing.dp_amount} Dark Points</div>
                   <div className="text-[9px] text-muted-foreground">Moneda del creador</div>
                 </div>
-                <button
-                  onClick={() => onBuy(listing)}
-                  disabled={buying || tpBalance < listing.price}
-                  className="text-[9px] font-display uppercase tracking-wider px-2 py-1 border border-primary/30 text-primary hover:bg-primary/10 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                  style={{ clipPath: 'polygon(0 2px, 2px 0, calc(100% - 2px) 0, 100% 2px, 100% calc(100% - 2px), calc(100% - 2px) 100%, 2px 100%, 0 calc(100% - 2px))' }}
-                >
-                  🔷 {listing.price} TP
-                </button>
+                <div className="flex gap-1">
+                  {listing.seller_id === user?.id ? (
+                    <button
+                      onClick={() => onCancel(listing)}
+                      className="text-[9px] font-display uppercase tracking-wider px-2 py-1 border border-destructive/30 text-destructive hover:bg-destructive/10 transition-all"
+                      style={{ clipPath: 'polygon(0 2px, 2px 0, calc(100% - 2px) 0, 100% 2px, 100% calc(100% - 2px), calc(100% - 2px) 100%, 2px 100%, 0 calc(100% - 2px))' }}
+                    >
+                      Cancelar
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => onBuy(listing)}
+                      disabled={buying || tpBalance < listing.price}
+                      className="text-[9px] font-display uppercase tracking-wider px-2 py-1 border border-primary/30 text-primary hover:bg-primary/10 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                      style={{ clipPath: 'polygon(0 2px, 2px 0, calc(100% - 2px) 0, 100% 2px, 100% calc(100% - 2px), calc(100% - 2px) 100%, 2px 100%, 0 calc(100% - 2px))' }}
+                    >
+                      🔷 {listing.price} TP
+                    </button>
+                  )}
+                </div>
               </div>
             );
           }
