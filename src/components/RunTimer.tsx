@@ -74,8 +74,8 @@ const RunTimer = ({ totalMinutes, open, onClose, onComplete }: RunTimerProps) =>
   const size = 280;
   const cx = size / 2;
   const cy = size / 2;
-  const outerRadius = 120;
-  const innerRadius = 88;
+  const outerRadius = 118;
+  const innerRadius = 98;
   const gapDeg = 5;
   const segmentAngle = (360 - gapDeg * segments) / segments;
 
