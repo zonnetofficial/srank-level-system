@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { useGameState } from '@/hooks/useGameState';
 import { useNavigate } from 'react-router-dom';
 import VictorianFrame from '@/components/VictorianFrame';
+import ClassChallengeDialog from '@/components/ClassChallengeDialog';
 import {
   STAT_LABELS,
   STAT_ICONS,
@@ -10,15 +12,31 @@ import {
   getClassTitle,
   getNextClassTitle,
 } from '@/lib/gameData';
+import { getClassChallenge } from '@/lib/classChallenges';
 
 const statKeys: StatKey[] = ['int', 'str', 'agi', 'vit', 'end'];
 
 const Titles = () => {
-  const { state } = useGameState();
+  const { state, completeClassChallengeTask } = useGameState();
   const navigate = useNavigate();
   const currentClass = getClassTitle(state.level, state.classTitles);
   const nextClass = getNextClassTitle(state.level, state.classTitles);
   const obtainedClasses = state.classTitles.filter(t => t.obtained);
+
+  // Find eligible (level reached but not obtained) classes
+  const eligibleClasses = state.classTitles.filter(
+    t => !t.obtained && state.level >= t.requiredLevel
+  );
+
+  const [challengeClass, setChallengeClass] = useState<string | null>(null);
+  const activeChallenge = challengeClass ? getClassChallenge(challengeClass) : null;
+  const completedStats = challengeClass ? (state.classChangeProgress[challengeClass] || []) : [];
+
+  const handleCompleteTask = (stat: StatKey) => {
+    if (challengeClass) {
+      completeClassChallengeTask(challengeClass, stat);
+    }
+  };
 
   return (
     <VictorianFrame>
@@ -60,7 +78,41 @@ const Titles = () => {
           ))}
         </div>
 
-        {nextClass && (
+        {/* Eligible classes - challenge available */}
+        {eligibleClasses.length > 0 && (
+          <div className="mt-4 space-y-2">
+            {eligibleClasses.map(t => {
+              const progress = state.classChangeProgress[t.name] || [];
+              return (
+                <button
+                  key={t.name}
+                  onClick={() => setChallengeClass(t.name)}
+                  className="w-full text-left p-3 rounded-lg border border-accent/40 bg-accent/5 hover:bg-accent/10 transition-all"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-xl">{t.icon}</span>
+                    <div className="flex-1">
+                      <div className="font-display text-sm font-bold text-accent">
+                        {t.name}
+                      </div>
+                      <div className="text-[10px] text-muted-foreground">
+                        Desafío disponible • {progress.length}/5 completados
+                      </div>
+                    </div>
+                    <span className="text-xs font-display text-accent animate-pulse">⚔️</span>
+                  </div>
+                  {progress.length > 0 && (
+                    <div className="mt-2 stat-bar-track h-1.5">
+                      <div className="stat-bar-fill bg-accent/60" style={{ width: `${(progress.length / 5) * 100}%` }} />
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {nextClass && !eligibleClasses.find(t => t.name === nextClass.name) && (
           <div className="mt-4 p-3 rounded-lg border border-border border-dashed">
             <div className="text-xs text-muted-foreground mb-1">
               Siguiente: {nextClass.icon} {nextClass.name}
@@ -129,6 +181,15 @@ const Titles = () => {
           })}
         </div>
       </div>
+
+      {/* Class Challenge Dialog */}
+      <ClassChallengeDialog
+        challenge={activeChallenge}
+        completedStats={completedStats}
+        open={!!challengeClass}
+        onCompleteTask={handleCompleteTask}
+        onClose={() => setChallengeClass(null)}
+      />
     </VictorianFrame>
   );
 };

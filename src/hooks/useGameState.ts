@@ -25,6 +25,7 @@ function loadState(): GameState {
     // Backward compat
     if (parsed.pendingPunishments === undefined) parsed.pendingPunishments = 0;
     if (!parsed.lastCheckedDate) parsed.lastCheckedDate = getToday();
+    if (!parsed.classChangeProgress) parsed.classChangeProgress = {};
     return parsed;
   } catch {
     return createInitialState();
@@ -231,10 +232,8 @@ export function useGameState() {
         newXpToNext = xpForLevel(newLevel);
       }
 
-      const newTitles = prev.classTitles.map(t => ({
-        ...t,
-        obtained: t.obtained || newLevel >= t.requiredLevel,
-      }));
+      // Don't auto-obtain: class titles require completing a challenge
+      const newTitles = prev.classTitles;
 
       const newStreak = prev.currentStreak + 1;
       const newCompleted = prev.totalCompleted + 1;
@@ -375,10 +374,7 @@ export function useGameState() {
         newLevel++;
         newXpToNext = xpForLevel(newLevel);
       }
-      const newTitles = prev.classTitles.map(t => ({
-        ...t,
-        obtained: t.obtained || newLevel >= t.requiredLevel,
-      }));
+      const newTitles = prev.classTitles;
 
       const newCooldowns = {
         ...prev.skillCooldowns,
@@ -448,10 +444,7 @@ export function useGameState() {
         newLevel++;
         newXpToNext = xpForLevel(newLevel);
       }
-      const newTitles = prev.classTitles.map(t => ({
-        ...t,
-        obtained: t.obtained || newLevel >= t.requiredLevel,
-      }));
+      const newTitles = prev.classTitles;
 
       return {
         ...prev,
@@ -564,7 +557,6 @@ export function useGameState() {
       }
 
       s.classTitles = s.classTitles || prev.classTitles;
-      s.classTitles = prev.classTitles.map(t => ({ ...t, obtained: t.obtained || s.level >= t.requiredLevel }));
       s.personalRecords = {
         ...prev.personalRecords,
         longestStreak: Math.max(prev.personalRecords.longestStreak, s.currentStreak),
@@ -572,6 +564,32 @@ export function useGameState() {
       };
 
       return s;
+    });
+  }, []);
+
+  // Class change challenge: complete one stat task for a class
+  const completeClassChallengeTask = useCallback((className: string, stat: StatKey) => {
+    setState(prev => {
+      const progress = { ...prev.classChangeProgress };
+      const completed = progress[className] ? [...progress[className]] : [];
+      if (completed.includes(stat)) return prev; // already done
+      completed.push(stat);
+      progress[className] = completed;
+
+      // Check if all 5 stats completed
+      const allDone = completed.length >= 5;
+      let newTitles = prev.classTitles;
+      if (allDone) {
+        newTitles = prev.classTitles.map(t =>
+          t.name === className ? { ...t, obtained: true } : t
+        );
+      }
+
+      return {
+        ...prev,
+        classChangeProgress: progress,
+        classTitles: newTitles,
+      };
     });
   }, []);
 
@@ -593,5 +611,6 @@ export function useGameState() {
     completePunishment,
     failPunishment,
     simulateDays,
+    completeClassChallengeTask,
   };
 }

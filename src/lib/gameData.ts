@@ -64,6 +64,7 @@ export interface GameState {
   };
   pendingPunishments: number;
   lastCheckedDate: string; // YYYY-MM-DD
+  classChangeProgress: Record<string, StatKey[]>; // className -> completed stat tasks
 }
 
 // ==================== CONSTANTS ====================
@@ -248,6 +249,7 @@ export function createInitialState(): GameState {
     personalRecords: { longestStreak: 0, maxLevel: 1 },
     pendingPunishments: 0,
     lastCheckedDate: getToday(),
+    classChangeProgress: {},
   };
 }
 
