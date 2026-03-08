@@ -9,30 +9,47 @@ const DailyQuest = () => {
   const [timerOpen, setTimerOpen] = useState(false);
 
   const hasQuest = !!todayQuest;
-
   const allExercisesDone = todayQuest?.exercises?.every(e => e.completed) ?? false;
   const runDone = todayQuest?.runCompleted ?? false;
   const canComplete = allExercisesDone && runDone;
+  const completedCount = todayQuest?.exercises?.filter(e => e.completed).length ?? 0;
+  const totalExercises = todayQuest?.exercises?.length ?? 0;
 
   return (
-    <div className="min-h-screen bg-background pb-20 px-4 pt-6 max-w-lg mx-auto">
-      <h1 className="font-display text-xl font-bold text-center text-primary text-glow-primary mb-6">
-        ⚔️ Daily Quest
-      </h1>
+    <div className="min-h-screen bg-background px-4 pt-6 pb-6 max-w-lg mx-auto">
+      {/* Back button */}
+      <button
+        onClick={() => navigate('/')}
+        className="text-muted-foreground hover:text-foreground text-xs font-display uppercase tracking-wider mb-4 flex items-center gap-1 transition-colors"
+      >
+        ← Volver
+      </button>
 
-      <div className="text-center text-xs font-display text-muted-foreground mb-4 uppercase tracking-wider">
-        {new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+      {/* Header */}
+      <div className="text-center mb-6">
+        <h1 className="font-display text-2xl font-bold text-primary text-glow-primary tracking-wider">
+          ⚔️ DAILY QUEST
+        </h1>
+        <div className="text-xs font-display text-muted-foreground uppercase tracking-wider mt-1">
+          {new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
+        </div>
+        {todayQuest?.status === 'pending' && (
+          <div className="mt-2 flex items-center justify-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+            <span className="text-[10px] font-display text-primary uppercase tracking-widest">En progreso</span>
+          </div>
+        )}
       </div>
 
       {/* Rest Day */}
       {restDay && !hasQuest && (
-        <div className="rpg-panel-glow text-center py-8">
-          <div className="text-5xl mb-3">💤</div>
-          <h2 className="font-display text-lg font-bold text-accent mb-2">Día de Descanso</h2>
-          <p className="text-sm text-muted-foreground mb-4">Recovery Mission – Tu cuerpo se regenera</p>
+        <div className="rpg-panel-glow text-center py-10 animate-fade-in">
+          <div className="text-6xl mb-4">💤</div>
+          <h2 className="font-display text-xl font-bold text-accent text-glow-accent mb-2">Día de Descanso</h2>
+          <p className="text-sm text-muted-foreground mb-6">Recovery Mission – Tu cuerpo se regenera</p>
           <button
             onClick={startQuest}
-            className="px-6 py-2 rounded-lg bg-accent text-accent-foreground font-display text-sm uppercase tracking-wider hover:opacity-90 transition-opacity"
+            className="px-8 py-3 rounded-lg bg-accent text-accent-foreground font-display text-sm uppercase tracking-widest hover:opacity-90 transition-all glow-accent"
           >
             Registrar Descanso
           </button>
@@ -41,102 +58,182 @@ const DailyQuest = () => {
 
       {/* No quest started */}
       {!restDay && !hasQuest && (
-        <div className="rpg-panel-glow text-center py-8">
-          <div className="text-5xl mb-3 animate-float">⚔️</div>
-          <h2 className="font-display text-lg font-bold text-foreground mb-4">Misión Disponible</h2>
+        <div className="animate-fade-in">
+          <div className="rpg-panel-glow text-center py-8 mb-5">
+            <div className="text-6xl mb-3 animate-float">⚔️</div>
+            <h2 className="font-display text-xl font-bold text-foreground mb-1">Misión Disponible</h2>
+            <p className="text-xs text-muted-foreground font-display">Acepta la misión para comenzar</p>
+          </div>
 
-          <div className="text-left rpg-panel mb-4 space-y-2">
-            <div className="text-xs font-display uppercase tracking-wider text-muted-foreground mb-2">
-              🏃 Carrera
-            </div>
-            <div className="text-sm text-foreground">
-              {state.runMode === 'time'
-                ? `Correr ${state.runProgression} minutos`
-                : 'Correr 5 km (registrar tiempo)'}
-            </div>
-
-            <div className="text-xs font-display uppercase tracking-wider text-muted-foreground mt-3 mb-2">
-              💪 Ejercicios
-            </div>
-            {state.exerciseProgression.map((ex, i) => (
-              <div key={i} className="text-sm text-foreground">
-                {ex.name}: {ex.reps} reps
+          {/* Mission preview */}
+          <div className="space-y-3 mb-6">
+            <div className="rpg-panel">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20">
+                  <span className="text-xl">🏃</span>
+                </div>
+                <div>
+                  <div className="text-xs font-display uppercase tracking-wider text-primary">Carrera</div>
+                  <div className="text-sm text-foreground font-body">
+                    {state.runMode === 'time'
+                      ? `Correr ${state.runProgression} minutos`
+                      : 'Correr 5 km (registrar tiempo)'}
+                  </div>
+                </div>
               </div>
-            ))}
+            </div>
+
+            <div className="rpg-panel">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-stat-str/10 flex items-center justify-center border border-stat-str/20">
+                  <span className="text-xl">💪</span>
+                </div>
+                <div>
+                  <div className="text-xs font-display uppercase tracking-wider text-stat-str">Ejercicios</div>
+                  <div className="text-xs text-muted-foreground">{state.exerciseProgression.length} ejercicios</div>
+                </div>
+              </div>
+              <div className="space-y-1.5 ml-[52px]">
+                {state.exerciseProgression.map((ex, i) => (
+                  <div key={i} className="text-sm text-foreground/80 flex justify-between">
+                    <span>{ex.name}</span>
+                    <span className="text-muted-foreground font-display text-xs">{ex.reps} reps</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           <button
             onClick={startQuest}
-            className="px-8 py-3 rounded-lg bg-primary text-primary-foreground font-display text-sm uppercase tracking-wider glow-primary hover:opacity-90 transition-opacity"
+            className="w-full py-4 rounded-lg bg-primary text-primary-foreground font-display text-sm uppercase tracking-[0.2em] glow-primary hover:opacity-90 transition-all"
           >
-            Aceptar Misión
+            ⚔️ Aceptar Misión
           </button>
         </div>
       )}
 
       {/* Quest in progress */}
       {todayQuest?.status === 'pending' && (
-        <div className="space-y-4">
-          {/* Run section - clickable */}
-          <div
-            className="rpg-panel animate-pulse-glow cursor-pointer hover:border-primary/60 transition-colors"
-            onClick={() => setTimerOpen(true)}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-xs font-display uppercase tracking-wider text-primary">
-                🏃 Carrera
-              </div>
-              {runDone ? (
-                <span className="text-xs font-display text-accent">✅ Completado</span>
-              ) : (
-                <span className="text-xs font-display text-muted-foreground">Toca para iniciar →</span>
-              )}
+        <div className="space-y-4 animate-fade-in">
+          {/* Overall progress */}
+          <div className="rpg-panel">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-xs font-display uppercase tracking-wider text-muted-foreground">Progreso General</span>
+              <span className="text-xs font-display text-primary">
+                {(runDone ? 1 : 0) + completedCount} / {1 + totalExercises}
+              </span>
             </div>
-            <div className="text-sm text-foreground mb-2">
-              {state.runMode === 'time'
-                ? `Correr ${state.runProgression} minutos`
-                : 'Correr 5 km'}
-            </div>
-            <div className="stat-bar-track h-2">
+            <div className="stat-bar-track h-2.5">
               <div
                 className="stat-bar-fill bg-primary"
-                style={{ width: runDone ? '100%' : '0%', transition: 'width 0.5s ease' }}
+                style={{
+                  width: `${(((runDone ? 1 : 0) + completedCount) / (1 + totalExercises)) * 100}%`,
+                }}
               />
             </div>
           </div>
 
-          {/* Exercises with checkboxes */}
-          <div className="rpg-panel">
-            <div className="text-xs font-display uppercase tracking-wider text-stat-str mb-3">
-              💪 Ejercicios
-            </div>
-            {todayQuest.exercises?.map((ex, i) => (
-              <div
-                key={i}
-                className="flex justify-between items-center py-2 border-b border-border last:border-0 cursor-pointer"
-                onClick={() => !ex.completed && completeExercise(i)}
-              >
-                <span className={`text-sm ${ex.completed ? 'text-accent line-through' : 'text-foreground'}`}>
-                  {ex.name}
-                </span>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-display text-muted-foreground">{ex.reps} reps</span>
-                  <span className="text-lg">{ex.completed ? '✅' : '⬜'}</span>
+          {/* Run section */}
+          <div
+            className={`rpg-panel cursor-pointer transition-all hover:border-primary/50 ${
+              runDone ? 'border-accent/30' : 'animate-pulse-glow'
+            }`}
+            onClick={() => !runDone && setTimerOpen(true)}
+          >
+            <div className="flex items-center gap-3">
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center border transition-colors ${
+                runDone
+                  ? 'bg-accent/10 border-accent/30'
+                  : 'bg-primary/10 border-primary/30'
+              }`}>
+                <span className="text-2xl">{runDone ? '✅' : '🏃'}</span>
+              </div>
+              <div className="flex-1">
+                <div className="flex justify-between items-center">
+                  <span className={`text-sm font-display font-semibold uppercase tracking-wider ${
+                    runDone ? 'text-accent' : 'text-primary'
+                  }`}>
+                    Carrera
+                  </span>
+                  {!runDone && (
+                    <span className="text-[10px] font-display text-muted-foreground animate-pulse">
+                      Toca para iniciar →
+                    </span>
+                  )}
+                </div>
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  {state.runMode === 'time'
+                    ? `${state.runProgression} minutos`
+                    : '5 km'}
+                  {runDone && <span className="text-accent ml-2">• Completado</span>}
                 </div>
               </div>
-            ))}
+            </div>
           </div>
 
+          {/* Exercises */}
+          <div className="rpg-panel">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-stat-str/10 flex items-center justify-center border border-stat-str/20">
+                  <span className="text-lg">💪</span>
+                </div>
+                <span className="text-sm font-display font-semibold uppercase tracking-wider text-stat-str">
+                  Ejercicios
+                </span>
+              </div>
+              <span className="text-xs font-display text-muted-foreground">
+                {completedCount}/{totalExercises}
+              </span>
+            </div>
+
+            <div className="space-y-1">
+              {todayQuest.exercises?.map((ex, i) => (
+                <div
+                  key={i}
+                  className={`flex justify-between items-center py-3 px-3 rounded-lg cursor-pointer transition-all ${
+                    ex.completed
+                      ? 'bg-accent/5 border border-accent/15'
+                      : 'hover:bg-secondary/50 border border-transparent'
+                  }`}
+                  onClick={() => !ex.completed && completeExercise(i)}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-6 h-6 rounded-md flex items-center justify-center text-xs transition-all ${
+                      ex.completed
+                        ? 'bg-accent/20 text-accent border border-accent/30'
+                        : 'bg-secondary border border-border text-muted-foreground'
+                    }`}>
+                      {ex.completed ? '✓' : i + 1}
+                    </div>
+                    <span className={`text-sm transition-colors ${
+                      ex.completed ? 'text-accent/80 line-through' : 'text-foreground'
+                    }`}>
+                      {ex.name}
+                    </span>
+                  </div>
+                  <span className={`text-xs font-display ${
+                    ex.completed ? 'text-accent/60' : 'text-muted-foreground'
+                  }`}>
+                    {ex.reps} reps
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Complete button */}
           <button
             onClick={completeQuest}
             disabled={!canComplete}
-            className={`w-full py-4 rounded-lg font-display text-sm uppercase tracking-[0.2em] transition-opacity ${
+            className={`w-full py-4 rounded-lg font-display text-sm uppercase tracking-[0.2em] transition-all ${
               canComplete
-                ? 'bg-primary text-primary-foreground glow-primary hover:opacity-90'
-                : 'bg-muted text-muted-foreground cursor-not-allowed opacity-50'
+                ? 'bg-accent text-accent-foreground glow-accent hover:opacity-90'
+                : 'bg-muted text-muted-foreground cursor-not-allowed opacity-40'
             }`}
           >
-            {canComplete ? '✅ Misión Completada' : '⏳ Completa todas las tareas'}
+            {canComplete ? '🏆 Completar Misión' : '⏳ Completa todas las tareas'}
           </button>
 
           <RunTimer
@@ -150,29 +247,39 @@ const DailyQuest = () => {
 
       {/* Quest completed */}
       {todayQuest?.status === 'completed' && (
-        <div className="rpg-panel-glow text-center py-8">
-          <div className="text-5xl mb-3">🏆</div>
-          <h2 className="font-display text-lg font-bold text-accent text-glow-accent mb-2">
-            ¡Misión Completada!
-          </h2>
-          <p className="text-sm text-muted-foreground mb-4">
-            +{10 + Math.floor(state.level * 2)} XP ganados
-          </p>
+        <div className="animate-fade-in text-center">
+          <div className="rpg-panel-glow py-10">
+            <div className="text-6xl mb-4">🏆</div>
+            <h2 className="font-display text-2xl font-bold text-accent text-glow-accent mb-2">
+              ¡Misión Completada!
+            </h2>
+            <div className="inline-block mt-2 px-4 py-1.5 rounded-full bg-accent/10 border border-accent/20">
+              <span className="text-sm font-display text-accent">
+                +{10 + Math.floor(state.level * 2)} XP
+              </span>
+            </div>
+          </div>
           <button
             onClick={() => navigate('/')}
-            className="px-6 py-2 rounded-lg bg-secondary text-secondary-foreground font-display text-sm uppercase tracking-wider hover:opacity-90 transition-opacity"
+            className="mt-4 w-full py-3 rounded-lg bg-secondary text-secondary-foreground font-display text-sm uppercase tracking-wider hover:opacity-90 transition-opacity"
           >
-            Volver al Home
+            ← Volver al Home
           </button>
         </div>
       )}
 
       {/* Rest registered */}
       {todayQuest?.status === 'rest' && (
-        <div className="rpg-panel text-center py-8">
-          <div className="text-5xl mb-3">💤</div>
-          <h2 className="font-display text-lg font-bold text-accent mb-2">Día de Descanso</h2>
+        <div className="rpg-panel text-center py-10 animate-fade-in">
+          <div className="text-6xl mb-4">💤</div>
+          <h2 className="font-display text-xl font-bold text-accent text-glow-accent mb-2">Día de Descanso</h2>
           <p className="text-sm text-muted-foreground">Recuperación registrada</p>
+          <button
+            onClick={() => navigate('/')}
+            className="mt-6 px-6 py-2 rounded-lg bg-secondary text-secondary-foreground font-display text-sm uppercase tracking-wider hover:opacity-90 transition-opacity"
+          >
+            ← Volver
+          </button>
         </div>
       )}
     </div>
