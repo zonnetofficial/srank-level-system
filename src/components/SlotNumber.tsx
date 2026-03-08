@@ -21,8 +21,8 @@ const SlotNumber = ({ value, className = '', delay = 0 }: SlotNumberProps) => {
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      // Initial mount — simple slide in
-      setAnimClass('animate-slide-nudge');
+      // Initial mount — just show, no pop
+      setAnimClass('');
       setKey(k => k + 1);
       prevValue.current = displayValue;
     }, delay);

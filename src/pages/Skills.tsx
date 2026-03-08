@@ -147,7 +147,7 @@ const Skills = () => {
 
         {testResult ? (
           <div className="text-center py-6 space-y-4 animate-scale-up">
-            <div className="text-5xl mb-2 animate-slide-nudge">
+            <div className="text-5xl mb-2">
               {testResult.perfect ? '🌟' : testResult.passed ? '✅' : '❌'}
             </div>
             <h2 className="font-display text-lg font-bold text-foreground animate-glitch-in delay-200">
@@ -311,7 +311,7 @@ const Skills = () => {
             <div key={key} className={`rpg-panel ${glowClass} animate-slide-up`} style={{ animationDelay: `${200 + i * 120}ms` }}>
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-xl animate-slide-nudge" style={{ animationDelay: `${400 + i * 120}ms` }}>{STAT_ICONS[key]}</span>
+                  <span className="text-xl">{STAT_ICONS[key]}</span>
                   <h3 className={`font-display text-sm uppercase tracking-wider text-stat-${key}`}>
                     {STAT_LABELS[key]}
                   </h3>

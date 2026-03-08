@@ -35,7 +35,7 @@ const DailyQuest = () => {
       {/* Rest Day */}
       {restDay && (
         <div className="rpg-panel-glow text-center py-10 animate-scale-up">
-          <div className="text-6xl mb-4 animate-slide-nudge">💤</div>
+          <div className="text-6xl mb-4">💤</div>
           <h2 className="font-display text-xl font-bold text-accent text-glow-accent mb-2">Día de Descanso</h2>
           <p className="text-sm text-muted-foreground mb-2">Recovery Mission – Tu cuerpo se regenera</p>
           <p className="text-xs text-accent">+1 INT, +1 VIT registrados</p>
@@ -179,11 +179,11 @@ const DailyQuest = () => {
       {todayQuest?.status === 'completed' && (
         <div className="text-center">
           <div className="rpg-panel-glow py-10 animate-scale-up">
-            <div className="text-6xl mb-4 animate-slide-nudge delay-200">🏆</div>
+            <div className="text-6xl mb-4">🏆</div>
             <h2 className="font-display text-2xl font-bold text-accent text-glow-accent mb-2 animate-glitch-in delay-300">
               ¡Misión Completada!
             </h2>
-            <div className="inline-block mt-2 px-4 py-1.5 rounded-full bg-accent/10 border border-accent/20 animate-number-pop delay-500">
+            <div className="inline-block mt-2 px-4 py-1.5 rounded-full bg-accent/10 border border-accent/20 animate-fade-in delay-500">
               <span className="text-sm font-display text-accent">
                 +{10 + Math.floor(state.level * 2)} XP
               </span>

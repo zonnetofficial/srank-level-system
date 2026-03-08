@@ -670,19 +670,19 @@
 }
 
 .animate-text-glitch {
-  animation: text-glitch-1 10s ease-in-out infinite;
+  animation: text-glitch-1 18s ease-in-out infinite;
 }
 
 .animate-text-glitch-alt {
-  animation: text-glitch-2 14s ease-in-out infinite;
+  animation: text-glitch-2 24s ease-in-out infinite;
 }
 
 .animate-text-glitch-heavy {
-  animation: text-glitch-3 18s ease-in-out infinite;
+  animation: text-glitch-3 30s ease-in-out infinite;
 }
 
 .animate-text-glitch-slow {
-  animation: text-glitch-1 16s ease-in-out infinite, text-glitch-2 22s ease-in-out infinite 5s;
+  animation: text-glitch-1 28s ease-in-out infinite, text-glitch-2 36s ease-in-out infinite 8s;
 }
 
 /* ═══════════════════════════════════════════════════
