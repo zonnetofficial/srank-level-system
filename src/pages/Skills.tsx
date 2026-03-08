@@ -147,7 +147,7 @@ const Skills = () => {
 
         {testResult ? (
           <div className="text-center py-6 space-y-4 animate-scale-up">
-            <div className="text-5xl mb-2 animate-slide-nudge">
+            <div className="text-5xl mb-2">
               {testResult.perfect ? '🌟' : testResult.passed ? '✅' : '❌'}
             </div>
             <h2 className="font-display text-lg font-bold text-foreground animate-glitch-in delay-200">
