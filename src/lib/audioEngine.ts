@@ -235,18 +235,420 @@ export function sfxPunishment() {
   });
 }
 
-// ─── SEQUENCER-BASED MUSIC ENGINE ────────────────────────
+// ─── ADVANCED MUSIC ENGINE ───────────────────────────────
+// Rich synthesis: FM keys, layered pads w/ LFO, genre-specific drum kits
 
 type MusicTheme = 'home' | 'quest' | 'dungeon' | 'shop' | 'battle' | 'menu';
-
 const NOTE = (midi: number) => 440 * Math.pow(2, (midi - 69) / 12);
+
+// ─── INSTRUMENT: Warm Pad (layered, LFO-modulated, chorus-like) ───
+function scheduleWarmPad(ctx: AudioContext, time: number, midiNotes: number[], duration: number, gain: number, brightness: number, dest: GainNode) {
+  // Master filter with slow sweep for movement
+  const masterFilt = ctx.createBiquadFilter();
+  masterFilt.type = 'lowpass';
+  masterFilt.frequency.setValueAtTime(brightness * 0.6, time);
+  masterFilt.frequency.linearRampToValueAtTime(brightness, time + duration * 0.4);
+  masterFilt.frequency.linearRampToValueAtTime(brightness * 0.7, time + duration);
+  masterFilt.Q.setValueAtTime(0.7, time);
+  masterFilt.connect(dest);
+
+  midiNotes.forEach(midi => {
+    const freq = NOTE(midi);
+    // 4 detuned voices per note for rich chorus
+    const detunes = [-12, -5, 5, 12];
+    const types: OscillatorType[] = ['sine', 'triangle', 'sine', 'triangle'];
+    detunes.forEach((det, j) => {
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = types[j];
+      osc.frequency.setValueAtTime(freq, time);
+      osc.detune.setValueAtTime(det, time);
+      // Slow LFO on detune for shimmer
+      const lfo = ctx.createOscillator();
+      const lfoGain = ctx.createGain();
+      lfo.type = 'sine';
+      lfo.frequency.setValueAtTime(0.3 + j * 0.15, time); // different rates
+      lfoGain.gain.setValueAtTime(3, time); // subtle pitch wobble
+      lfo.connect(lfoGain);
+      lfoGain.connect(osc.detune);
+      lfo.start(time); lfo.stop(time + duration + 0.2);
+      // Slow attack, sustained, slow release
+      const attack = Math.min(1.2, duration * 0.2);
+      const release = Math.min(1.5, duration * 0.25);
+      g.gain.setValueAtTime(0.001, time);
+      g.gain.linearRampToValueAtTime(gain * 0.25, time + attack);
+      g.gain.setValueAtTime(gain * 0.25, time + duration - release);
+      g.gain.linearRampToValueAtTime(0.001, time + duration);
+      osc.connect(g); g.connect(masterFilt);
+      osc.start(time); osc.stop(time + duration + 0.1);
+    });
+  });
+
+  // Sub layer (one octave down, just the root)
+  if (midiNotes.length > 0) {
+    const subOsc = ctx.createOscillator();
+    const subG = ctx.createGain();
+    subOsc.type = 'sine';
+    subOsc.frequency.setValueAtTime(NOTE(midiNotes[0] - 12), time);
+    const attack = Math.min(1.5, duration * 0.25);
+    subG.gain.setValueAtTime(0.001, time);
+    subG.gain.linearRampToValueAtTime(gain * 0.15, time + attack);
+    subG.gain.setValueAtTime(gain * 0.15, time + duration - attack);
+    subG.gain.linearRampToValueAtTime(0.001, time + duration);
+    subOsc.connect(subG); subG.connect(dest); // bypass filter for clean sub
+    subOsc.start(time); subOsc.stop(time + duration + 0.1);
+  }
+}
+
+// ─── INSTRUMENT: FM Electric Piano / Keys ───
+function scheduleFMKeys(ctx: AudioContext, time: number, midi: number, duration: number, brightness: number, velocity: number, dest: GainNode) {
+  const freq = NOTE(midi);
+  // FM synthesis: carrier + modulator
+  const mod = ctx.createOscillator();
+  const modGain = ctx.createGain();
+  mod.type = 'sine';
+  mod.frequency.setValueAtTime(freq * 2, time); // 2:1 ratio (classic EP)
+  modGain.gain.setValueAtTime(freq * brightness * velocity, time);
+  modGain.gain.exponentialRampToValueAtTime(freq * 0.1, time + duration * 0.8);
+  mod.connect(modGain);
+
+  const carrier = ctx.createOscillator();
+  const carrierGain = ctx.createGain();
+  carrier.type = 'sine';
+  carrier.frequency.setValueAtTime(freq, time);
+  modGain.connect(carrier.frequency); // FM connection
+
+  // Sharp attack, natural decay
+  carrierGain.gain.setValueAtTime(0.001, time);
+  carrierGain.gain.linearRampToValueAtTime(0.12 * velocity, time + 0.005);
+  carrierGain.gain.exponentialRampToValueAtTime(0.05 * velocity, time + duration * 0.3);
+  carrierGain.gain.exponentialRampToValueAtTime(0.001, time + duration);
+
+  carrier.connect(carrierGain); carrierGain.connect(dest);
+  mod.start(time); carrier.start(time);
+  mod.stop(time + duration + 0.05); carrier.stop(time + duration + 0.05);
+
+  // Add a second harmonic for body
+  const h2 = ctx.createOscillator();
+  const h2g = ctx.createGain();
+  h2.type = 'sine';
+  h2.frequency.setValueAtTime(freq * 2, time);
+  h2g.gain.setValueAtTime(0.001, time);
+  h2g.gain.linearRampToValueAtTime(0.03 * velocity, time + 0.005);
+  h2g.gain.exponentialRampToValueAtTime(0.001, time + duration * 0.5);
+  h2.connect(h2g); h2g.connect(dest);
+  h2.start(time); h2.stop(time + duration * 0.5 + 0.05);
+}
+
+// ─── INSTRUMENT: Pluck/Bell (for arpeggios) ───
+function schedulePluck(ctx: AudioContext, time: number, midi: number, duration: number, dest: GainNode) {
+  const freq = NOTE(midi);
+  // Karplus-Strong inspired: filtered noise burst + resonant body
+  const bufSize = Math.floor(ctx.sampleRate * 0.01);
+  const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < bufSize; i++) d[i] = Math.random() * 2 - 1;
+  const noiseSrc = ctx.createBufferSource();
+  noiseSrc.buffer = buf;
+  const noiseG = ctx.createGain();
+  noiseG.gain.setValueAtTime(0.08, time);
+  noiseG.gain.exponentialRampToValueAtTime(0.001, time + 0.02);
+  noiseSrc.connect(noiseG); noiseG.connect(dest);
+  noiseSrc.start(time);
+
+  // Tonal body
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  const filt = ctx.createBiquadFilter();
+  osc.type = 'triangle';
+  osc.frequency.setValueAtTime(freq, time);
+  filt.type = 'lowpass';
+  filt.frequency.setValueAtTime(freq * 6, time);
+  filt.frequency.exponentialRampToValueAtTime(freq * 1.5, time + duration);
+  filt.Q.setValueAtTime(2, time);
+  g.gain.setValueAtTime(0.001, time);
+  g.gain.linearRampToValueAtTime(0.06, time + 0.003);
+  g.gain.exponentialRampToValueAtTime(0.001, time + duration);
+  osc.connect(filt); filt.connect(g); g.connect(dest);
+  osc.start(time); osc.stop(time + duration + 0.05);
+}
+
+// ─── INSTRUMENT: Deep 808 Sub Bass ───
+function schedule808Sub(ctx: AudioContext, time: number, midi: number, duration: number, dest: GainNode) {
+  const freq = NOTE(midi);
+  // Main sine body with pitch drop
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(freq * 1.5, time);
+  osc.frequency.exponentialRampToValueAtTime(freq, time + 0.04);
+  // Distortion for warmth
+  const shaper = ctx.createWaveShaper();
+  const curve = new Float32Array(256);
+  for (let i = 0; i < 256; i++) {
+    const x = (i / 128) - 1;
+    curve[i] = (Math.PI + 2) * x / (Math.PI + 2 * Math.abs(x)); // soft clip
+  }
+  shaper.curve = curve;
+  shaper.oversample = '2x';
+  g.gain.setValueAtTime(0.001, time);
+  g.gain.linearRampToValueAtTime(0.18, time + 0.01);
+  g.gain.setValueAtTime(0.18, time + duration * 0.5);
+  g.gain.exponentialRampToValueAtTime(0.001, time + duration);
+  osc.connect(shaper); shaper.connect(g); g.connect(dest);
+  osc.start(time); osc.stop(time + duration + 0.05);
+}
+
+// ─── INSTRUMENT: House Bass (filtered saw + sub) ───
+function scheduleHouseBass(ctx: AudioContext, time: number, midi: number, duration: number, dest: GainNode) {
+  const freq = NOTE(midi);
+  // Saw layer with filter envelope
+  const saw = ctx.createOscillator();
+  const sawG = ctx.createGain();
+  const filt = ctx.createBiquadFilter();
+  saw.type = 'sawtooth';
+  saw.frequency.setValueAtTime(freq, time);
+  filt.type = 'lowpass';
+  filt.frequency.setValueAtTime(freq * 8, time);
+  filt.frequency.exponentialRampToValueAtTime(freq * 2, time + duration * 0.4);
+  filt.Q.setValueAtTime(3, time);
+  sawG.gain.setValueAtTime(0.001, time);
+  sawG.gain.linearRampToValueAtTime(0.08, time + 0.008);
+  sawG.gain.exponentialRampToValueAtTime(0.001, time + duration);
+  saw.connect(filt); filt.connect(sawG); sawG.connect(dest);
+  saw.start(time); saw.stop(time + duration + 0.05);
+  // Sub sine
+  const sub = ctx.createOscillator();
+  const subG = ctx.createGain();
+  sub.type = 'sine';
+  sub.frequency.setValueAtTime(freq, time);
+  subG.gain.setValueAtTime(0.001, time);
+  subG.gain.linearRampToValueAtTime(0.12, time + 0.005);
+  subG.gain.setValueAtTime(0.12, time + duration * 0.6);
+  subG.gain.exponentialRampToValueAtTime(0.001, time + duration);
+  sub.connect(subG); subG.connect(dest);
+  sub.start(time); sub.stop(time + duration + 0.05);
+}
+
+// ─── INSTRUMENT: Dark Drone (for dungeon/ambient) ───
+function scheduleDrone(ctx: AudioContext, time: number, midi: number, duration: number, dest: GainNode) {
+  const freq = NOTE(midi);
+  // Multiple detuned saws through heavy filtering
+  [-7, 0, 7, 12].forEach(det => {
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(freq, time);
+    osc.detune.setValueAtTime(det, time);
+    // Slow LFO
+    const lfo = ctx.createOscillator();
+    const lfoG = ctx.createGain();
+    lfo.type = 'sine';
+    lfo.frequency.setValueAtTime(0.1 + Math.random() * 0.2, time);
+    lfoG.gain.setValueAtTime(5, time);
+    lfo.connect(lfoG); lfoG.connect(osc.detune);
+    lfo.start(time); lfo.stop(time + duration + 0.1);
+
+    g.gain.setValueAtTime(0.001, time);
+    g.gain.linearRampToValueAtTime(0.02, time + duration * 0.3);
+    g.gain.setValueAtTime(0.02, time + duration * 0.7);
+    g.gain.linearRampToValueAtTime(0.001, time + duration);
+    osc.connect(g); g.connect(dest);
+    osc.start(time); osc.stop(time + duration + 0.1);
+  });
+}
+
+// ─── DRUM KITS ───────────────────────────────────────────
+
+// TRAP KIT: booming 808 kick, sharp snare, crispy hats
+function trapKick(ctx: AudioContext, time: number, vel: number, dest: GainNode) {
+  // Body: long 808 sine sweep
+  const body = ctx.createOscillator();
+  const bg = ctx.createGain();
+  body.type = 'sine';
+  body.frequency.setValueAtTime(180, time);
+  body.frequency.exponentialRampToValueAtTime(32, time + 0.18);
+  bg.gain.setValueAtTime(0.4 * vel, time);
+  bg.gain.setValueAtTime(0.35 * vel, time + 0.15);
+  bg.gain.exponentialRampToValueAtTime(0.001, time + 0.5);
+  body.connect(bg); bg.connect(dest);
+  body.start(time); body.stop(time + 0.55);
+  // Click transient
+  const clickBuf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.005), ctx.sampleRate);
+  const cd = clickBuf.getChannelData(0);
+  for (let i = 0; i < cd.length; i++) cd[i] = (Math.random() * 2 - 1) * (1 - i / cd.length);
+  const click = ctx.createBufferSource();
+  click.buffer = clickBuf;
+  const cg = ctx.createGain();
+  cg.gain.setValueAtTime(0.15 * vel, time);
+  const cf = ctx.createBiquadFilter();
+  cf.type = 'bandpass'; cf.frequency.setValueAtTime(4000, time); cf.Q.setValueAtTime(2, time);
+  click.connect(cf); cf.connect(cg); cg.connect(dest);
+  click.start(time);
+}
+
+function trapSnare(ctx: AudioContext, time: number, vel: number, dest: GainNode) {
+  // Noise body - longer, crispier
+  const dur = 0.18;
+  const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur), ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const bp = ctx.createBiquadFilter();
+  bp.type = 'bandpass'; bp.frequency.setValueAtTime(4500, time); bp.Q.setValueAtTime(0.8, time);
+  const hp = ctx.createBiquadFilter();
+  hp.type = 'highpass'; hp.frequency.setValueAtTime(1500, time);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.2 * vel, time);
+  g.gain.exponentialRampToValueAtTime(0.001, time + dur);
+  src.connect(bp); bp.connect(hp); hp.connect(g); g.connect(dest);
+  src.start(time);
+  // Tonal body (snare wires)
+  const t1 = ctx.createOscillator();
+  const t1g = ctx.createGain();
+  t1.type = 'triangle'; t1.frequency.setValueAtTime(185, time);
+  t1g.gain.setValueAtTime(0.12 * vel, time);
+  t1g.gain.exponentialRampToValueAtTime(0.001, time + 0.08);
+  t1.connect(t1g); t1g.connect(dest);
+  t1.start(time); t1.stop(time + 0.09);
+}
+
+function trapHat(ctx: AudioContext, time: number, vel: number, open: boolean, dest: GainNode) {
+  const dur = open ? 0.2 : 0.035;
+  const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur * 1.5), ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  // Metallic resonance via multiple bandpasses
+  const bp1 = ctx.createBiquadFilter();
+  bp1.type = 'bandpass'; bp1.frequency.setValueAtTime(10000, time); bp1.Q.setValueAtTime(3, time);
+  const bp2 = ctx.createBiquadFilter();
+  bp2.type = 'highpass'; bp2.frequency.setValueAtTime(7000, time);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.06 * vel, time);
+  g.gain.exponentialRampToValueAtTime(0.001, time + dur);
+  src.connect(bp1); bp1.connect(bp2); bp2.connect(g); g.connect(dest);
+  src.start(time);
+}
+
+// HOUSE KIT: punchy kick, clap, shaker-like hats
+function houseKick(ctx: AudioContext, time: number, vel: number, dest: GainNode) {
+  // Punchy, shorter than trap
+  const body = ctx.createOscillator();
+  const bg = ctx.createGain();
+  body.type = 'sine';
+  body.frequency.setValueAtTime(120, time);
+  body.frequency.exponentialRampToValueAtTime(45, time + 0.06);
+  bg.gain.setValueAtTime(0.35 * vel, time);
+  bg.gain.exponentialRampToValueAtTime(0.001, time + 0.2);
+  body.connect(bg); bg.connect(dest);
+  body.start(time); body.stop(time + 0.25);
+  // Hard click
+  const click = ctx.createOscillator();
+  const cg = ctx.createGain();
+  click.type = 'square';
+  click.frequency.setValueAtTime(1500, time);
+  cg.gain.setValueAtTime(0.08 * vel, time);
+  cg.gain.exponentialRampToValueAtTime(0.001, time + 0.008);
+  click.connect(cg); cg.connect(dest);
+  click.start(time); click.stop(time + 0.01);
+}
+
+function houseClap(ctx: AudioContext, time: number, vel: number, dest: GainNode) {
+  // Multiple noise bursts for clap texture
+  [0, 0.01, 0.02].forEach(offset => {
+    const dur = 0.06;
+    const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur), ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass'; bp.frequency.setValueAtTime(1500, time + offset); bp.Q.setValueAtTime(0.5, time);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.12 * vel, time + offset);
+    g.gain.exponentialRampToValueAtTime(0.001, time + offset + dur);
+    src.connect(bp); bp.connect(g); g.connect(dest);
+    src.start(time + offset);
+  });
+  // Tail
+  const tailBuf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.15), ctx.sampleRate);
+  const td = tailBuf.getChannelData(0);
+  for (let i = 0; i < td.length; i++) td[i] = Math.random() * 2 - 1;
+  const tail = ctx.createBufferSource();
+  tail.buffer = tailBuf;
+  const tg = ctx.createGain();
+  const tf = ctx.createBiquadFilter();
+  tf.type = 'bandpass'; tf.frequency.setValueAtTime(2000, time); tf.Q.setValueAtTime(1, time);
+  tg.gain.setValueAtTime(0.08 * vel, time + 0.03);
+  tg.gain.exponentialRampToValueAtTime(0.001, time + 0.18);
+  tail.connect(tf); tf.connect(tg); tg.connect(dest);
+  tail.start(time + 0.03);
+}
+
+function houseHat(ctx: AudioContext, time: number, vel: number, open: boolean, dest: GainNode) {
+  const dur = open ? 0.25 : 0.05;
+  // Shaker-like: brighter, more metallic
+  const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur), ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const hp = ctx.createBiquadFilter();
+  hp.type = 'highpass'; hp.frequency.setValueAtTime(8500, time);
+  const peak = ctx.createBiquadFilter();
+  peak.type = 'peaking'; peak.frequency.setValueAtTime(12000, time); peak.gain.setValueAtTime(6, time);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.055 * vel, time);
+  g.gain.exponentialRampToValueAtTime(0.001, time + dur);
+  src.connect(hp); hp.connect(peak); peak.connect(g); g.connect(dest);
+  src.start(time);
+}
+
+// AMBIENT KIT: soft textural hits
+function ambientKick(ctx: AudioContext, time: number, vel: number, dest: GainNode) {
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(80, time);
+  osc.frequency.exponentialRampToValueAtTime(35, time + 0.15);
+  g.gain.setValueAtTime(0.15 * vel, time);
+  g.gain.exponentialRampToValueAtTime(0.001, time + 0.4);
+  osc.connect(g); g.connect(dest);
+  osc.start(time); osc.stop(time + 0.45);
+}
+
+function ambientPerc(ctx: AudioContext, time: number, vel: number, dest: GainNode) {
+  // Soft brush / shaker texture
+  const dur = 0.2;
+  const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur), ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const lp = ctx.createBiquadFilter();
+  lp.type = 'lowpass'; lp.frequency.setValueAtTime(3000, time);
+  const bp = ctx.createBiquadFilter();
+  bp.type = 'bandpass'; bp.frequency.setValueAtTime(5000, time); bp.Q.setValueAtTime(0.5, time);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.04 * vel, time);
+  g.gain.exponentialRampToValueAtTime(0.001, time + dur);
+  src.connect(lp); lp.connect(bp); bp.connect(g); g.connect(dest);
+  src.start(time);
+}
+
+// ─── THEME CONFIGS ───────────────────────────────────────
 
 interface ThemeConfig {
   bpm: number;
   genre: 'trap' | 'house' | 'ambient';
-  chords: number[][]; // 8 chords (8-bar loop), each [root, 3rd, 5th] MIDI
-  bassPattern: number[]; // 32 steps (2 bars pattern, repeated)
-  filterCutoff: number;
+  chords: number[][];
+  bassPattern: number[];
+  keyPattern: number[]; // which 16th notes play keys (per bar)
+  arpPattern: number[]; // which play pluck arpeggios
+  padBrightness: number;
   padGain: number;
   bassOctave: number;
 }
@@ -255,253 +657,152 @@ const THEMES: Record<MusicTheme, ThemeConfig> = {
   home: {
     bpm: 140,
     genre: 'trap',
-    // Dark but vibey - Cm → Ab → Fm → G → Cm → Eb → Ab → Bb
     chords: [
-      [48, 51, 55], // Cm
-      [44, 48, 51], // Ab
-      [41, 44, 48], // Fm
-      [43, 47, 50], // G (dominant for pull)
-      [48, 51, 55], // Cm
-      [39, 43, 46], // Eb
-      [44, 48, 51], // Ab
-      [46, 50, 53], // Bb
+      [48,51,55],[44,48,51],[41,44,48],[43,47,50],
+      [48,51,55],[39,43,46],[44,48,51],[46,50,53],
     ],
-    // 32-step bass: bouncy trap pattern (half-time feel)
-    bassPattern: [
-      1,0,0,0, 0,0,1,0, 0,0,0,0, 1,0,0,0,
-      0,0,1,0, 0,0,0,1, 0,0,0,0, 1,0,0,0,
-    ],
-    filterCutoff: 1100,
-    padGain: 0.05,
+    bassPattern: [1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0, 0,0,1,0,0,0,0,1,0,0,0,0,1,0,0,0],
+    keyPattern:  [0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0, 0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
+    arpPattern:  [0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0, 0,0,0,0,0,0,0,0,1,0,0,0,1,0,1,0],
+    padBrightness: 1100,
+    padGain: 0.045,
     bassOctave: -1,
   },
   quest: {
     bpm: 145,
     genre: 'trap',
     chords: [
-      [50, 53, 57], [48, 51, 55], [46, 49, 53], [43, 46, 50],
-      [50, 53, 57], [46, 49, 53], [41, 44, 48], [43, 46, 50],
+      [50,53,57],[48,51,55],[46,49,53],[43,46,50],
+      [50,53,57],[46,49,53],[41,44,48],[43,46,50],
     ],
-    bassPattern: [
-      1,0,0,0, 1,0,0,1, 0,0,1,0, 0,0,1,0,
-      1,0,0,0, 0,0,1,0, 1,0,0,1, 0,0,0,0,
-    ],
-    filterCutoff: 1000,
-    padGain: 0.05,
+    bassPattern: [1,0,0,0,1,0,0,1,0,0,1,0,0,0,1,0, 1,0,0,0,0,0,1,0,1,0,0,1,0,0,0,0],
+    keyPattern:  [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0, 0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0],
+    arpPattern:  [1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0, 0,0,0,0,1,0,0,0,1,0,0,0,0,0,1,0],
+    padBrightness: 900,
+    padGain: 0.04,
     bassOctave: -1,
   },
   dungeon: {
     bpm: 75,
     genre: 'ambient',
     chords: [
-      [47, 50, 54], [48, 51, 55], [45, 48, 52], [47, 50, 54],
-      [43, 47, 50], [45, 48, 52], [47, 50, 54], [48, 51, 55],
+      [47,50,54],[48,51,55],[45,48,52],[47,50,54],
+      [43,47,50],[45,48,52],[47,50,54],[48,51,55],
     ],
-    bassPattern: [
-      1,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,
-      1,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,
-    ],
-    filterCutoff: 500,
-    padGain: 0.07,
+    bassPattern: [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    keyPattern:  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    arpPattern:  [0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0],
+    padBrightness: 500,
+    padGain: 0.06,
     bassOctave: -2,
   },
   shop: {
     bpm: 124,
     genre: 'house',
     chords: [
-      [53, 56, 60], [51, 55, 58], [48, 51, 55], [46, 50, 53],
-      [53, 56, 60], [48, 52, 55], [46, 50, 53], [51, 55, 58],
+      [53,56,60],[51,55,58],[48,51,55],[46,50,53],
+      [53,56,60],[48,52,55],[46,50,53],[51,55,58],
     ],
-    bassPattern: [
-      1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0,
-      1,0,0,0, 1,0,0,0, 1,0,0,1, 0,0,1,0,
-    ],
-    filterCutoff: 1200,
-    padGain: 0.04,
+    bassPattern: [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0, 1,0,0,0,1,0,0,0,1,0,0,1,0,0,1,0],
+    keyPattern:  [0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0, 0,0,1,0,0,0,0,0,0,0,1,0,0,0,1,0],
+    arpPattern:  [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0, 0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],
+    padBrightness: 1400,
+    padGain: 0.035,
     bassOctave: -1,
   },
   battle: {
     bpm: 155,
     genre: 'trap',
     chords: [
-      [45, 48, 52], [43, 46, 50], [41, 44, 48], [40, 43, 48],
-      [45, 48, 52], [41, 44, 48], [43, 46, 50], [40, 43, 48],
+      [45,48,52],[43,46,50],[41,44,48],[40,43,48],
+      [45,48,52],[41,44,48],[43,46,50],[40,43,48],
     ],
-    bassPattern: [
-      1,0,1,0, 1,0,0,1, 0,1,0,0, 1,0,1,0,
-      1,0,0,1, 0,1,0,0, 1,0,1,0, 0,0,1,0,
-    ],
-    filterCutoff: 1400,
-    padGain: 0.05,
+    bassPattern: [1,0,1,0,1,0,0,1,0,1,0,0,1,0,1,0, 1,0,0,1,0,1,0,0,1,0,1,0,0,0,1,0],
+    keyPattern:  [0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0],
+    arpPattern:  [1,0,0,0,1,0,1,0,0,0,1,0,0,0,1,0, 1,0,1,0,0,0,1,0,1,0,0,0,1,0,0,0],
+    padBrightness: 800,
+    padGain: 0.04,
     bassOctave: -1,
   },
   menu: {
     bpm: 95,
     genre: 'ambient',
     chords: [
-      [48, 51, 55], [53, 56, 60], [50, 53, 57], [46, 50, 53],
-      [48, 52, 55], [44, 48, 51], [46, 50, 53], [48, 51, 55],
+      [48,51,55],[53,56,60],[50,53,57],[46,50,53],
+      [48,52,55],[44,48,51],[46,50,53],[48,51,55],
     ],
-    bassPattern: [
-      1,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,
-      0,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0,
-    ],
-    filterCutoff: 700,
+    bassPattern: [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0],
+    keyPattern:  [0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0],
+    arpPattern:  [0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0],
+    padBrightness: 700,
     padGain: 0.05,
     bassOctave: -1,
   },
 };
 
-// Drum patterns: 32 steps (2 bars that repeat)
-type DrumStep = [number, number, number, number]; // [kick, snare, hat, openHat]
+// Drum patterns: 32 steps [kick, snare/clap, closedHat, openHat]
+type DrumStep = [number, number, number, number];
 
 const DRUM_PATTERNS: Record<'trap' | 'house' | 'ambient', DrumStep[]> = {
   trap: [
-    // Bar 1: standard trap half-time
+    // Bar 1
     [1,  0, .5, 0],  [0, 0, .3, 0],  [0, 0, .7, 0],  [0, 0, .3, 0],
     [0,  0, .5, 0],  [0, 0, .4, 0],  [0, 0, .8, 0],  [0, 0, .4, 0],
-    [.7, .9,.5, 0],  [0, 0, .3, 0],  [0, 0, .7, 0],  [0, 0, .5, 0],
+    [.6,.9, .5, 0],  [0, 0, .3, 0],  [0, 0, .7, 0],  [0, 0, .5, 0],
     [0,  0, .5,.6],  [.5,0, .3, 0],  [0, 0, .8, 0],  [0, 0, .4, 0],
-    // Bar 2: variation with hi-hat rolls
-    [1,  0, .5, 0],  [0, 0, .4, 0],  [0, 0, .7, 0],  [0, 0, .5, 0],
-    [0,  0, .6, 0],  [0, 0, .6, 0],  [0, 0, .8, 0],  [0, 0, .6, 0],  // hat roll
-    [.8,.9, .5, 0],  [0, 0, .4, 0],  [0, 0, .7, 0],  [0, 0, .3, 0],
-    [0,  0, .6,.7],  [0, 0, .7, 0],  [0, 0, .8, 0],  [.4,0, .6, 0],  // fill
+    // Bar 2: rolls
+    [1,  0, .5, 0],  [0, 0, .5, 0],  [0, 0, .7, 0],  [0, 0, .5, 0],
+    [0,  0, .7, 0],  [0, 0, .7, 0],  [0, 0, .8, 0],  [0, 0, .7, 0],
+    [.7,.9, .5, 0],  [0, 0, .4, 0],  [0, 0, .7, 0],  [0, 0, .3, 0],
+    [0,  0, .6,.7],  [0, 0, .7, 0],  [0, 0, .9, 0],  [.4,0, .6, 0],
   ],
   house: [
-    // Bar 1: classic four-on-the-floor
-    [1, 0, 0, 0],  [0, 0, 0, 0],  [0, 0,.8, 0],  [0, 0, 0, 0],
-    [1,.8, 0, 0],  [0, 0, 0, 0],  [0, 0,.8, 0],  [0, 0, 0, 0],
-    [1, 0, 0, 0],  [0, 0, 0, 0],  [0, 0,.8, 0],  [0, 0, 0, 0],
-    [1,.8, 0, 0],  [0, 0, 0, 0],  [0, 0,.7,.5],  [0, 0,.4, 0],
-    // Bar 2: slight variation
-    [1, 0, 0, 0],  [0, 0, 0, 0],  [0, 0,.8, 0],  [0, 0, 0, 0],
-    [1,.8, 0, 0],  [0, 0, 0, 0],  [0, 0,.8, 0],  [0, 0,.3, 0],
-    [1, 0, 0, 0],  [0, 0, 0, 0],  [0, 0,.8, 0],  [0, 0, 0, 0],
-    [1,.9, 0, 0],  [0, 0,.4, 0],  [0, 0,.7,.6],  [0, 0,.5, 0],
+    // Bar 1: four-on-the-floor
+    [1, 0, 0, 0],  [0, 0, 0, 0],  [0, 0,.7, 0],  [0, 0, 0, 0],
+    [1,.8, 0, 0],  [0, 0, 0, 0],  [0, 0,.7, 0],  [0, 0, 0, 0],
+    [1, 0, 0, 0],  [0, 0, 0, 0],  [0, 0,.7, 0],  [0, 0, 0, 0],
+    [1,.8, 0, 0],  [0, 0, 0, 0],  [0, 0,.6,.5],  [0, 0,.3, 0],
+    // Bar 2: variation
+    [1, 0, 0, 0],  [0, 0, 0, 0],  [0, 0,.7, 0],  [0, 0, 0, 0],
+    [1,.9, 0, 0],  [0, 0, 0, 0],  [0, 0,.7, 0],  [0, 0,.2, 0],
+    [1, 0, 0, 0],  [0, 0, 0, 0],  [0, 0,.7, 0],  [0, 0, 0, 0],
+    [1,.9, 0, 0],  [0, 0,.3, 0],  [0, 0,.6,.6],  [0, 0,.4, 0],
   ],
   ambient: [
-    // Bar 1 & 2: very sparse
-    [.3, 0, 0, 0],  [0,0,0,0],  [0,0,0,0],  [0,0,0,0],
-    [0,  0, 0, 0],  [0,0,0,0],  [0,0,.15,0],[0,0,0,0],
-    [0,  0, 0, 0],  [0,0,0,0],  [0,0,0,0],  [0,0,0,0],
-    [.2, 0, 0, 0],  [0,0,0,0],  [0,0,.15,0],[0,0,0,0],
-    [0,  0, 0, 0],  [0,0,0,0],  [0,0,0,0],  [0,0,0,0],
-    [0,  0, 0, 0],  [0,0,0,0],  [0,0,.1, 0],[0,0,0,0],
-    [.25, 0, 0, 0], [0,0,0,0],  [0,0,0,0],  [0,0,0,0],
-    [0,  0, 0, 0],  [0,0,0,0],  [0,0,.1, 0],[0,0,0,0],
+    [.3, 0, 0, 0],  [0,0,0,0],[0,0,0,0],[0,0,0,0],
+    [0,  0, 0, 0],  [0,0,0,0],[0,0,.1,0],[0,0,0,0],
+    [0,  0, 0, 0],  [0,0,0,0],[0,0,0,0],[0,0,0,0],
+    [.2, 0, 0, 0],  [0,0,0,0],[0,0,.1,0],[0,0,0,0],
+    [0,  0, 0, 0],  [0,0,0,0],[0,0,0,0],[0,0,0,0],
+    [0,  0, 0, 0],  [0,0,0,0],[0,0,.08,0],[0,0,0,0],
+    [.25, 0, 0, 0], [0,0,0,0],[0,0,0,0],[0,0,0,0],
+    [0,  0, 0, 0],  [0,0,0,0],[0,0,.08,0],[0,0,0,0],
   ],
 };
 
-// ─── Synth helpers ───
+// Genre-specific drum dispatchers
+type DrumKit = {
+  kick: (ctx: AudioContext, t: number, v: number, d: GainNode) => void;
+  snare: (ctx: AudioContext, t: number, v: number, d: GainNode) => void;
+  hat: (ctx: AudioContext, t: number, v: number, open: boolean, d: GainNode) => void;
+};
 
-function schedule808Kick(ctx: AudioContext, time: number, velocity: number, dest: GainNode) {
-  const osc = ctx.createOscillator();
-  const g = ctx.createGain();
-  osc.type = 'sine';
-  osc.frequency.setValueAtTime(160 * velocity, time);
-  osc.frequency.exponentialRampToValueAtTime(35, time + 0.15);
-  g.gain.setValueAtTime(0.3 * velocity, time);
-  g.gain.exponentialRampToValueAtTime(0.001, time + 0.3);
-  osc.connect(g); g.connect(dest);
-  osc.start(time); osc.stop(time + 0.35);
-  // Transient click
-  const click = ctx.createOscillator();
-  const cg = ctx.createGain();
-  click.type = 'square';
-  click.frequency.setValueAtTime(800, time);
-  cg.gain.setValueAtTime(0.06 * velocity, time);
-  cg.gain.exponentialRampToValueAtTime(0.001, time + 0.01);
-  click.connect(cg); cg.connect(dest);
-  click.start(time); click.stop(time + 0.02);
-}
+const DRUM_KITS: Record<'trap' | 'house' | 'ambient', DrumKit> = {
+  trap: { kick: trapKick, snare: trapSnare, hat: trapHat },
+  house: { kick: houseKick, snare: houseClap, hat: houseHat },
+  ambient: { kick: ambientKick, snare: ambientPerc, hat: (ctx, t, v, _o, d) => ambientPerc(ctx, t, v * 0.5, d) },
+};
 
-function scheduleSnare(ctx: AudioContext, time: number, velocity: number, dest: GainNode) {
-  const dur = 0.12;
-  const bufSize = Math.floor(ctx.sampleRate * dur);
-  const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
-  const d = buf.getChannelData(0);
-  for (let i = 0; i < bufSize; i++) d[i] = Math.random() * 2 - 1;
-  const src = ctx.createBufferSource();
-  src.buffer = buf;
-  const filt = ctx.createBiquadFilter();
-  filt.type = 'bandpass'; filt.frequency.setValueAtTime(3000, time); filt.Q.setValueAtTime(1, time);
-  const g = ctx.createGain();
-  g.gain.setValueAtTime(0.15 * velocity, time);
-  g.gain.exponentialRampToValueAtTime(0.001, time + dur);
-  src.connect(filt); filt.connect(g); g.connect(dest);
-  src.start(time);
-  const osc = ctx.createOscillator();
-  const og = ctx.createGain();
-  osc.type = 'triangle'; osc.frequency.setValueAtTime(200, time);
-  og.gain.setValueAtTime(0.1 * velocity, time);
-  og.gain.exponentialRampToValueAtTime(0.001, time + 0.05);
-  osc.connect(og); og.connect(dest);
-  osc.start(time); osc.stop(time + 0.06);
-}
-
-function scheduleHihat(ctx: AudioContext, time: number, velocity: number, open: boolean, dest: GainNode) {
-  const dur = open ? 0.15 : 0.04;
-  const bufSize = Math.floor(ctx.sampleRate * dur);
-  const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
-  const d = buf.getChannelData(0);
-  for (let i = 0; i < bufSize; i++) d[i] = Math.random() * 2 - 1;
-  const src = ctx.createBufferSource();
-  src.buffer = buf;
-  const hp = ctx.createBiquadFilter();
-  hp.type = 'highpass'; hp.frequency.setValueAtTime(open ? 7000 : 9000, time);
-  const g = ctx.createGain();
-  g.gain.setValueAtTime(0.07 * velocity, time);
-  g.gain.exponentialRampToValueAtTime(0.001, time + dur);
-  src.connect(hp); hp.connect(g); g.connect(dest);
-  src.start(time);
-}
-
-function scheduleBass(ctx: AudioContext, time: number, midi: number, duration: number, dest: GainNode) {
-  const freq = NOTE(midi);
-  const osc = ctx.createOscillator();
-  const g = ctx.createGain();
-  osc.type = 'sawtooth';
-  osc.frequency.setValueAtTime(freq, time);
-  const filt = ctx.createBiquadFilter();
-  filt.type = 'lowpass';
-  filt.frequency.setValueAtTime(350, time);
-  filt.Q.setValueAtTime(4, time);
-  g.gain.setValueAtTime(0.12, time);
-  g.gain.setValueAtTime(0.12, time + duration * 0.6);
-  g.gain.exponentialRampToValueAtTime(0.001, time + duration);
-  osc.connect(filt); filt.connect(g); g.connect(dest);
-  osc.start(time); osc.stop(time + duration + 0.05);
-}
-
-function schedulePad(ctx: AudioContext, time: number, midiNotes: number[], duration: number, gainVal: number, cutoff: number, dest: GainNode) {
-  const filt = ctx.createBiquadFilter();
-  filt.type = 'lowpass';
-  filt.frequency.setValueAtTime(cutoff, time);
-  filt.Q.setValueAtTime(1, time);
-  filt.connect(dest);
-
-  midiNotes.forEach(midi => {
-    const freq = NOTE(midi);
-    (['sine', 'triangle'] as OscillatorType[]).forEach((type, j) => {
-      const osc = ctx.createOscillator();
-      const g = ctx.createGain();
-      osc.type = type;
-      osc.frequency.setValueAtTime(freq, time);
-      osc.detune.setValueAtTime(j === 0 ? -8 : 8, time);
-      g.gain.setValueAtTime(0.001, time);
-      g.gain.linearRampToValueAtTime(gainVal, time + Math.min(0.5, duration * 0.15));
-      g.gain.setValueAtTime(gainVal, time + duration - Math.min(0.5, duration * 0.15));
-      g.gain.linearRampToValueAtTime(0.001, time + duration);
-      osc.connect(g); g.connect(filt);
-      osc.start(time); osc.stop(time + duration + 0.1);
-    });
-  });
-}
+// Genre-specific bass dispatchers
+const BASS_FN: Record<'trap' | 'house' | 'ambient', (ctx: AudioContext, t: number, m: number, dur: number, d: GainNode) => void> = {
+  trap: schedule808Sub,
+  house: scheduleHouseBass,
+  ambient: scheduleDrone,
+};
 
 // ─── MAIN SEQUENCER WITH CROSSFADE ───
 
-const FADE_DURATION = 1.5; // seconds for crossfade
+const FADE_DURATION = 2.0;
 
 interface MusicInstance {
   outputGain: GainNode;
@@ -518,23 +819,24 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
   const ctx = getCtx();
   const config = THEMES[theme];
   const drumPattern = DRUM_PATTERNS[config.genre];
+  const kit = DRUM_KITS[config.genre];
+  const bassFn = BASS_FN[config.genre];
 
   const sixteenthDur = 60 / config.bpm / 4;
   const barDur = sixteenthDur * 16;
-  const loopDur = barDur * 8; // 8-bar loop now
+  const loopDur = barDur * 8;
 
-  // This instance's output gain (for fading)
   const outputGain = ctx.createGain();
   outputGain.gain.setValueAtTime(0.001, ctx.currentTime);
   outputGain.connect(musicGain!);
 
-  // Delay send
-  const delaySend = ctx.createDelay();
+  // Delay send (tempo-synced)
+  const delaySend = ctx.createDelay(2);
   delaySend.delayTime.setValueAtTime(sixteenthDur * 3, ctx.currentTime);
   const delayFb = ctx.createGain();
   delayFb.gain.setValueAtTime(0.2, ctx.currentTime);
   const delayOut = ctx.createGain();
-  delayOut.gain.setValueAtTime(0.25, ctx.currentTime);
+  delayOut.gain.setValueAtTime(0.2, ctx.currentTime);
   const delaySendGain = ctx.createGain();
   delaySendGain.gain.setValueAtTime(1, ctx.currentTime);
   delaySendGain.connect(delaySend);
@@ -552,34 +854,54 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
       const chord = config.chords[bar];
       const rootMidi = chord[0];
 
-      // Pad per bar
-      schedulePad(ctx, barStart, chord, barDur, config.padGain, config.filterCutoff, outputGain);
-      schedulePad(ctx, barStart, chord, barDur, config.padGain * 0.2, config.filterCutoff, delaySendGain);
+      // ── Warm Pad ──
+      scheduleWarmPad(ctx, barStart, chord, barDur, config.padGain, config.padBrightness, outputGain);
 
-      // Drums + bass: 32-step pattern wraps every 2 bars
+      // ── Drone layer (dungeon/ambient only) ──
+      if (config.genre === 'ambient' && bar % 4 === 0) {
+        scheduleDrone(ctx, barStart, rootMidi - 12, barDur * 4, outputGain);
+      }
+
+      // ── Per-step instruments ──
       for (let step = 0; step < 16; step++) {
         const stepTime = barStart + step * sixteenthDur;
-        const patIdx = (bar % 2) * 16 + step; // index into 32-step pattern
+        const patIdx = (bar % 2) * 16 + step;
         const [kick, snare, hat, openHat] = drumPattern[patIdx];
 
-        if (kick > 0) schedule808Kick(ctx, stepTime, kick, outputGain);
-        if (snare > 0) scheduleSnare(ctx, stepTime, snare, outputGain);
-        if (hat > 0) scheduleHihat(ctx, stepTime, hat, false, outputGain);
-        if (openHat > 0) scheduleHihat(ctx, stepTime, openHat, true, outputGain);
+        // Drums
+        if (kick > 0) kit.kick(ctx, stepTime, kick, outputGain);
+        if (snare > 0) kit.snare(ctx, stepTime, snare, outputGain);
+        if (hat > 0) kit.hat(ctx, stepTime, hat, false, outputGain);
+        if (openHat > 0) kit.hat(ctx, stepTime, openHat, true, outputGain);
 
+        // Bass
         if (config.bassPattern[patIdx]) {
           const bassMidi = rootMidi + config.bassOctave * 12;
-          scheduleBass(ctx, stepTime, bassMidi, sixteenthDur * 3, outputGain);
+          const bassDur = config.genre === 'ambient' ? barDur : sixteenthDur * 3;
+          bassFn(ctx, stepTime, bassMidi, bassDur, outputGain);
+        }
+
+        // FM Keys (stabs/chords)
+        if (config.keyPattern[patIdx]) {
+          const brightness = config.genre === 'house' ? 1.5 : config.genre === 'trap' ? 0.8 : 0.4;
+          chord.forEach(m => scheduleFMKeys(ctx, stepTime, m + 12, sixteenthDur * 4, brightness, 0.7, outputGain));
+          // Send keys to delay
+          chord.forEach(m => scheduleFMKeys(ctx, stepTime, m + 12, sixteenthDur * 4, brightness * 0.5, 0.3, delaySendGain));
+        }
+
+        // Pluck arpeggios
+        if (config.arpPattern[patIdx]) {
+          const arpNote = chord[step % chord.length] + 12;
+          schedulePluck(ctx, stepTime, arpNote, sixteenthDur * 2, outputGain);
+          schedulePluck(ctx, stepTime, arpNote, sixteenthDur * 2, delaySendGain);
         }
       }
     }
   }
 
-  // Schedule first loop
   scheduleLoop(nextLoopTime);
   nextLoopTime += loopDur;
 
-  // Look-ahead scheduler
   const schedulerTimer = setInterval(() => {
     if (stopped) return;
     if (ctx.currentTime > nextLoopTime - 3) {
@@ -588,7 +910,6 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
     }
   }, 500);
 
-  // Fade in
   outputGain.gain.linearRampToValueAtTime(1, ctx.currentTime + FADE_DURATION);
 
   const instance: MusicInstance = {
@@ -609,7 +930,6 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
       outputGain.gain.cancelScheduledValues(ctx2.currentTime);
       outputGain.gain.setValueAtTime(outputGain.gain.value, ctx2.currentTime);
       outputGain.gain.linearRampToValueAtTime(0.001, ctx2.currentTime + duration);
-      // After fade, fully stop
       setTimeout(() => instance.stop(), duration * 1000 + 100);
     },
   };
@@ -618,18 +938,14 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
 }
 
 export function playMusic(theme: MusicTheme) {
-  // If already fading one out, force-stop it
   if (fadingOutInstance) {
     fadingOutInstance.stop();
     fadingOutInstance = null;
   }
-
-  // Crossfade: fade out current, fade in new
   if (currentMusicInstance) {
     fadingOutInstance = currentMusicInstance;
     fadingOutInstance.fadeOut(FADE_DURATION);
   }
-
   currentMusicInstance = createMusicInstance(theme);
 }
 
