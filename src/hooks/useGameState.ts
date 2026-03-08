@@ -148,6 +148,9 @@ export function useGameState() {
         loaded = { ...loaded, questLog: newLog };
       }
     }
+    // Schedule mandatory missions
+    if (!loaded.missionSchedule) loaded.missionSchedule = createInitialSchedule();
+    loaded.missionSchedule = checkAndScheduleMission(loaded.missionSchedule, loaded.level);
     return loaded;
   });
   const [timeWarning, setTimeWarning] = useState(false);
