@@ -61,7 +61,7 @@ const DailyQuest = () => {
                 <h2 className="font-display text-sm font-bold uppercase tracking-[0.3em] text-primary text-glow-primary">Quest Info</h2>
               </div>
             </div>
-            <p className="text-sm text-foreground/80 font-body italic mb-4">(Daily Quest: Strength Training has arrived!)</p>
+            <p className="text-sm text-foreground/80 font-body italic mb-4">[Daily Quest: Strength Training has arrived.]</p>
             <h3 className="font-display text-sm font-bold uppercase tracking-[0.3em] text-primary text-glow-primary">Goal</h3>
           </div>
 
