@@ -4,10 +4,12 @@ import { StatKey } from './gameData';
 export interface SkillTask {
   name: string;
   description: string;
-  /** Total duration in seconds for timed tasks. */
+  /** Total duration in seconds for timed tasks (sum of all rounds). */
   durationSeconds?: number;
   /** Number of timer rounds. Each round = durationSeconds / timerRounds. Defaults to 1. */
   timerRounds?: number;
+  /** Label for each round (e.g. "Pierna izquierda", "Pierna derecha"). Length must match timerRounds. */
+  roundLabels?: string[];
 }
 
 // Tier index maps to skill title index (0=Novato, 1=Aprendiz, etc.)
