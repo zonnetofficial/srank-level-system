@@ -1,6 +1,7 @@
 import { useGameState } from '@/hooks/useGameState';
 import { useNavigate } from 'react-router-dom';
 import VictorianFrame from '@/components/VictorianFrame';
+import SlotNumber from '@/components/SlotNumber';
 
 const statusIcons: Record<string, string> = {
   completed: '✅',
@@ -29,31 +30,31 @@ const History = () => {
       >
         ← Volver
       </button>
-      <h1 className="font-display text-xl font-bold text-center text-primary text-glow-primary mb-6 animate-glitch-in delay-100">
+      <h1 className="font-display text-xl font-bold text-center text-primary text-glow-primary mb-6 animate-glitch-in delay-100 animate-text-glitch-heavy" style={{ animationDelay: '6s' }}>
         📜 Historial
       </h1>
 
       {/* Records */}
       <div className="rpg-panel mb-4 animate-slide-up delay-200">
-        <h2 className="text-xs font-display uppercase tracking-[0.3em] text-muted-foreground mb-3">
+        <h2 className="text-xs font-display uppercase tracking-[0.3em] text-muted-foreground mb-3 animate-text-glitch-alt" style={{ animationDelay: '13s' }}>
           🏆 Récords Personales
         </h2>
         <div className="grid grid-cols-3 gap-3 text-center">
           <div>
-            <div className="font-display text-xl font-bold text-accent animate-number-pop delay-300">
-              {state.personalRecords.longestStreak}
+            <div className="font-display text-xl font-bold text-accent">
+              <SlotNumber value={state.personalRecords.longestStreak} delay={400} />
             </div>
             <div className="text-[10px] text-muted-foreground font-display uppercase">Mejor Racha</div>
           </div>
           <div>
-            <div className="font-display text-xl font-bold text-primary animate-number-pop delay-400">
-              {state.personalRecords.maxLevel}
+            <div className="font-display text-xl font-bold text-primary">
+              <SlotNumber value={state.personalRecords.maxLevel} delay={500} />
             </div>
             <div className="text-[10px] text-muted-foreground font-display uppercase">Max Nivel</div>
           </div>
           <div>
-            <div className="font-display text-xl font-bold text-foreground animate-number-pop delay-500">
-              {state.totalCompleted}
+            <div className="font-display text-xl font-bold text-foreground">
+              <SlotNumber value={state.totalCompleted} delay={600} />
             </div>
             <div className="text-[10px] text-muted-foreground font-display uppercase">Total</div>
           </div>
@@ -64,21 +65,21 @@ const History = () => {
       <div className="rpg-panel mb-4 animate-slide-up delay-300">
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Completadas</span>
-          <span className="text-foreground font-display">{state.totalCompleted}</span>
+          <span className="text-foreground font-display"><SlotNumber value={state.totalCompleted} delay={500} /></span>
         </div>
         <div className="flex justify-between text-sm mt-1">
           <span className="text-muted-foreground">Fallidas</span>
-          <span className="text-destructive font-display">{state.totalFailed}</span>
+          <span className="text-destructive font-display"><SlotNumber value={state.totalFailed} delay={600} /></span>
         </div>
         <div className="flex justify-between text-sm mt-1">
           <span className="text-muted-foreground">Racha actual</span>
-          <span className="text-primary font-display">{state.currentStreak}</span>
+          <span className="text-primary font-display"><SlotNumber value={state.currentStreak} delay={700} /></span>
         </div>
       </div>
 
       {/* Quest Log */}
       <div className="rpg-panel animate-slide-up delay-400">
-        <h2 className="text-xs font-display uppercase tracking-[0.3em] text-muted-foreground mb-3">
+        <h2 className="text-xs font-display uppercase tracking-[0.3em] text-muted-foreground mb-3 animate-text-glitch" style={{ animationDelay: '9s' }}>
           Registro de Misiones
         </h2>
         {sortedLog.length === 0 ? (

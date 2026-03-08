@@ -1,3 +1,5 @@
+import SlotNumber from '@/components/SlotNumber';
+
 interface XPBarProps {
   xp: number;
   xpToNext: number;
@@ -9,14 +11,14 @@ export function XPBar({ xp, xpToNext, level }: XPBarProps) {
 
   return (
     <div className="rpg-panel-glow text-center py-5">
-      <div className="hud-label mb-1">System Level</div>
+      <div className="hud-label mb-1 animate-text-glitch-alt" style={{ animationDelay: '11s' }}>System Level</div>
       <div className="font-display text-5xl font-black text-primary text-glow-primary mb-3 animate-data-flicker animate-text-glitch-slow">
-        {String(level).padStart(2, '0')}
+        <SlotNumber value={String(level).padStart(2, '0')} delay={300} className="inline-flex" />
       </div>
       <div className="relative mx-2">
         <div className="stat-bar-track h-3">
           <div
-            className="stat-bar-fill bg-primary"
+            className="stat-bar-fill bg-primary animate-bar-fill"
             style={{ width: `${pct}%` }}
           />
         </div>
@@ -28,8 +30,10 @@ export function XPBar({ xp, xpToNext, level }: XPBarProps) {
         </div>
       </div>
       <div className="flex justify-between text-xs text-muted-foreground font-mono mt-1.5 px-1">
-        <span className="hud-data">{xp}/{xpToNext}</span>
-        <span className="hud-data">{Math.round(pct)}%</span>
+        <span className="hud-data">
+          <SlotNumber value={xp} delay={500} />/<SlotNumber value={xpToNext} delay={600} />
+        </span>
+        <span className="hud-data"><SlotNumber value={Math.round(pct)} delay={700} />%</span>
       </div>
     </div>
   );

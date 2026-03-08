@@ -6,6 +6,7 @@ import { useGameState } from '@/hooks/useGameState';
 import { useAuth } from '@/hooks/useAuth';
 import { useTitleNotifications } from '@/hooks/useTitleNotifications';
 import { TitleUnlockModal } from '@/components/TitleUnlockModal';
+import SlotNumber from '@/components/SlotNumber';
 import {
   STAT_LABELS,
   STAT_ICONS,
@@ -39,7 +40,7 @@ const Index = () => {
       <div className="flex justify-between items-center mb-3 animate-slide-down">
         <div className="flex items-center gap-2">
           <div className="hud-status-dot bg-stat-agi" />
-          <span className="hud-label">Online</span>
+          <span className="hud-label animate-text-glitch-alt" style={{ animationDelay: '7s' }}>Online</span>
         </div>
         <button
           onClick={signOut}
@@ -63,7 +64,7 @@ const Index = () => {
 
       {/* Time display */}
       <div className="text-center mb-4 animate-slide-up delay-100">
-        <div className="hud-label">
+        <div className="hud-label animate-text-glitch-alt" style={{ animationDelay: '12s' }}>
           {currentTime.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
         </div>
         <div className="hud-data text-xl text-primary text-glow-primary mt-0.5 animate-text-glitch" style={{ animationDelay: '5s' }}>
@@ -79,12 +80,12 @@ const Index = () => {
       {/* Class */}
       <div className="mt-4 text-center animate-slide-up delay-300">
         <div className="hud-label">Clase</div>
-        <div className="text-xl font-display font-bold text-accent text-glow-accent mt-1 animate-text-glitch-slow" style={{ animationDelay: '3s' }}>
+        <div className="text-xl font-display font-bold text-accent text-glow-accent mt-1 animate-text-glitch-heavy" style={{ animationDelay: '3s' }}>
           {currentClass.icon} {currentClass.name}
         </div>
         {nextClass && (
           <div className="mt-2">
-            <div className="hud-label">
+            <div className="hud-label animate-text-glitch-alt" style={{ animationDelay: '9s' }}>
               Siguiente: {nextClass.name} (Nv. {nextClass.requiredLevel})
             </div>
             <div className="stat-bar-track h-1.5 mt-1 max-w-48 mx-auto">
@@ -104,11 +105,11 @@ const Index = () => {
       {/* Stats */}
       <div className="rpg-panel space-y-3 animate-slide-up delay-400">
         <div className="flex items-center justify-between mb-2">
-          <h2 className="hud-label">
+          <h2 className="hud-label animate-text-glitch" style={{ animationDelay: '15s' }}>
             Estadísticas
           </h2>
           <span className="hud-data text-[10px] text-muted-foreground">
-            Nv.{String(state.level).padStart(2, '0')}
+            Nv.<SlotNumber value={String(state.level).padStart(2, '0')} delay={600} />
           </span>
         </div>
         {statKeys.map((key, i) => (
@@ -152,7 +153,7 @@ const Index = () => {
           style={{ borderColor: 'hsl(45 100% 60% / 0.3)' }}
         >
           <span className="text-2xl animate-icon-bounce" style={{ animationDelay: '1100ms' }}>👑</span>
-          <span className="font-display text-[10px] uppercase tracking-[0.15em] text-accent">
+          <span className="font-display text-[10px] uppercase tracking-[0.15em] text-accent animate-text-glitch-heavy" style={{ animationDelay: '8s' }}>
             Ruta del Monarca
           </span>
         </button>
@@ -162,17 +163,23 @@ const Index = () => {
       <div className="mt-4 rpg-panel animate-slide-up" style={{ animationDelay: '900ms' }}>
         <div className="flex justify-around text-center">
           <div>
-            <div className="hud-data text-2xl font-bold text-primary text-glow-primary animate-number-pop" style={{ animationDelay: '1000ms' }}>{String(state.currentStreak).padStart(2, '0')}</div>
+            <div className="hud-data text-2xl font-bold text-primary text-glow-primary">
+              <SlotNumber value={String(state.currentStreak).padStart(2, '0')} delay={1000} />
+            </div>
             <div className="hud-label mt-0.5">Racha</div>
           </div>
           <div className="w-px bg-border/30 self-stretch" />
           <div>
-            <div className="hud-data text-2xl font-bold text-accent text-glow-accent animate-number-pop" style={{ animationDelay: '1100ms' }}>{String(state.totalCompleted).padStart(3, '0')}</div>
+            <div className="hud-data text-2xl font-bold text-accent text-glow-accent">
+              <SlotNumber value={String(state.totalCompleted).padStart(3, '0')} delay={1100} />
+            </div>
             <div className="hud-label mt-0.5">Completadas</div>
           </div>
           <div className="w-px bg-border/30 self-stretch" />
           <div>
-            <div className="hud-data text-2xl font-bold text-foreground animate-number-pop" style={{ animationDelay: '1200ms' }}>{String(state.personalRecords.longestStreak).padStart(2, '0')}</div>
+            <div className="hud-data text-2xl font-bold text-foreground">
+              <SlotNumber value={String(state.personalRecords.longestStreak).padStart(2, '0')} delay={1200} />
+            </div>
             <div className="hud-label mt-0.5">Mejor Racha</div>
           </div>
         </div>

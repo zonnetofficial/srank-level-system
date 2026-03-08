@@ -1,4 +1,5 @@
 import { StatKey, getSkillTitle, getNextSkillTitle } from '@/lib/gameData';
+import SlotNumber from '@/components/SlotNumber';
 
 interface StatBarProps {
   stat: StatKey;
@@ -16,6 +17,15 @@ const statColorClasses: Record<StatKey, { bar: string; text: string; glow: strin
   end: { bar: 'bg-stat-end', text: 'text-stat-end', glow: 'glow-end' },
 };
 
+// Assign different glitch classes per stat for visual variety
+const statGlitchClasses: Record<StatKey, string> = {
+  int: 'animate-text-glitch',
+  str: 'animate-text-glitch-alt',
+  agi: 'animate-text-glitch-heavy',
+  vit: 'animate-text-glitch',
+  end: 'animate-text-glitch-alt',
+};
+
 export function StatBar({ stat, value, points, label, icon }: StatBarProps) {
   const colors = statColorClasses[stat];
   const currentTitle = getSkillTitle(stat, points);
@@ -30,6 +40,11 @@ export function StatBar({ stat, value, points, label, icon }: StatBarProps) {
     pct = Math.min((progress / range) * 100, 100);
   }
 
+  // Different delay per stat for non-synchronized glitch
+  const glitchDelays: Record<StatKey, string> = {
+    int: '3s', str: '7s', agi: '11s', vit: '5s', end: '9s',
+  };
+
   return (
     <div className="flex items-center gap-3 group">
       <div className="flex items-center justify-center w-8 h-8 text-lg transition-transform duration-200 group-hover:scale-125">
@@ -37,11 +52,11 @@ export function StatBar({ stat, value, points, label, icon }: StatBarProps) {
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex justify-between items-baseline mb-1">
-          <span className={`text-[11px] font-display uppercase tracking-[0.15em] ${colors.text}`}>
+          <span className={`text-[11px] font-display uppercase tracking-[0.15em] ${colors.text} ${statGlitchClasses[stat]}`} style={{ animationDelay: glitchDelays[stat] }}>
             {label}
           </span>
           <span className={`hud-data text-sm font-bold ${colors.text}`}>
-            {String(value).padStart(3, '0')}
+            <SlotNumber value={String(value).padStart(3, '0')} delay={400} />
           </span>
         </div>
         <div className="stat-bar-track h-1.5">
