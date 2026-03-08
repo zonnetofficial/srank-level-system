@@ -246,15 +246,14 @@ export function useGameState() {
 
       const newStats = { ...prev.stats };
       const newPoints = { ...prev.statPoints };
+      const newBank = { ...prev.statBank };
 
-      // Physical stats grow faster (real body progression)
-      if (newCompleted % 3 === 0) { newStats.str++; newPoints.str++; }
-      if (newCompleted % 3 === 0) { newStats.agi++; newPoints.agi++; }
-      // Endurance/vitality grow moderately
-      if (newCompleted % 4 === 0) { newStats.end++; newPoints.end++; }
-      if (newCompleted % 5 === 0) { newStats.vit++; newPoints.vit++; }
-      // INT grows slowest from quests (boosted by skill tasks)
-      if (newStreak % 7 === 0) { newStats.int++; newPoints.int++; }
+      // Stat gains go to bank (not auto-assigned)
+      if (newCompleted % 3 === 0) { newBank.str++; }
+      if (newCompleted % 3 === 0) { newBank.agi++; }
+      if (newCompleted % 4 === 0) { newBank.end++; }
+      if (newCompleted % 5 === 0) { newBank.vit++; }
+      if (newStreak % 7 === 0) { newBank.int++; }
 
       const newExercises = getNextExercises(prev.exerciseProgression);
       const newRunProg = prev.runMode === 'time'
