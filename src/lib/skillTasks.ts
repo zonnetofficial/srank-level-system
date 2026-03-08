@@ -171,7 +171,7 @@ const END_TASKS: SkillTask[][] = [
   [
     { name: 'Resistencia prolongada', description: '20 minutos de esfuerzo constante', durationSeconds: 1200 },
     { name: 'Wall sit extremo', description: '3 minutos contra la pared', durationSeconds: 180 },
-    { name: 'EMOM de 15 min', description: 'Cada minuto al minuto, 3 ejercicios', durationSeconds: 900 },
+    { name: 'EMOM de 15 min', description: 'Cada minuto al minuto, 3 ejercicios', durationSeconds: 900, timerRounds: 15 },
     { name: 'Cardio mixto', description: '20 min alternando alta y baja intensidad', durationSeconds: 1200 },
     { name: 'Plancha dinámica', description: 'Variaciones de plancha por 5 min', durationSeconds: 300 },
   ],
