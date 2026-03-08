@@ -1009,8 +1009,8 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
       // ── Warm Pad ──
       scheduleWarmPad(ctx, barStart, chord, barDur, config.padGain, config.padBrightness, outputGain);
 
-      // ── Drone layer (dungeon/ambient only) ──
-      if (config.genre === 'ambient' && bar % 4 === 0) {
+      // ── Drone layer (dungeon/ambient & darktrap atmospheric) ──
+      if ((config.genre === 'ambient' || config.genre === 'darktrap') && bar % 4 === 0) {
         scheduleDrone(ctx, barStart, rootMidi - 12, barDur * 4, outputGain);
       }
 
@@ -1026,26 +1026,36 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
         if (hat > 0) kit.hat(ctx, stepTime, hat, false, outputGain);
         if (openHat > 0) kit.hat(ctx, stepTime, openHat, true, outputGain);
 
-        // Bass
+        // Bass — darktrap gets very long sustained notes
         if (config.bassPattern[patIdx]) {
           const bassMidi = rootMidi + config.bassOctave * 12;
-          const bassDur = config.genre === 'ambient' ? barDur : config.genre === 'trap' ? sixteenthDur * 6 : sixteenthDur * 3;
+          const bassDur = config.genre === 'darktrap' ? barDur * 1.5
+            : config.genre === 'ambient' ? barDur
+            : config.genre === 'trap' ? sixteenthDur * 6
+            : sixteenthDur * 3;
           bassFn(ctx, stepTime, bassMidi, bassDur, outputGain);
         }
 
-        // FM Keys (stabs/chords)
+        // FM Keys (stabs/chords) — darktrap uses very dark, soft keys
         if (config.keyPattern[patIdx]) {
-          const brightness = config.genre === 'house' ? 1.5 : config.genre === 'trap' ? 0.8 : 0.4;
-          chord.forEach(m => scheduleFMKeys(ctx, stepTime, m + 12, sixteenthDur * 4, brightness, 0.7, outputGain));
-          // Send keys to delay
-          chord.forEach(m => scheduleFMKeys(ctx, stepTime, m + 12, sixteenthDur * 4, brightness * 0.5, 0.3, delaySendGain));
+          const brightness = config.genre === 'darktrap' ? 0.3
+            : config.genre === 'house' ? 1.5
+            : config.genre === 'trap' ? 0.8 : 0.4;
+          const vel = config.genre === 'darktrap' ? 0.5 : 0.7;
+          chord.forEach(m => scheduleFMKeys(ctx, stepTime, m + 12, sixteenthDur * 6, brightness, vel, outputGain));
+          // Heavy delay send for dark atmosphere
+          chord.forEach(m => scheduleFMKeys(ctx, stepTime, m + 12, sixteenthDur * 6, brightness * 0.4, vel * 0.4, delaySendGain));
         }
 
-        // Pluck arpeggios
+        // Pluck arpeggios — darktrap sends more to delay for ethereal feel
         if (config.arpPattern[patIdx]) {
           const arpNote = chord[step % chord.length] + 12;
-          schedulePluck(ctx, stepTime, arpNote, sixteenthDur * 2, outputGain);
-          schedulePluck(ctx, stepTime, arpNote, sixteenthDur * 2, delaySendGain);
+          schedulePluck(ctx, stepTime, arpNote, sixteenthDur * 3, outputGain);
+          schedulePluck(ctx, stepTime, arpNote, sixteenthDur * 3, delaySendGain);
+          if (config.genre === 'darktrap') {
+            // Extra delay send for spacious reverb-like effect
+            schedulePluck(ctx, stepTime, arpNote + 12, sixteenthDur * 4, delaySendGain);
+          }
         }
       }
     }
