@@ -107,6 +107,48 @@ export type Database = {
         }
         Relationships: []
       }
+      dungeon_profiles: {
+        Row: {
+          character_class: string | null
+          character_name: string | null
+          character_sprite: string | null
+          deaths: number
+          display_name: string
+          dungeons_cleared: number
+          highest_rank: string
+          id: string
+          total_xp_earned: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          character_class?: string | null
+          character_name?: string | null
+          character_sprite?: string | null
+          deaths?: number
+          display_name?: string
+          dungeons_cleared?: number
+          highest_rank?: string
+          id?: string
+          total_xp_earned?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          character_class?: string | null
+          character_name?: string | null
+          character_sprite?: string | null
+          deaths?: number
+          display_name?: string
+          dungeons_cleared?: number
+          highest_rank?: string
+          id?: string
+          total_xp_earned?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       marketplace_listings: {
         Row: {
           buyer_id: string | null
