@@ -557,7 +557,6 @@ export function useGameState() {
       }
 
       s.classTitles = s.classTitles || prev.classTitles;
-      s.classTitles = prev.classTitles.map(t => ({ ...t, obtained: t.obtained || s.level >= t.requiredLevel }));
       s.personalRecords = {
         ...prev.personalRecords,
         longestStreak: Math.max(prev.personalRecords.longestStreak, s.currentStreak),
