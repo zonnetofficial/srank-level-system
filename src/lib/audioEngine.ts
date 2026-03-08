@@ -671,21 +671,22 @@ interface ThemeConfig {
 
 const THEMES: Record<MusicTheme, ThemeConfig> = {
   home: {
-    bpm: 140,
-    genre: 'trap',
-    // Dark minor progression — Cm, Abmaj, Fm, Gm, Cm, Ebm, Abmaj, Bdim
+    bpm: 75,
+    genre: 'darktrap',
+    // Deep Cm minor — nocturnal, cold, elegant
+    // Cm(add9) → Ab → Fm7 → Gsus4 → Cm → Eb → Abmaj7 → Gm
     chords: [
-      [36,48,51,55],[44,48,51],[41,44,48],[43,46,50],
-      [36,48,51,55],[39,42,46],[44,48,51],[42,45,47],
+      [36, 48, 51, 55, 62], [44, 48, 51, 55], [41, 44, 48, 51], [43, 50, 55, 58],
+      [36, 48, 51, 55], [39, 46, 51, 55], [44, 48, 51, 56], [43, 46, 50, 55],
     ],
-    // Bouncy 808 pattern with slides — heavy on downbeats, syncopated hits
-    bassPattern: [1,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0, 1,0,0,1,0,0,0,0,0,0,1,0,0,0,1,0],
-    // Sparse dark key stabs
-    keyPattern:  [0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0],
-    // Minimal arps — dark melodic touches
-    arpPattern:  [0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0, 0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0],
-    padBrightness: 700,
-    padGain: 0.035,
+    // Sparse, sustained 808 hits — let them ring
+    bassPattern: [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0],
+    // Very sparse dark key touches
+    keyPattern:  [0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    // Ethereal plucks with space
+    arpPattern:  [0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0, 0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0],
+    padBrightness: 500,
+    padGain: 0.05,
     bassOctave: -1,
   },
   quest: {
