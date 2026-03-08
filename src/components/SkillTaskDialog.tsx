@@ -352,7 +352,7 @@ const SkillTaskDialog = ({ stat, task, open, onResult, onClose }: SkillTaskDialo
             )}
 
             {/* Circular timer */}
-            {renderTimer(secondsLeft, roundSeconds, getRoundLabel(currentRound) || 'En curso')}
+            {renderTimer(secondsLeft, roundSeconds, 'En curso')}
 
             <button onClick={handleAbort} className="w-full py-3 rounded-lg bg-destructive/20 border border-destructive/40 text-destructive font-display text-xs uppercase tracking-[0.2em] hover:bg-destructive/30 transition-all">
               ✖ Abortar Tarea
