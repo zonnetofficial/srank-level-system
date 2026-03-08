@@ -504,10 +504,11 @@ export function useGameState() {
           s.xpToNext = xpForLevel(s.level);
         }
 
-        if (s.totalCompleted % 3 === 0) { s.stats.end++; s.statPoints.end++; }
-        if (s.totalCompleted % 4 === 0) { s.stats.agi++; s.statPoints.agi++; }
-        if (s.currentStreak % 5 === 0) { s.stats.int++; s.statPoints.int++; }
-        if (s.totalCompleted % 7 === 0) { s.stats.str++; s.statPoints.str++; s.stats.vit++; s.statPoints.vit++; }
+        if (s.totalCompleted % 3 === 0) { s.stats.str++; s.statPoints.str++; }
+        if (s.totalCompleted % 3 === 0) { s.stats.agi++; s.statPoints.agi++; }
+        if (s.totalCompleted % 4 === 0) { s.stats.end++; s.statPoints.end++; }
+        if (s.totalCompleted % 5 === 0) { s.stats.vit++; s.statPoints.vit++; }
+        if (s.currentStreak % 7 === 0) { s.stats.int++; s.statPoints.int++; }
       }
 
       s.classTitles = s.classTitles || prev.classTitles;
