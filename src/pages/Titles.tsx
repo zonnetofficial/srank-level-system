@@ -1,5 +1,6 @@
 import { useGameState } from '@/hooks/useGameState';
 import { useNavigate } from 'react-router-dom';
+import VictorianFrame from '@/components/VictorianFrame';
 import {
   STAT_LABELS,
   STAT_ICONS,
