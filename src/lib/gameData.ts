@@ -286,7 +286,7 @@ export function calculateStatGains(questLog: DailyQuestLog[]): Partial<PlayerSta
 }
 
 export function getQuestXP(level: number): number {
-  return 10 + Math.floor(level * 2);
+  return 15 + Math.floor(level * 3);
 }
 
 // ==================== EXERCISE PROGRESSION ====================
