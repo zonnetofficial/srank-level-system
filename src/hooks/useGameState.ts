@@ -408,8 +408,7 @@ export function useGameState() {
 
   const completeIntTest = useCallback((points: number, failed: boolean, perfectCount: number, newCorrectIds: string[]) => {
     setState(prev => {
-      const newStats = { ...prev.stats, int: prev.stats.int + points };
-      const newPoints = { ...prev.statPoints, int: prev.statPoints.int + points };
+      const newBank = { ...prev.statBank, int: prev.statBank.int + points };
       const currentWeekStart = getWeekStart(today);
       const cooldown = prev.skillCooldowns.int;
 
