@@ -33,7 +33,7 @@ const Skills = () => {
 
   // Skill task dialog state
   const [taskDialogStat, setTaskDialogStat] = useState<StatKey | null>(null);
-  const [taskDialogTask, setTaskDialogTask] = useState<{ name: string; description: string } | null>(null);
+  const [taskDialogTask, setTaskDialogTask] = useState<SkillTask | null>(null);
 
   // Show skill intro first, then launch the actual INT test
   const handleShowIntSkillIntro = () => {
