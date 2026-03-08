@@ -64,10 +64,10 @@ const Index = () => {
 
       {/* Time display */}
       <div className="text-center mb-4 animate-slide-up delay-100">
-        <div className="hud-label animate-text-glitch-alt" style={{ animationDelay: '12s' }}>
+        <div className="hud-label">
           {currentTime.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
         </div>
-        <div className="hud-data text-xl text-primary text-glow-primary mt-0.5 animate-text-glitch" style={{ animationDelay: '5s' }}>
+        <div className="hud-data text-xl text-primary text-glow-primary mt-0.5">
           {currentTime.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
         </div>
       </div>
