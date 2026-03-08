@@ -315,11 +315,11 @@ export default function Dungeons() {
 
           {rewardChoice && (
             <button
-              onClick={handleAdvance}
+              onClick={handleAfterReward}
               className="w-full py-3 font-display text-xs uppercase tracking-[0.2em] border border-primary/40 text-primary hover:bg-primary/10 transition-all"
               style={{ clipPath: 'polygon(0 4px, 4px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px))' }}
             >
-              {run.currentRoom + 1 >= run.rooms.length ? 'Finalizar Mazmorra' : 'Siguiente Sala →'}
+              Finalizar Mazmorra
             </button>
           )}
         </div>
