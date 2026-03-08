@@ -659,7 +659,7 @@ function ambientPerc(ctx: AudioContext, time: number, vel: number, dest: GainNod
 
 interface ThemeConfig {
   bpm: number;
-  genre: 'trap' | 'house' | 'ambient';
+  genre: 'trap' | 'house' | 'ambient' | 'darktrap';
   chords: number[][];
   bassPattern: number[];
   keyPattern: number[]; // which 16th notes play keys (per bar)
