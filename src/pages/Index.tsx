@@ -153,7 +153,7 @@ const Index = () => {
           <div className="text-[10px] font-display uppercase tracking-wider text-muted-foreground">Mejor Racha</div>
         </div>
       </div>
-    </div>
+    </VictorianFrame>
   );
 };
 
