@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { MarketplaceListing, ShopItem } from '@/hooks/useShop';
 import { RARITY_COLORS, RARITY_LABELS } from './shopConstants';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Props {
   listings: MarketplaceListing[];
@@ -10,6 +11,7 @@ interface Props {
   buying: boolean;
   onBuy: (listing: MarketplaceListing) => void;
   onSellDP: (amount: number) => void;
+  onCancel: (listing: MarketplaceListing) => void;
 }
 
 export default function MarketTab({ listings, getItemById, tpBalance, dpBalance, buying, onBuy, onSellDP }: Props) {
