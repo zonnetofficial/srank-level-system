@@ -14,6 +14,7 @@ const statKeys: StatKey[] = ['int', 'str', 'agi', 'vit', 'end'];
 
 const Titles = () => {
   const { state } = useGameState();
+  const navigate = useNavigate();
   const currentClass = getClassTitle(state.level, state.classTitles);
   const nextClass = getNextClassTitle(state.level, state.classTitles);
   const obtainedClasses = state.classTitles.filter(t => t.obtained);
