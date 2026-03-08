@@ -5,11 +5,10 @@ import RunTimer from '@/components/RunTimer';
 import VictorianFrame from '@/components/VictorianFrame';
 
 const DailyQuest = () => {
-  const { state, today, todayQuest, restDay, startQuest, completeQuest, completeExercise, completeRun } = useGameState();
+  const { state, today, todayQuest, restDay, completeQuest, completeExercise, completeRun } = useGameState();
   const navigate = useNavigate();
   const [timerOpen, setTimerOpen] = useState(false);
 
-  const hasQuest = !!todayQuest;
   const allExercisesDone = todayQuest?.exercises?.every(e => e.completed) ?? false;
   const runDone = todayQuest?.runCompleted ?? false;
   const canComplete = allExercisesDone && runDone;
@@ -34,93 +33,22 @@ const DailyQuest = () => {
       )}
 
       {/* Rest Day */}
-      {restDay && !hasQuest && (
+      {restDay && (
         <div className="rpg-panel-glow text-center py-10 animate-fade-in">
           <div className="text-6xl mb-4">💤</div>
           <h2 className="font-display text-xl font-bold text-accent text-glow-accent mb-2">Día de Descanso</h2>
-          <p className="text-sm text-muted-foreground mb-6">Recovery Mission – Tu cuerpo se regenera</p>
+          <p className="text-sm text-muted-foreground mb-2">Recovery Mission – Tu cuerpo se regenera</p>
+          <p className="text-xs text-accent">+1 INT, +1 VIT registrados</p>
           <button
-            onClick={startQuest}
-            className="px-8 py-3 rounded-lg bg-accent text-accent-foreground font-display text-sm uppercase tracking-widest hover:opacity-90 transition-all glow-accent"
+            onClick={() => navigate('/')}
+            className="mt-6 px-6 py-2 rounded-lg bg-secondary text-secondary-foreground font-display text-sm uppercase tracking-wider hover:opacity-90 transition-opacity"
           >
-            Registrar Descanso
+            ← Volver
           </button>
         </div>
       )}
 
-      {/* No quest started */}
-      {!restDay && !hasQuest && (
-        <div className="animate-fade-in">
-          <div className="rpg-panel-glow text-center py-8 mb-5">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <div className="border border-primary/60 rounded-none h-8 w-8 flex items-center justify-center">
-                <div className="w-5 h-5 rounded-full border border-primary/60 flex items-center justify-center">
-                  <span className="font-display text-xs font-bold text-primary text-glow-primary leading-none">!</span>
-                </div>
-              </div>
-              <div className="border border-primary/60 rounded-none h-8 px-4 flex items-center justify-center">
-                <h2 className="font-display text-sm font-bold uppercase tracking-[0.3em] text-primary text-glow-primary">Quest Info</h2>
-              </div>
-            </div>
-            <p className="text-sm text-foreground/80 font-body italic mb-4">[Daily Quest: Strength Training has arrived.]</p>
-            <h3 className="font-display text-sm font-bold uppercase tracking-[0.3em] text-primary text-glow-primary">Goal</h3>
-            <div className="flex justify-center mt-1 mb-5">
-              <div className="w-16 flex flex-col gap-[2px]">
-                <div className="h-[2px] bg-primary shadow-[0_0_6px_hsl(195_100%_55%/0.7)]" />
-                <div className="h-[2px] bg-primary shadow-[0_0_6px_hsl(195_100%_55%/0.7)]" />
-              </div>
-            </div>
-
-            {/* Mission preview inside panel */}
-            <div className="space-y-3 text-left">
-              <div className="border border-border/40 rounded-lg p-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20">
-                    <span className="text-xl">🏃</span>
-                  </div>
-                  <div>
-                    <div className="text-xs font-display uppercase tracking-wider text-primary">Carrera</div>
-                    <div className="text-sm text-foreground font-body">
-                      {state.runMode === 'time'
-                        ? `Correr ${state.runProgression} minutos`
-                        : 'Correr 5 km (registrar tiempo)'}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="border border-border/40 rounded-lg p-3">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-lg bg-stat-str/10 flex items-center justify-center border border-stat-str/20">
-                    <span className="text-xl">💪</span>
-                  </div>
-                  <div>
-                    <div className="text-xs font-display uppercase tracking-wider text-stat-str">Ejercicios</div>
-                    <div className="text-xs text-muted-foreground">{state.exerciseProgression.length} ejercicios</div>
-                  </div>
-                </div>
-                <div className="space-y-1.5 ml-[52px]">
-                  {state.exerciseProgression.map((ex, i) => (
-                    <div key={i} className="text-sm text-foreground/80 flex justify-between">
-                      <span>{ex.name}</span>
-                      <span className="text-muted-foreground font-display text-xs">{ex.reps} reps</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <button
-            onClick={startQuest}
-            className="w-full py-4 rounded-lg bg-primary text-primary-foreground font-display text-sm uppercase tracking-[0.2em] glow-primary hover:opacity-90 transition-all"
-          >
-            ⚔️ Aceptar Misión
-          </button>
-        </div>
-      )}
-
-      {/* Quest in progress */}
+      {/* Quest info header - shown when pending */}
       {todayQuest?.status === 'pending' && (
         <div className="space-y-4 animate-fade-in">
           {/* Overall progress */}
@@ -275,20 +203,6 @@ const DailyQuest = () => {
         </div>
       )}
 
-      {/* Rest registered */}
-      {todayQuest?.status === 'rest' && (
-        <div className="rpg-panel text-center py-10 animate-fade-in">
-          <div className="text-6xl mb-4">💤</div>
-          <h2 className="font-display text-xl font-bold text-accent text-glow-accent mb-2">Día de Descanso</h2>
-          <p className="text-sm text-muted-foreground">Recuperación registrada</p>
-          <button
-            onClick={() => navigate('/')}
-            className="mt-6 px-6 py-2 rounded-lg bg-secondary text-secondary-foreground font-display text-sm uppercase tracking-wider hover:opacity-90 transition-opacity"
-          >
-            ← Volver
-          </button>
-        </div>
-      )}
     </VictorianFrame>
   );
 };
