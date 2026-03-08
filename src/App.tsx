@@ -51,6 +51,7 @@ const AppContent = () => {
         <Route path="/skills" element={<ProtectedRoute><Skills /></ProtectedRoute>} />
         <Route path="/titles" element={<ProtectedRoute><Titles /></ProtectedRoute>} />
         <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
+        <Route path="/monarch" element={<ProtectedRoute><MonarchMode /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
 

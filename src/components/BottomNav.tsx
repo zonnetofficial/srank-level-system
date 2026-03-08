@@ -6,6 +6,7 @@ const navItems = [
   { to: '/skills', icon: '✨', label: 'Skills' },
   { to: '/titles', icon: '🏷️', label: 'Títulos' },
   { to: '/history', icon: '📜', label: 'Historial' },
+  { to: '/monarch', icon: '👑', label: 'Monarca' },
 ];
 
 export function BottomNav() {
