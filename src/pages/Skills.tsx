@@ -108,7 +108,7 @@ const Skills = () => {
   // Skill task handling
   const handleStartSkill = (key: StatKey) => {
     if (key === 'int') {
-      handleStartInt();
+      handleShowIntSkillIntro();
       return;
     }
     const titleIdx = getTitleIndex(key, state.statPoints[key]);
