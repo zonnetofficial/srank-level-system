@@ -136,7 +136,6 @@ serve(async (req) => {
       });
 
       const mpData = await mpResponse.json();
-      const responseBody = await mpResponse.text(); // consume body
 
       let newStatus = sub.status;
       if (mpData.status === 'authorized') newStatus = 'active';
