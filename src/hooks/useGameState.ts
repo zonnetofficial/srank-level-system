@@ -32,6 +32,7 @@ function loadState(): GameState {
     if (!parsed.lastCheckedDate) parsed.lastCheckedDate = getToday();
     if (!parsed.classChangeProgress) parsed.classChangeProgress = {};
     if (!parsed.statBank) parsed.statBank = { int: 0, str: 0, agi: 0, vit: 0, end: 0 };
+    if (!parsed.missionSchedule) parsed.missionSchedule = createInitialSchedule();
     return parsed;
   } catch {
     return createInitialState();
