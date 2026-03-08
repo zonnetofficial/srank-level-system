@@ -165,7 +165,7 @@ const END_TASKS: SkillTask[][] = [
   ],
   [
     { name: 'Circuito de resistencia', description: '15 minutos de ejercicio continuo', durationSeconds: 900 },
-    { name: 'Plancha lateral', description: '1 minuto cada lado', durationSeconds: 120, timerRounds: 2 },
+    { name: 'Plancha lateral', description: '1 minuto cada lado', durationSeconds: 120, timerRounds: 2, roundLabels: ['Lado izquierdo', 'Lado derecho'] },
     { name: 'Burpee endurance', description: '1 burpee por minuto durante 15 min', durationSeconds: 900, timerRounds: 15 },
     { name: 'Trote sostenido', description: '15 minutos a ritmo constante', durationSeconds: 900 },
     { name: 'Circuito AMRAP', description: 'Máximas rondas en 12 minutos', durationSeconds: 720 },
