@@ -66,7 +66,7 @@ const Index = () => {
         <div className="hud-label">
           {currentTime.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
         </div>
-        <div className="hud-data text-xl text-primary text-glow-primary mt-0.5">
+        <div className="hud-data text-xl text-primary text-glow-primary mt-0.5 animate-text-glitch" style={{ animationDelay: '5s' }}>
           {currentTime.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
         </div>
       </div>
@@ -79,7 +79,7 @@ const Index = () => {
       {/* Class */}
       <div className="mt-4 text-center animate-slide-up delay-300">
         <div className="hud-label">Clase</div>
-        <div className="text-xl font-display font-bold text-accent text-glow-accent mt-1">
+        <div className="text-xl font-display font-bold text-accent text-glow-accent mt-1 animate-text-glitch-slow" style={{ animationDelay: '3s' }}>
           {currentClass.icon} {currentClass.name}
         </div>
         {nextClass && (

@@ -10,7 +10,7 @@ export function XPBar({ xp, xpToNext, level }: XPBarProps) {
   return (
     <div className="rpg-panel-glow text-center py-5">
       <div className="hud-label mb-1">System Level</div>
-      <div className="font-display text-5xl font-black text-primary text-glow-primary mb-3 animate-data-flicker">
+      <div className="font-display text-5xl font-black text-primary text-glow-primary mb-3 animate-data-flicker animate-text-glitch-slow">
         {String(level).padStart(2, '0')}
       </div>
       <div className="relative mx-2">
