@@ -274,6 +274,7 @@ export function useGameState() {
         xpToNext: newXpToNext,
         stats: newStats,
         statPoints: newPoints,
+        statBank: newBank,
         questLog: newLog,
         classTitles: newTitles,
         currentStreak: newStreak,
