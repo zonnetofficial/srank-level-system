@@ -16,8 +16,10 @@ import MandatoryMission from "./pages/MandatoryMission";
 import Dungeons from "./pages/Dungeons";
 import NotFound from "./pages/NotFound";
 import PunishmentOverlay from "./components/PunishmentOverlay";
+import AudioSettings from "./components/AudioSettings";
 import { useGameState } from "./hooks/useGameState";
 import { useAuth } from "./hooks/useAuth";
+import { useAudio } from "./hooks/useAudio";
 
 const queryClient = new QueryClient();
 
@@ -38,7 +40,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 const AppContent = () => {
   const { state, completePunishment, failPunishment } = useGameState();
-
+  const { settings: audioSettings, setMasterVolume: setMaster, setMusicVolume: setMusic, setSfxVolume: setSfx, toggleMute } = useAudio();
   let titleIdx = 0;
   for (let i = 0; i < state.classTitles.length; i++) {
     if (state.classTitles[i].obtained) titleIdx = i;
@@ -47,6 +49,13 @@ const AppContent = () => {
 
   return (
     <>
+      <AudioSettings
+        settings={audioSettings}
+        onMasterChange={setMaster}
+        onMusicChange={setMusic}
+        onSfxChange={setSfx}
+        onToggleMute={toggleMute}
+      />
       <Routes>
         <Route path="/auth" element={<Auth />} />
         <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useGameState } from '@/hooks/useGameState';
 import { useNavigate } from 'react-router-dom';
 import RunTimer from '@/components/RunTimer';
+import { sfxSuccess, sfxClick, sfxQuestComplete } from '@/lib/audioEngine';
 import VictorianFrame from '@/components/VictorianFrame';
 
 const DailyQuest = () => {
@@ -127,7 +128,7 @@ const DailyQuest = () => {
                       : 'hover:bg-secondary/50 border border-transparent'
                   }`}
                   style={{ animationDelay: `${400 + i * 80}ms` }}
-                  onClick={() => !ex.completed && completeExercise(i)}
+                  onClick={() => { if (!ex.completed) { completeExercise(i); sfxClick(); } }}
                 >
                   <div className="flex items-center gap-3">
                     <div className={`w-6 h-6 rounded-md flex items-center justify-center text-xs transition-all ${
@@ -155,7 +156,7 @@ const DailyQuest = () => {
 
           {/* Complete button */}
           <button
-            onClick={completeQuest}
+            onClick={() => { completeQuest(); sfxQuestComplete(); }}
             disabled={!canComplete}
             className={`w-full py-4 rounded-lg font-display text-sm uppercase tracking-[0.2em] transition-all animate-slide-up delay-500 ${
               canComplete

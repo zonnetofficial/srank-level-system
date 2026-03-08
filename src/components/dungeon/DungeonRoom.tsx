@@ -6,6 +6,7 @@ import MemoryGame from '@/components/minigames/MemoryGame';
 import ReactionGame from '@/components/minigames/ReactionGame';
 import PatternGame from '@/components/minigames/PatternGame';
 import LogicGame from '@/components/minigames/LogicGame';
+import { sfxRoomClear, sfxDamage } from '@/lib/audioEngine';
 
 interface Props {
   room: DungeonRoomType;
@@ -31,6 +32,7 @@ export default function DungeonRoom({ room, roomNumber, totalRooms, charClass, e
 
   const handleComplete = useCallback((success: boolean) => {
     setResult(success);
+    if (success) sfxRoomClear(); else sfxDamage();
     setTimeout(() => onComplete(success), 1500);
   }, [onComplete]);
 

@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import SudokuGame from './SudokuGame';
+import { sfxPunishment } from '@/lib/audioEngine';
 
 const PUNISHMENT_PHRASES = [
   'Es lamentable ver tu falta de compromiso. Si no deseas entrenar tu cuerpo, entonces entrenarás tu mente.',
@@ -21,7 +22,7 @@ interface PunishmentOverlayProps {
 }
 
 const PunishmentOverlay = ({ pendingCount, level, statPenalty, onComplete, onFail }: PunishmentOverlayProps) => {
-  const [phase, setPhase] = useState<'phrase' | 'sudoku'>('phrase');
+  const [phase, setPhase] = useState<'phrase' | 'sudoku'>(() => { sfxPunishment(); return 'phrase'; });
 
   const phrase = useMemo(
     () => PUNISHMENT_PHRASES[Math.floor(Math.random() * PUNISHMENT_PHRASES.length)],
