@@ -202,20 +202,6 @@ const DailyQuest = () => {
         </div>
       )}
 
-      {/* Rest registered */}
-      {todayQuest?.status === 'rest' && (
-        <div className="rpg-panel text-center py-10 animate-fade-in">
-          <div className="text-6xl mb-4">💤</div>
-          <h2 className="font-display text-xl font-bold text-accent text-glow-accent mb-2">Día de Descanso</h2>
-          <p className="text-sm text-muted-foreground">Recuperación registrada</p>
-          <button
-            onClick={() => navigate('/')}
-            className="mt-6 px-6 py-2 rounded-lg bg-secondary text-secondary-foreground font-display text-sm uppercase tracking-wider hover:opacity-90 transition-opacity"
-          >
-            ← Volver
-          </button>
-        </div>
-      )}
     </VictorianFrame>
   );
 };
