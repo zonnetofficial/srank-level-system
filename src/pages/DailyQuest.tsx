@@ -188,12 +188,6 @@ const DailyQuest = () => {
               </span>
             </div>
           </div>
-          <button
-            onClick={() => navigate('/')}
-            className="mt-4 w-full py-3 rounded-lg bg-secondary text-secondary-foreground font-display text-sm uppercase tracking-wider hover:opacity-90 transition-opacity"
-          >
-            ← Volver al Home
-          </button>
         </div>
       )}
 
