@@ -704,24 +704,32 @@ function darkTrapSnare(ctx: AudioContext, time: number, vel: number, dest: GainN
 }
 
 function darkTrapHat(ctx: AudioContext, time: number, vel: number, open: boolean, dest: GainNode) {
-  const dur = open ? 0.2 : 0.03;
-  const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur * 2), ctx.sampleRate);
-  const d = buf.getChannelData(0);
-  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-  const src = ctx.createBufferSource();
-  src.buffer = buf;
-  // Loud, present, crispy — more gain, sharper filters
-  const hp = ctx.createBiquadFilter();
-  hp.type = 'highpass'; hp.frequency.setValueAtTime(8000, time);
-  const peak1 = ctx.createBiquadFilter();
-  peak1.type = 'peaking'; peak1.frequency.setValueAtTime(11000, time); peak1.gain.setValueAtTime(10, time); peak1.Q.setValueAtTime(3, time);
-  const peak2 = ctx.createBiquadFilter();
-  peak2.type = 'peaking'; peak2.frequency.setValueAtTime(14000, time); peak2.gain.setValueAtTime(6, time); peak2.Q.setValueAtTime(2, time);
-  const g = ctx.createGain();
-  g.gain.setValueAtTime(0.1 * vel, time); // louder hats
-  g.gain.exponentialRampToValueAtTime(0.001, time + dur);
-  src.connect(hp); hp.connect(peak1); peak1.connect(peak2); peak2.connect(g); g.connect(dest);
-  src.start(time);
+  const dur = 0.03; // Keep it crisp and short for both single hits and rolls
+  
+  const playHit = (t: number, v: number) => {
+    const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur * 2), ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const hp = ctx.createBiquadFilter();
+    hp.type = 'highpass'; hp.frequency.setValueAtTime(8000, t);
+    const peak1 = ctx.createBiquadFilter();
+    peak1.type = 'peaking'; peak1.frequency.setValueAtTime(11000, t); peak1.gain.setValueAtTime(10, t); peak1.Q.setValueAtTime(3, t);
+    const peak2 = ctx.createBiquadFilter();
+    peak2.type = 'peaking'; peak2.frequency.setValueAtTime(14000, t); peak2.gain.setValueAtTime(6, t); peak2.Q.setValueAtTime(2, t);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.1 * v, t); 
+    g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    src.connect(hp); hp.connect(peak1); peak1.connect(peak2); peak2.connect(g); g.connect(dest);
+    src.start(t);
+  };
+
+  playHit(time, vel);
+  if (open) {
+    // 'open' flag triggers a 32nd note roll (double subdivision)
+    playHit(time + 0.1, vel * 0.8);
+  }
 }
 
 // DEEP 808 SUB BASS for dark trap — clean, sustained, massive sub
@@ -910,16 +918,26 @@ type DrumStep = [number, number, number, number];
 
 const DRUM_PATTERNS: Record<'trap' | 'house' | 'ambient' | 'darktrap', DrumStep[]> = {
   darktrap: [
-    // Bar 1: Full kick pattern, loud hats every 16th, snare on 5 & 13
-    [1,  0, 1,  0],  [0, 0, .7, 0],  [0, 0, 1,  0],  [0, 0, .6, 0],
-    [0, 1,  1,  0],  [0, 0, .7, 0],  [0, 0, .9, 0],  [.7,0, .6, 0],   // snare + ghost kick
-    [1,  0, 1,  0],  [0, 0, .8, 0],  [0, 0, 1,  0],  [0, 0, .7, 0],
-    [0, 1,  .9, 0],  [0, 0, .7, 0],  [.5,0, 1,  0],  [0, 0, .8, 0],   // snare + ghost kick fill
-    // Bar 2: Syncopated kicks, hat rolls, open hat accents
-    [1,  0, 1,  0],  [0, 0, .8, 0],  [.6,0, 1,  0],  [0, 0, .7, 0],   // double kick
-    [0, 1,  .9, 0],  [0, 0, .8, 0],  [0, 0, 1,  0],  [0, 0, 1,  0],   // hat roll
-    [1,  0, .8,.8],  [0, 0, 1,  0],  [0, 0, 1,  0],  [0, 0, .9, 0],   // open hat + hat roll
-    [.8,1,  1,  0],  [0, 0, .8, 0],  [0, 0, 1,  0],  [0, 0, .7, 0],   // kick+snare hit
+    // Bar 1
+    [1, 0, 0, 0], [0, 0, .8, 0], [0, 0, 0, .9], [0, 0, .8, 0],
+    [0, 1, 0, 0], [0, 0, .8, 0], [1, 0, 0, 0], [0, 0, 0, .9],
+    [1, 0, 0, 0], [0, 0, .8, 0], [0, 0, 0, .9], [0, 0, .8, 0],
+    [0, 1, 0, 0], [0, 0, .8, 0], [1, 0, 0, 0], [0, 0, .8, 0],
+    // Bar 2
+    [0, 0, .8, 0], [1, 0, 0, 0], [0, 0, .8, 0], [0, 0, 0, .9],
+    [0, 1, 0, 0], [0, 0, .8, 0], [1, 0, 0, 0], [0, 0, .8, 0],
+    [1, 0, 0, 0], [0, 0, 0, .9], [0, 0, .8, 0], [1, 0, 0, 0],
+    [0, 1, 0, 0], [0, 0, .8, 0], [0, 0, 0, .9], [0, 0, .8, 0],
+    // Bar 3
+    [1, 0, 0, 0], [0, 0, .8, 0], [1, 0, 0, 0], [0, 0, .8, 0],
+    [0, 1, 0, 0], [0, 0, 0, .9], [0, 0, .8, 0], [1, 0, 0, 0],
+    [1, 0, 0, 0], [0, 0, .8, 0], [0, 0, 0, .9], [0, 0, .8, 0],
+    [0, 1, 0, 0], [0, 0, .8, 0], [1, 0, 0, 0], [0, 0, .8, 0],
+    // Bar 4
+    [1, 0, 0, 0], [0, 0, 0, .9], [0, 0, .8, 0], [1, 0, 0, 0],
+    [0, 1, 0, 0], [0, 0, .8, 0], [1, 0, 0, 0], [0, 0, .8, 0],
+    [1, 0, 0, 0], [0, 0, 0, .9], [0, 1, 0, 0], [0, 0, .8, 0],
+    [0, 1, 0, 0], [0, 0, 0, .9], [0, 0, .8, 0], [0, 0, .8, 0],
   ],
   trap: [
     // Bar 1: heavy kick, rolling hats, snare on 5 & 13
@@ -1044,7 +1062,7 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
       // ── Per-step instruments ──
       for (let step = 0; step < 16; step++) {
         const stepTime = barStart + step * sixteenthDur;
-        const patIdx = (bar % 2) * 16 + step;
+        const patIdx = ((bar * 16) + step) % drumPattern.length;
         const [kick, snare, hat, openHat] = drumPattern[patIdx];
 
         // Drums
@@ -1054,7 +1072,8 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
         if (openHat > 0) kit.hat(ctx, stepTime, openHat, true, outputGain);
 
         // Bass — darktrap gets very long sustained notes
-        if (config.bassPattern[patIdx]) {
+        const bassPatIdx = ((bar * 16) + step) % config.bassPattern.length;
+        if (config.bassPattern[bassPatIdx]) {
           const bassMidi = rootMidi + config.bassOctave * 12;
           const bassDur = config.genre === 'darktrap' ? barDur * 1.5
             : config.genre === 'ambient' ? barDur
@@ -1064,7 +1083,8 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
         }
 
         // FM Keys (stabs/chords) — darktrap uses very dark, soft keys
-        if (config.keyPattern[patIdx]) {
+        const keyPatIdx = ((bar * 16) + step) % config.keyPattern.length;
+        if (config.keyPattern[keyPatIdx]) {
           const brightness = config.genre === 'darktrap' ? 0.3
             : config.genre === 'house' ? 1.5
             : config.genre === 'trap' ? 0.8 : 0.4;
@@ -1075,7 +1095,8 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
         }
 
         // Pluck arpeggios — darktrap sends more to delay for ethereal feel
-        if (config.arpPattern[patIdx]) {
+        const arpPatIdx = ((bar * 16) + step) % config.arpPattern.length;
+        if (config.arpPattern[arpPatIdx]) {
           const arpNote = chord[step % chord.length] + 12;
           schedulePluck(ctx, stepTime, arpNote, sixteenthDur * 3, outputGain);
           schedulePluck(ctx, stepTime, arpNote, sixteenthDur * 3, delaySendGain);
