@@ -367,8 +367,7 @@ export function useGameState() {
       if (stat === 'agi' && weeklyUses >= 3) return prev;
       if (stat === 'vit' && weeklyUses >= 4) return prev;
 
-      const newStats = { ...prev.stats, [stat]: prev.stats[stat] + points };
-      const newPoints = { ...prev.statPoints, [stat]: prev.statPoints[stat] + points };
+      const newBank = { ...prev.statBank, [stat]: prev.statBank[stat] + points };
 
       // XP from skill task
       const skillXp = Math.floor(getQuestXP(prev.level) * 0.5);
