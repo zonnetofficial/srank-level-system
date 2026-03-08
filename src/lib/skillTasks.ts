@@ -4,10 +4,12 @@ import { StatKey } from './gameData';
 export interface SkillTask {
   name: string;
   description: string;
-  /** Total duration in seconds for timed tasks. */
+  /** Total duration in seconds for timed tasks (sum of all rounds). */
   durationSeconds?: number;
   /** Number of timer rounds. Each round = durationSeconds / timerRounds. Defaults to 1. */
   timerRounds?: number;
+  /** Label for each round (e.g. "Pierna izquierda", "Pierna derecha"). Length must match timerRounds. */
+  roundLabels?: string[];
 }
 
 // Tier index maps to skill title index (0=Novato, 1=Aprendiz, etc.)
@@ -58,16 +60,16 @@ const STR_TASKS: SkillTask[][] = [
 
 const AGI_TASKS: SkillTask[][] = [
   [
-    { name: 'Estiramientos básicos', description: 'Realiza: tocarse los pies 20s, estiramiento de cuádriceps 20s por pierna, estiramiento de hombros 20s por lado, giro de cadera 20s por lado', durationSeconds: 120, timerRounds: 4 },
+    { name: 'Estiramientos básicos', description: 'Tocarse los pies, estiramiento de cuádriceps por pierna, estiramiento de hombros por lado, giro de cadera por lado — 20s cada ejercicio/lado', durationSeconds: 140, timerRounds: 7, roundLabels: ['Tocarse los pies', 'Cuádriceps – pierna izquierda', 'Cuádriceps – pierna derecha', 'Hombros – lado izquierdo', 'Hombros – lado derecho', 'Giro de cadera – lado izquierdo', 'Giro de cadera – lado derecho'] },
     { name: 'Saltos en el lugar', description: 'Haz 30 saltos seguidos con rodillas al pecho alternando velocidad: 10 lentos, 10 rápidos, 10 explosivos' },
-    { name: 'Equilibrio a un pie', description: 'Mantente en un pie 30 segundos, luego cambia. Ojos cerrados para mayor dificultad', durationSeconds: 60, timerRounds: 2 },
+    { name: 'Equilibrio a un pie', description: 'Mantente en un pie 30 segundos por lado. Ojos cerrados para mayor dificultad', durationSeconds: 60, timerRounds: 2, roundLabels: ['Pie izquierdo', 'Pie derecho'] },
     { name: 'Caminata lateral', description: 'Da 20 pasos laterales por lado en posición de media sentadilla, manteniendo la espalda recta' },
     { name: 'Rodillas altas', description: 'Eleva las rodillas al pecho alternando piernas, 40 repeticiones totales lo más rápido posible' },
   ],
   [
-    { name: 'Movilidad dinámica', description: 'Circuito: 10 círculos de brazos, 10 balanceos de pierna por lado, 10 rotaciones de cadera, 10 giros de tobillo por pie', durationSeconds: 120, timerRounds: 4 },
+    { name: 'Movilidad dinámica', description: 'Circuito de movilidad — 30s cada ejercicio', durationSeconds: 120, timerRounds: 4, roundLabels: ['Círculos de brazos', 'Balanceos de pierna', 'Rotaciones de cadera', 'Giros de tobillo'] },
     { name: 'Saltos de cuerda', description: 'Simula o usa cuerda real: 50 saltos sin parar alternando pies juntos y alternados cada 10 saltos' },
-    { name: 'Skipping lateral', description: '3 series de 30 segundos de desplazamiento lateral rápido, cambiando dirección en cada serie', durationSeconds: 90, timerRounds: 3 },
+    { name: 'Skipping lateral', description: '3 series de 30s de desplazamiento lateral rápido', durationSeconds: 90, timerRounds: 3, roundLabels: ['Serie 1', 'Serie 2', 'Serie 3'] },
     { name: 'Toe touches dinámicos', description: 'De pie, lanza una pierna al frente y toca la punta con la mano opuesta. 15 por pierna alternando' },
     { name: 'Bear crawl', description: 'Desplázate en cuadrupedia (manos y pies) hacia adelante y atrás durante 2 minutos sin detenerte', durationSeconds: 120 },
   ],
@@ -76,7 +78,7 @@ const AGI_TASKS: SkillTask[][] = [
     { name: 'Circuito de agilidad', description: 'Marca 4 puntos en cuadrado (2m): toca cada punto en orden ida y vuelta, 5 rondas lo más rápido posible' },
     { name: 'Salto en caja progresivo', description: 'Salta sobre un escalón o banco a 3 alturas diferentes (bajo, medio, alto), 5 saltos cada una' },
     { name: 'Shuttle run', description: 'Marca dos líneas a 10m de distancia: corre de ida y vuelta tocando el suelo en cada extremo, 5 sprints' },
-    { name: 'Escalera de pies', description: 'Imagina una escalera en el suelo: pies adentro-afuera rápido, lateral, y zig-zag. 3 patrones x 30s cada uno', durationSeconds: 90, timerRounds: 3 },
+    { name: 'Escalera de pies', description: 'Pies adentro-afuera, lateral y zig-zag — 30s cada patrón', durationSeconds: 90, timerRounds: 3, roundLabels: ['Adentro-afuera', 'Lateral', 'Zig-zag'] },
   ],
   [
     { name: 'Sprints con cambio', description: 'Sprint 5m → giro 180° → sprint 5m → giro → repite 10 veces sin parar' },
@@ -163,7 +165,7 @@ const END_TASKS: SkillTask[][] = [
   ],
   [
     { name: 'Circuito de resistencia', description: '15 minutos de ejercicio continuo', durationSeconds: 900 },
-    { name: 'Plancha lateral', description: '1 minuto cada lado', durationSeconds: 120, timerRounds: 2 },
+    { name: 'Plancha lateral', description: '1 minuto cada lado', durationSeconds: 120, timerRounds: 2, roundLabels: ['Lado izquierdo', 'Lado derecho'] },
     { name: 'Burpee endurance', description: '1 burpee por minuto durante 15 min', durationSeconds: 900, timerRounds: 15 },
     { name: 'Trote sostenido', description: '15 minutos a ritmo constante', durationSeconds: 900 },
     { name: 'Circuito AMRAP', description: 'Máximas rondas en 12 minutos', durationSeconds: 720 },
