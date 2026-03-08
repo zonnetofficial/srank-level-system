@@ -528,7 +528,7 @@ export default function Dungeons() {
                       key={inv.id}
                       className={`rpg-panel p-3 flex items-center gap-3 ${SHOP_RARITY_COLORS[item.rarity]}`}
                     >
-                      <span className="text-2xl">{item.icon}</span>
+                      <ItemIcon name={item.name} fallbackEmoji={item.icon} size="lg" />
                       <div className="flex-1 min-w-0">
                         <div className="font-display text-xs font-bold truncate">{item.name}</div>
                         <div className="text-[9px] text-muted-foreground">
