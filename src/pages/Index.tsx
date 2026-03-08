@@ -136,6 +136,15 @@ const Index = () => {
             Historial
           </span>
         </button>
+        <button
+          onClick={() => navigate('/monarch')}
+          className="rpg-panel flex flex-col items-center gap-2 py-5 hover:border-accent/50 transition-colors col-span-2"
+        >
+          <span className="text-3xl">👑</span>
+          <span className="font-display text-xs uppercase tracking-wider text-accent">
+            Ruta del Monarca
+          </span>
+        </button>
       </div>
 
       {/* Streak */}

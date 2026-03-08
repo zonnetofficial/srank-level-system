@@ -14,7 +14,107 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      monarch_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          mp_payment_id: string | null
+          reason: string | null
+          status: string
+          subscription_id: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          id?: string
+          mp_payment_id?: string | null
+          reason?: string | null
+          status?: string
+          subscription_id: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          mp_payment_id?: string | null
+          reason?: string | null
+          status?: string
+          subscription_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monarch_payments_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "monarch_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      monarch_subscriptions: {
+        Row: {
+          blocked_until: string | null
+          created_at: string
+          id: string
+          mp_payer_email: string | null
+          mp_preapproval_id: string | null
+          penalty_amount: number
+          status: string
+          streak_at_entry: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          blocked_until?: string | null
+          created_at?: string
+          id?: string
+          mp_payer_email?: string | null
+          mp_preapproval_id?: string | null
+          penalty_amount?: number
+          status?: string
+          streak_at_entry?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          blocked_until?: string | null
+          created_at?: string
+          id?: string
+          mp_payer_email?: string | null
+          mp_preapproval_id?: string | null
+          penalty_amount?: number
+          status?: string
+          streak_at_entry?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
