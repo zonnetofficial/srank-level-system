@@ -11,6 +11,7 @@ import Titles from "./pages/Titles";
 import History from "./pages/History";
 import Auth from "./pages/Auth";
 import MonarchMode from "./pages/MonarchMode";
+import Shop from "./pages/Shop";
 import NotFound from "./pages/NotFound";
 import PunishmentOverlay from "./components/PunishmentOverlay";
 import { useGameState } from "./hooks/useGameState";
@@ -52,6 +53,7 @@ const AppContent = () => {
         <Route path="/titles" element={<ProtectedRoute><Titles /></ProtectedRoute>} />
         <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
         <Route path="/monarch" element={<ProtectedRoute><MonarchMode /></ProtectedRoute>} />
+        <Route path="/shop" element={<ProtectedRoute><Shop /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
 

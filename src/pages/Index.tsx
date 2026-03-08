@@ -163,8 +163,8 @@ const Index = () => {
         {[
           { path: '/quest', icon: restDay ? '💤' : '⚔️', label: todayQuest?.status === 'completed' ? '✅ Completada' : restDay ? 'Día de Descanso' : 'Daily Quest', glow: todayQuest?.status !== 'completed', primary: true },
           { path: '/skills', icon: '✨', label: 'Skills' },
+          { path: '/shop', icon: '🏪', label: 'Tienda' },
           { path: '/titles', icon: '🏷️', label: 'Títulos' },
-          { path: '/history', icon: '📜', label: 'Historial' },
         ].map((item, i) => (
           <button
             key={item.path}

@@ -14,6 +14,140 @@ export type Database = {
   }
   public: {
     Tables: {
+      dark_points: {
+        Row: {
+          balance: number
+          created_at: string
+          id: string
+          total_earned: number
+          total_spent: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          id?: string
+          total_earned?: number
+          total_spent?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          id?: string
+          total_earned?: number
+          total_spent?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      dp_packages: {
+        Row: {
+          bonus_points: number
+          created_at: string
+          dark_points: number
+          icon: string
+          id: string
+          is_active: boolean
+          name: string
+          price_mxn: number
+        }
+        Insert: {
+          bonus_points?: number
+          created_at?: string
+          dark_points: number
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          price_mxn: number
+        }
+        Update: {
+          bonus_points?: number
+          created_at?: string
+          dark_points?: number
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          price_mxn?: number
+        }
+        Relationships: []
+      }
+      dp_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          id: string
+          reference_id: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          reference_id?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          reference_id?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      marketplace_listings: {
+        Row: {
+          buyer_id: string | null
+          created_at: string
+          id: string
+          item_id: string
+          price: number
+          seller_id: string
+          sold_at: string | null
+          status: string
+        }
+        Insert: {
+          buyer_id?: string | null
+          created_at?: string
+          id?: string
+          item_id: string
+          price: number
+          seller_id: string
+          sold_at?: string | null
+          status?: string
+        }
+        Update: {
+          buyer_id?: string | null
+          created_at?: string
+          id?: string
+          item_id?: string
+          price?: number
+          seller_id?: string
+          sold_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_listings_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "shop_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       monarch_payments: {
         Row: {
           amount: number
@@ -114,6 +248,89 @@ export type Database = {
           id?: string
         }
         Relationships: []
+      }
+      shop_items: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          effect_type: string | null
+          effect_value: number | null
+          icon: string
+          id: string
+          is_active: boolean
+          max_per_user: number | null
+          name: string
+          price: number
+          rarity: string
+          stock: number | null
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          effect_type?: string | null
+          effect_value?: number | null
+          icon?: string
+          id?: string
+          is_active?: boolean
+          max_per_user?: number | null
+          name: string
+          price: number
+          rarity?: string
+          stock?: number | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          effect_type?: string | null
+          effect_value?: number | null
+          icon?: string
+          id?: string
+          is_active?: boolean
+          max_per_user?: number | null
+          name?: string
+          price?: number
+          rarity?: string
+          stock?: number | null
+        }
+        Relationships: []
+      }
+      user_inventory: {
+        Row: {
+          acquired_at: string
+          id: string
+          item_id: string
+          quantity: number
+          source: string
+          user_id: string
+        }
+        Insert: {
+          acquired_at?: string
+          id?: string
+          item_id: string
+          quantity?: number
+          source?: string
+          user_id: string
+        }
+        Update: {
+          acquired_at?: string
+          id?: string
+          item_id?: string
+          quantity?: number
+          source?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_inventory_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "shop_items"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
