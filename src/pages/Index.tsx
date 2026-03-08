@@ -3,6 +3,7 @@ import { XPBar } from '@/components/XPBar';
 import VictorianFrame from '@/components/VictorianFrame';
 import { StatBar } from '@/components/StatBar';
 import { useGameState } from '@/hooks/useGameState';
+import { useAuth } from '@/hooks/useAuth';
 import {
   STAT_LABELS,
   STAT_ICONS,
@@ -11,6 +12,7 @@ import {
   getNextClassTitle,
 } from '@/lib/gameData';
 import { useNavigate } from 'react-router-dom';
+import { LogOut } from 'lucide-react';
 
 const statKeys: StatKey[] = ['int', 'str', 'agi', 'vit', 'end'];
 
