@@ -17,6 +17,7 @@ const statusLabels: Record<string, string> = {
 
 const History = () => {
   const { state, resetGame } = useGameState();
+  const navigate = useNavigate();
   const sortedLog = [...state.questLog].reverse();
 
   return (
