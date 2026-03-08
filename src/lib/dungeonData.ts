@@ -38,11 +38,23 @@ export interface DungeonRun {
   xpEarned: number;
 }
 
+export interface DungeonLoadoutItem {
+  inventoryId: string;
+  itemId: string;
+  name: string;
+  icon: string;
+  effect_type: string;
+  effect_value: number;
+  rarity: string;
+  quantity: number; // how many of this item are in loadout
+}
+
 export interface DungeonState {
   character: DungeonCharacter | null;
   currentRun: DungeonRun | null;
   cooldowns: Partial<Record<DungeonRank, string>>; // rank -> next available ISO date
   totalCleared: number;
+  loadout: DungeonLoadoutItem[];
 }
 
 export type RewardChoice = 'heal' | 'luckbox';
