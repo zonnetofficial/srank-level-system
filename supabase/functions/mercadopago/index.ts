@@ -106,6 +106,94 @@ serve(async (req) => {
       });
     }
 
+    // --- BUY T-POINTS ---
+    if (action === 'buy_t_points') {
+      const { package_id, t_points, amount, back_url } = params;
+
+      if (!amount || amount < 1) {
+        return new Response(JSON.stringify({ error: 'Monto inválido' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const prefResponse = await fetch(`${MP_API}/checkout/preferences`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${MP_ACCESS_TOKEN}`,
+        },
+        body: JSON.stringify({
+          items: [{
+            title: `T-Points - ${t_points} TP`,
+            quantity: 1,
+            unit_price: amount,
+            currency_id: 'MXN',
+          }],
+          payer: { email: user.email },
+          external_reference: `tp_${userId}_${package_id}_${t_points}`,
+          back_urls: {
+            success: (back_url || 'https://srank-level-system.lovable.app/shop') + '?tp_success=true',
+            failure: (back_url || 'https://srank-level-system.lovable.app/shop') + '?tp_fail=true',
+          },
+          auto_return: 'approved',
+        }),
+      });
+
+      const prefData = await prefResponse.json();
+      if (!prefResponse.ok) {
+        console.error('MP TP preference error:', prefData);
+        throw new Error(`MercadoPago error [${prefResponse.status}]: ${JSON.stringify(prefData)}`);
+      }
+
+      return new Response(JSON.stringify({
+        init_point: prefData.init_point,
+        preference_id: prefData.id,
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // --- CONFIRM TP PURCHASE (webhook or manual) ---
+    if (action === 'confirm_tp_purchase') {
+      const { t_points: tpAmount } = params;
+      const adminSupabase = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+      );
+
+      const { data: existing } = await adminSupabase
+        .from('t_points')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (existing) {
+        await adminSupabase.from('t_points').update({
+          balance: existing.balance + tpAmount,
+          total_earned: existing.total_earned + tpAmount,
+          updated_at: new Date().toISOString(),
+        }).eq('user_id', userId);
+      } else {
+        await adminSupabase.from('t_points').insert({
+          user_id: userId,
+          balance: tpAmount,
+          total_earned: tpAmount,
+          total_spent: 0,
+        });
+      }
+
+      await adminSupabase.from('tp_transactions').insert({
+        user_id: userId,
+        amount: tpAmount,
+        type: 'purchase',
+        description: `Compra de ${tpAmount} T-Points`,
+      });
+
+      return new Response(JSON.stringify({ success: true, new_balance: (existing?.balance || 0) + tpAmount }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // --- CONFIRM DP PURCHASE (webhook or manual) ---
     if (action === 'confirm_dp_purchase') {
       const { dark_points: dpAmount } = params;
