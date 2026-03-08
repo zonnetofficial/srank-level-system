@@ -47,10 +47,12 @@ export interface InventoryItem {
 export interface MarketplaceListing {
   id: string;
   seller_id: string;
-  item_id: string;
+  item_id: string | null;
   price: number;
   status: string;
   created_at: string;
+  listing_type: 'item' | 'dp';
+  dp_amount: number | null;
   item?: ShopItem;
 }
 
