@@ -17,7 +17,7 @@ const DailyQuest = () => {
   const totalExercises = todayQuest?.exercises?.length ?? 0;
 
   return (
-    <div className="min-h-screen bg-background px-4 pt-6 pb-6 max-w-lg mx-auto">
+    <VictorianFrame>
       {/* Back button */}
       <button
         onClick={() => navigate('/')}
