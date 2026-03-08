@@ -567,6 +567,32 @@ export function useGameState() {
     });
   }, []);
 
+  // Class change challenge: complete one stat task for a class
+  const completeClassChallengeTask = useCallback((className: string, stat: StatKey) => {
+    setState(prev => {
+      const progress = { ...prev.classChangeProgress };
+      const completed = progress[className] ? [...progress[className]] : [];
+      if (completed.includes(stat)) return prev; // already done
+      completed.push(stat);
+      progress[className] = completed;
+
+      // Check if all 5 stats completed
+      const allDone = completed.length >= 5;
+      let newTitles = prev.classTitles;
+      if (allDone) {
+        newTitles = prev.classTitles.map(t =>
+          t.name === className ? { ...t, obtained: true } : t
+        );
+      }
+
+      return {
+        ...prev,
+        classChangeProgress: progress,
+        classTitles: newTitles,
+      };
+    });
+  }, []);
+
   return {
     state,
     today,
@@ -585,5 +611,6 @@ export function useGameState() {
     completePunishment,
     failPunishment,
     simulateDays,
+    completeClassChallengeTask,
   };
 }
