@@ -20,6 +20,7 @@ const Skills = () => {
   const navigate = useNavigate();
 
   // INT test state
+  const [intSkillIntro, setIntSkillIntro] = useState(false);
   const [testActive, setTestActive] = useState(false);
   const [testTheme, setTestTheme] = useState<TestTheme | null>(null);
   const [testQuestions, setTestQuestions] = useState<TestQuestion[]>([]);
@@ -34,7 +35,13 @@ const Skills = () => {
   const [taskDialogStat, setTaskDialogStat] = useState<StatKey | null>(null);
   const [taskDialogTask, setTaskDialogTask] = useState<{ name: string; description: string } | null>(null);
 
+  // Show skill intro first, then launch the actual INT test
+  const handleShowIntSkillIntro = () => {
+    setIntSkillIntro(true);
+  };
+
   const handleStartInt = () => {
+    setIntSkillIntro(false);
     const tier = getTierFromPoints(state.statPoints.int);
     const answeredCorrectly: string[] = (state as any).answeredCorrectly || [];
     const { theme, questions } = getTestForTier(tier, answeredCorrectly);
@@ -101,7 +108,7 @@ const Skills = () => {
   // Skill task handling
   const handleStartSkill = (key: StatKey) => {
     if (key === 'int') {
-      handleStartInt();
+      handleShowIntSkillIntro();
       return;
     }
     const titleIdx = getTitleIndex(key, state.statPoints[key]);
@@ -302,6 +309,49 @@ const Skills = () => {
           );
         })}
       </div>
+
+      {/* INT Skill Intro Dialog */}
+      <Dialog open={intSkillIntro} onOpenChange={(o) => { if (!o) setIntSkillIntro(false); }}>
+        <DialogContent className="bg-background border-border max-w-sm p-0 overflow-hidden">
+          <DialogHeader className="px-6 pt-6 pb-3 border-b border-border">
+            <DialogTitle className="font-display text-center text-stat-int">
+              🧠 Inteligencia
+            </DialogTitle>
+          </DialogHeader>
+          <div className="px-6 py-6 space-y-5">
+            <div className="rpg-panel space-y-3">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                <span className="text-[10px] font-display text-primary uppercase tracking-[0.2em]">
+                  Tarea Asignada
+                </span>
+              </div>
+              <h3 className="font-display text-base font-bold text-foreground">
+                Test de Conocimiento
+              </h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Se te presentará un texto informativo sobre un tema específico. Léelo con atención, ya que luego deberás responder preguntas basadas en su contenido.
+              </p>
+            </div>
+
+            <div className="rpg-panel bg-primary/5 border-primary/20">
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                <span className="text-primary font-display font-bold">📋 Instrucciones:</span>{' '}
+                Primero leerás un texto introductorio. Después responderás entre 15 y 20 preguntas de opción múltiple. 
+                Un resultado perfecto te permite repetir el test. 5 perfectos desbloquean un test de rango superior.
+                Fallar todas las preguntas te bloquea por 2 días.
+              </p>
+            </div>
+
+            <button
+              onClick={handleStartInt}
+              className="w-full py-3.5 rounded-lg bg-primary text-primary-foreground font-display text-sm uppercase tracking-[0.2em] glow-primary hover:opacity-90 transition-all"
+            >
+              ▶ Iniciar Test
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {intTestDialog}
       {skillTaskDialog}
