@@ -25,7 +25,7 @@ const ROOM_TYPE_LABELS: Record<DungeonRoomType['type'], { label: string; icon: s
   logic: { label: 'Acertijo Lógico', icon: '🧠' },
 };
 
-export default function DungeonRoom({ room, roomNumber, totalRooms, charClass, onComplete }: Props) {
+export default function DungeonRoom({ room, roomNumber, totalRooms, charClass, extraTime = 0, damageReduction = 0, onComplete }: Props) {
   const [started, setStarted] = useState(false);
   const [result, setResult] = useState<boolean | null>(null);
 
@@ -36,6 +36,9 @@ export default function DungeonRoom({ room, roomNumber, totalRooms, charClass, o
 
   const typeInfo = ROOM_TYPE_LABELS[room.type];
   const timeMultiplier = getTimeBonusMultiplier(charClass);
+  // Extra time from equipment adds to time multiplier
+  const effectiveTimeMultiplier = timeMultiplier + (extraTime / 10); // each 2s ≈ 0.2 multiplier
+  const effectiveDamage = Math.max(1, Math.floor(room.damage * (1 - damageReduction / 100)));
 
   return (
     <div className="space-y-4">
