@@ -35,7 +35,7 @@ const AppContent = () => {
         <Route path="/history" element={<History />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
-      <BottomNav />
+      
 
       {state.pendingPunishments > 0 && (
         <PunishmentOverlay
