@@ -47,6 +47,7 @@ export default function Dungeons() {
     healCharacter, clearRun,
   } = useDungeon(state.stats, state.level);
 
+  const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>('dungeons');
   const [view, setView] = useState<View>(dungeonState.character ? (dungeonState.currentRun?.status === 'active' ? 'dungeon' : 'lobby') : 'create');
   const [rewardChoice, setRewardChoice] = useState<'heal' | 'luckbox' | null>(null);
