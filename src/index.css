@@ -198,6 +198,22 @@
     z-index: 1;
   }
 
+  /* Ambient glitch effect */
+  .hud-glitch {
+    position: relative;
+  }
+
+  .hud-glitch::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 3;
+    opacity: 0;
+    mix-blend-mode: screen;
+    animation: ambient-glitch 8s ease-in-out infinite;
+  }
+
   /* HUD label */
   .hud-label {
     @apply text-[10px] font-display uppercase tracking-[0.25em] text-muted-foreground;
