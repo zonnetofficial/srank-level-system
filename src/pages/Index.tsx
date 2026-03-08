@@ -67,7 +67,7 @@ const Index = () => {
         <div className="hud-label">
           {currentTime.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
         </div>
-        <div className="hud-data text-xl text-primary text-glow-primary mt-0.5">
+        <div className="hud-data text-xl text-primary text-glow-primary mt-0.5 animate-text-flicker">
           {currentTime.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
         </div>
       </div>
