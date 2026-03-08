@@ -376,27 +376,43 @@ function schedulePluck(ctx: AudioContext, time: number, midi: number, duration: 
 // ─── INSTRUMENT: Deep 808 Sub Bass ───
 function schedule808Sub(ctx: AudioContext, time: number, midi: number, duration: number, dest: GainNode) {
   const freq = NOTE(midi);
-  // Main sine body with pitch drop
+  // Main sine body with pitch drop — longer sustain for dark trap
   const osc = ctx.createOscillator();
   const g = ctx.createGain();
   osc.type = 'sine';
-  osc.frequency.setValueAtTime(freq * 1.5, time);
-  osc.frequency.exponentialRampToValueAtTime(freq, time + 0.04);
-  // Distortion for warmth
+  osc.frequency.setValueAtTime(freq * 2, time);
+  osc.frequency.exponentialRampToValueAtTime(freq, time + 0.06);
+  // Soft-clip distortion for warmth & grit
   const shaper = ctx.createWaveShaper();
   const curve = new Float32Array(256);
   for (let i = 0; i < 256; i++) {
     const x = (i / 128) - 1;
-    curve[i] = (Math.PI + 2) * x / (Math.PI + 2 * Math.abs(x)); // soft clip
+    curve[i] = (Math.PI + 3) * x / (Math.PI + 3 * Math.abs(x)); // heavier saturation
   }
   shaper.curve = curve;
   shaper.oversample = '2x';
+  // Low-pass to keep it sub-heavy
+  const lp = ctx.createBiquadFilter();
+  lp.type = 'lowpass';
+  lp.frequency.setValueAtTime(freq * 4, time);
+  lp.frequency.exponentialRampToValueAtTime(freq * 1.5, time + duration * 0.5);
   g.gain.setValueAtTime(0.001, time);
-  g.gain.linearRampToValueAtTime(0.18, time + 0.01);
-  g.gain.setValueAtTime(0.18, time + duration * 0.5);
+  g.gain.linearRampToValueAtTime(0.25, time + 0.015);
+  g.gain.setValueAtTime(0.22, time + duration * 0.6);
   g.gain.exponentialRampToValueAtTime(0.001, time + duration);
-  osc.connect(shaper); shaper.connect(g); g.connect(dest);
+  osc.connect(shaper); shaper.connect(lp); lp.connect(g); g.connect(dest);
   osc.start(time); osc.stop(time + duration + 0.05);
+  // Sub harmonic layer
+  const sub = ctx.createOscillator();
+  const sg = ctx.createGain();
+  sub.type = 'sine';
+  sub.frequency.setValueAtTime(freq / 2, time);
+  sg.gain.setValueAtTime(0.001, time);
+  sg.gain.linearRampToValueAtTime(0.1, time + 0.02);
+  sg.gain.setValueAtTime(0.08, time + duration * 0.5);
+  sg.gain.exponentialRampToValueAtTime(0.001, time + duration);
+  sub.connect(sg); sg.connect(dest);
+  sub.start(time); sub.stop(time + duration + 0.05);
 }
 
 // ─── INSTRUMENT: House Bass (filtered saw + sub) ───
@@ -657,15 +673,19 @@ const THEMES: Record<MusicTheme, ThemeConfig> = {
   home: {
     bpm: 140,
     genre: 'trap',
+    // Dark minor progression — Cm, Abmaj, Fm, Gm, Cm, Ebm, Abmaj, Bdim
     chords: [
-      [48,51,55],[44,48,51],[41,44,48],[43,47,50],
-      [48,51,55],[39,43,46],[44,48,51],[46,50,53],
+      [36,48,51,55],[44,48,51],[41,44,48],[43,46,50],
+      [36,48,51,55],[39,42,46],[44,48,51],[42,45,47],
     ],
-    bassPattern: [1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0, 0,0,1,0,0,0,0,1,0,0,0,0,1,0,0,0],
-    keyPattern:  [0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0, 0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
-    arpPattern:  [0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0, 0,0,0,0,0,0,0,0,1,0,0,0,1,0,1,0],
-    padBrightness: 1100,
-    padGain: 0.045,
+    // Bouncy 808 pattern with slides — heavy on downbeats, syncopated hits
+    bassPattern: [1,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0, 1,0,0,1,0,0,0,0,0,0,1,0,0,0,1,0],
+    // Sparse dark key stabs
+    keyPattern:  [0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0],
+    // Minimal arps — dark melodic touches
+    arpPattern:  [0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0, 0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0],
+    padBrightness: 700,
+    padGain: 0.035,
     bassOctave: -1,
   },
   quest: {
@@ -745,16 +765,16 @@ type DrumStep = [number, number, number, number];
 
 const DRUM_PATTERNS: Record<'trap' | 'house' | 'ambient', DrumStep[]> = {
   trap: [
-    // Bar 1
-    [1,  0, .5, 0],  [0, 0, .3, 0],  [0, 0, .7, 0],  [0, 0, .3, 0],
-    [0,  0, .5, 0],  [0, 0, .4, 0],  [0, 0, .8, 0],  [0, 0, .4, 0],
-    [.6,.9, .5, 0],  [0, 0, .3, 0],  [0, 0, .7, 0],  [0, 0, .5, 0],
-    [0,  0, .5,.6],  [.5,0, .3, 0],  [0, 0, .8, 0],  [0, 0, .4, 0],
-    // Bar 2: rolls
-    [1,  0, .5, 0],  [0, 0, .5, 0],  [0, 0, .7, 0],  [0, 0, .5, 0],
-    [0,  0, .7, 0],  [0, 0, .7, 0],  [0, 0, .8, 0],  [0, 0, .7, 0],
-    [.7,.9, .5, 0],  [0, 0, .4, 0],  [0, 0, .7, 0],  [0, 0, .3, 0],
-    [0,  0, .6,.7],  [0, 0, .7, 0],  [0, 0, .9, 0],  [.4,0, .6, 0],
+    // Bar 1: heavy kick, rolling hats, snare on 5 & 13
+    [1,  0, .6, 0],  [0, 0, .4, 0],  [0, 0, .7, 0],  [0, 0, .5, 0],
+    [0, .9, .6, 0],  [0, 0, .4, 0],  [0, 0, .8, 0],  [0, 0, .6, 0],
+    [.7, 0, .7, 0],  [0, 0, .5, 0],  [0, 0, .8, 0],  [0, 0, .7, 0],
+    [0, .9, .6,.5],  [.5,0, .7, 0],  [0, 0, .8, 0],  [0, 0, .5, 0],
+    // Bar 2: hi-hat triplet rolls, bounce
+    [1,  0, .7, 0],  [0, 0, .6, 0],  [0, 0, .8, 0],  [0, 0, .7, 0],
+    [0, .9, .8, 0],  [0, 0, .7, 0],  [0, 0, .9, 0],  [0, 0, .8, 0],
+    [.8, 0, .8, 0],  [0, 0, .7, 0],  [0, 0, .9, 0],  [0, 0, .8, 0],
+    [0, .9, .7,.6],  [0, 0, .8, 0],  [0, 0, .9, 0],  [.4,0, .7, 0],
   ],
   house: [
     // Bar 1: four-on-the-floor
@@ -877,7 +897,7 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
         // Bass
         if (config.bassPattern[patIdx]) {
           const bassMidi = rootMidi + config.bassOctave * 12;
-          const bassDur = config.genre === 'ambient' ? barDur : sixteenthDur * 3;
+          const bassDur = config.genre === 'ambient' ? barDur : config.genre === 'trap' ? sixteenthDur * 6 : sixteenthDur * 3;
           bassFn(ctx, stepTime, bassMidi, bassDur, outputGain);
         }
 
