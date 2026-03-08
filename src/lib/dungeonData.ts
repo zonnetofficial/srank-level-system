@@ -302,7 +302,8 @@ export function createInitialDungeonState(): DungeonState {
   };
 }
 
-export function getLoadoutBonuses(loadout: DungeonLoadoutItem[]) {
+export function getLoadoutBonuses(loadout: DungeonLoadoutItem[] | undefined | null) {
+  if (!Array.isArray(loadout)) return { extraTime: 0, damageReduction: 0, luckBoost: 0, hasRevive: false };
   let extraTime = 0;
   let damageReduction = 0;
   let luckBoost = 0;
