@@ -178,6 +178,14 @@ const Index = () => {
           <div className="text-[10px] font-display uppercase tracking-wider text-muted-foreground">Mejor Racha</div>
         </div>
       </div>
+
+      {/* DEV BUTTONS - REMOVE AFTER SCREENSHOTS */}
+      <div className="flex gap-2 mt-4">
+        <button onClick={() => { resetGame(); setTimeout(() => simulateDays(50), 100); }} className="px-3 py-2 bg-blue-600 text-white rounded text-xs">Sim 50</button>
+        <button onClick={() => { resetGame(); setTimeout(() => simulateDays(100), 100); }} className="px-3 py-2 bg-green-600 text-white rounded text-xs">Sim 100</button>
+        <button onClick={() => { resetGame(); setTimeout(() => simulateDays(150), 100); }} className="px-3 py-2 bg-purple-600 text-white rounded text-xs">Sim 150</button>
+        <button onClick={() => resetGame()} className="px-3 py-2 bg-red-600 text-white rounded text-xs">Reset</button>
+      </div>
     </VictorianFrame>
   );
 };
