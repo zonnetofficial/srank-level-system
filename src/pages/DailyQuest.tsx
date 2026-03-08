@@ -52,10 +52,12 @@ const DailyQuest = () => {
         <div className="animate-fade-in">
           <div className="rpg-panel-glow text-center py-8 mb-5">
             <div className="flex items-center justify-center gap-2 mb-2">
-              <div className="border border-primary/60 rounded-sm h-8 w-8 flex items-center justify-center">
-                <span className="font-display text-sm font-bold text-primary text-glow-primary">!</span>
+              <div className="border border-primary/60 rounded-none h-8 w-8 flex items-center justify-center">
+                <div className="w-5 h-5 rounded-full border border-primary/60 flex items-center justify-center">
+                  <span className="font-display text-xs font-bold text-primary text-glow-primary leading-none">!</span>
+                </div>
               </div>
-              <div className="border border-primary/60 rounded-sm h-8 px-4 flex items-center justify-center">
+              <div className="border border-primary/60 rounded-none h-8 px-4 flex items-center justify-center">
                 <h2 className="font-display text-sm font-bold uppercase tracking-[0.3em] text-primary text-glow-primary">Quest Info</h2>
               </div>
             </div>
