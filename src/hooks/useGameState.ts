@@ -591,6 +591,28 @@ export function useGameState() {
     });
   }, []);
 
+  const assignBankPoints = useCallback(() => {
+    setState(prev => {
+      const bank = prev.statBank;
+      const totalBank = bank.int + bank.str + bank.agi + bank.vit + bank.end;
+      if (totalBank === 0) return prev;
+
+      const newStats = { ...prev.stats };
+      const newPoints = { ...prev.statPoints };
+      for (const key of ['int', 'str', 'agi', 'vit', 'end'] as StatKey[]) {
+        newStats[key] += bank[key];
+        newPoints[key] += bank[key];
+      }
+
+      return {
+        ...prev,
+        stats: newStats,
+        statPoints: newPoints,
+        statBank: { int: 0, str: 0, agi: 0, vit: 0, end: 0 },
+      };
+    });
+  }, []);
+
   return {
     state,
     today,
@@ -610,5 +632,6 @@ export function useGameState() {
     failPunishment,
     simulateDays,
     completeClassChallengeTask,
+    assignBankPoints,
   };
 }
