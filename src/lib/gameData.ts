@@ -214,12 +214,10 @@ export function getNextClassTitle(level: number, titles: ClassTitle[]): ClassTit
 }
 
 export function isRestDay(questLog: DailyQuestLog[]): boolean {
-  // Rest if completed 5+ days in a row (force rest)
   const recent = questLog.slice(-5);
   if (recent.length >= 5 && recent.every(q => q.status === 'completed')) return true;
-  // Also rest on Sundays
   const today = new Date();
-  return today.getDay() === 0;
+  return today.getDay() === 0 || today.getDay() === 4; // Sunday or Thursday
 }
 
 // ==================== INITIAL STATE ====================

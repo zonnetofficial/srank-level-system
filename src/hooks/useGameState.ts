@@ -64,9 +64,10 @@ function detectAndApplyPunishments(state: GameState): GameState {
 
   while (currentDate < todayDate) {
     const dateStr = formatLocalDate(currentDate);
-    const isSunday = currentDate.getDay() === 0;
+    const dayOfWeek = currentDate.getDay();
+    const isRest = dayOfWeek === 0 || dayOfWeek === 4; // Sunday or Thursday
 
-    if (!isSunday) {
+    if (!isRest) {
       const existing = updatedLog.find(q => q.date === dateStr);
       if (!existing) {
         failedDays++;
@@ -271,6 +272,10 @@ export function useGameState() {
       const newLog = [...prev.questLog];
       if (restDay) {
         newLog.push({ date: today, status: 'rest' });
+        // Rest day bonus: +1 INT, +1 VIT
+        const newStats = { ...prev.stats, int: prev.stats.int + 1, vit: prev.stats.vit + 1 };
+        const newPoints = { ...prev.statPoints, int: prev.statPoints.int + 1, vit: prev.statPoints.vit + 1 };
+        return { ...prev, questLog: newLog, stats: newStats, statPoints: newPoints };
       } else {
         newLog.push({
           date: today,
