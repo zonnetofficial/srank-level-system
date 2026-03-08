@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useGameState } from '@/hooks/useGameState';
 import { useNavigate } from 'react-router-dom';
 import RunTimer from '@/components/RunTimer';
+import VictorianFrame from '@/components/VictorianFrame';
 
 const DailyQuest = () => {
   const { state, today, todayQuest, restDay, startQuest, completeQuest, completeExercise, completeRun } = useGameState();
@@ -16,7 +17,7 @@ const DailyQuest = () => {
   const totalExercises = todayQuest?.exercises?.length ?? 0;
 
   return (
-    <div className="min-h-screen bg-background px-4 pt-6 pb-6 max-w-lg mx-auto">
+    <VictorianFrame>
       {/* Back button */}
       <button
         onClick={() => navigate('/')}
@@ -288,7 +289,7 @@ const DailyQuest = () => {
           </button>
         </div>
       )}
-    </div>
+    </VictorianFrame>
   );
 };
 

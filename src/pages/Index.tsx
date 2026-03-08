@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { XPBar } from '@/components/XPBar';
+import VictorianFrame from '@/components/VictorianFrame';
 import { StatBar } from '@/components/StatBar';
 import { useGameState } from '@/hooks/useGameState';
 import {
@@ -27,7 +28,7 @@ const Index = () => {
   const nextClass = getNextClassTitle(state.level, state.classTitles);
 
   return (
-    <div className="min-h-screen bg-background px-4 pt-6 pb-6 max-w-lg mx-auto">
+    <VictorianFrame>
       {/* Time warning */}
       {timeWarning && (
         <div
@@ -152,7 +153,7 @@ const Index = () => {
           <div className="text-[10px] font-display uppercase tracking-wider text-muted-foreground">Mejor Racha</div>
         </div>
       </div>
-    </div>
+    </VictorianFrame>
   );
 };
 

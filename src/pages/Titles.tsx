@@ -1,5 +1,6 @@
 import { useGameState } from '@/hooks/useGameState';
 import { useNavigate } from 'react-router-dom';
+import VictorianFrame from '@/components/VictorianFrame';
 import {
   STAT_LABELS,
   STAT_ICONS,
@@ -20,7 +21,7 @@ const Titles = () => {
   const obtainedClasses = state.classTitles.filter(t => t.obtained);
 
   return (
-    <div className="min-h-screen bg-background pb-20 px-4 pt-6 max-w-lg mx-auto">
+    <VictorianFrame>
       <button
         onClick={() => navigate('/')}
         className="text-muted-foreground hover:text-foreground text-xs font-display uppercase tracking-wider mb-4 flex items-center gap-1 transition-colors"
@@ -128,7 +129,7 @@ const Titles = () => {
           })}
         </div>
       </div>
-    </div>
+    </VictorianFrame>
   );
 };
 

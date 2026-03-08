@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import VictorianFrame from '@/components/VictorianFrame';
 import { useGameState } from '@/hooks/useGameState';
 import { STAT_LABELS, STAT_ICONS, StatKey, getSkillTitle } from '@/lib/gameData';
 import { getTasksForStat, getTitleIndex } from '@/lib/skillTasks';
@@ -282,7 +283,7 @@ const Skills = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background pb-20 px-4 pt-6 max-w-lg mx-auto">
+    <VictorianFrame>
       <button
         onClick={() => navigate('/')}
         className="text-muted-foreground hover:text-foreground text-xs font-display uppercase tracking-wider mb-4 flex items-center gap-1 transition-colors"
@@ -337,7 +338,7 @@ const Skills = () => {
 
       {intTestDialog}
       {skillTaskDialog}
-    </div>
+    </VictorianFrame>
   );
 };
 
