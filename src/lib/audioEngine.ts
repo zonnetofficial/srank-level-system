@@ -910,16 +910,16 @@ type DrumStep = [number, number, number, number];
 
 const DRUM_PATTERNS: Record<'trap' | 'house' | 'ambient' | 'darktrap', DrumStep[]> = {
   darktrap: [
-    // Bar 1: Hard punchy kicks, aggressive rolling hats, hard snares
-    [1,  0, .6, 0],  [0, 0, .8, 0],  [0, 0, .9, 0],  [0, 0, .5, 0],
-    [0, 1,  .7, 0],  [0, 0, .9, 0],  [0, 0, 1,  0],  [0, 0, .8, 0],   // hard snare + hat roll
-    [.8, 0, .6, 0],  [0, 0, .9, 0],  [0, 0, .7,.6],  [0, 0, .8, 0],   // ghost kick + open hat
-    [0, .8, .5, 0],  [.6,0, .9, 0],  [0, 0, 1,  0],  [0, 0, .7, 0],   // double kick pattern
-    // Bar 2: More aggressive — rapid hat rolls, syncopated kicks
-    [1,  0, .7, 0],  [0, 0, .9, 0],  [0, 0, 1,  0],  [0, 0, .9, 0],   // 4-hat roll
-    [0, 1,  .8, 0],  [0, 0, .6, 0],  [0, 0, .9, 0],  [0, 0, 1,  0],   // hat crescendo
-    [.7, 0, .5,.7],  [0, 0, .8, 0],  [0, 0, 1,  0],  [0, 0, .9, 0],   // open hat accent
-    [.5,.9, .6, 0],  [0, 0, .9, 0],  [0, 0, 1,  0],  [0, 0, .8, 0],   // kick+snare hit
+    // Bar 1: Full kick pattern, loud hats every 16th, snare on 5 & 13
+    [1,  0, 1,  0],  [0, 0, .7, 0],  [0, 0, 1,  0],  [0, 0, .6, 0],
+    [0, 1,  1,  0],  [0, 0, .7, 0],  [0, 0, .9, 0],  [.7,0, .6, 0],   // snare + ghost kick
+    [1,  0, 1,  0],  [0, 0, .8, 0],  [0, 0, 1,  0],  [0, 0, .7, 0],
+    [0, 1,  .9, 0],  [0, 0, .7, 0],  [.5,0, 1,  0],  [0, 0, .8, 0],   // snare + ghost kick fill
+    // Bar 2: Syncopated kicks, hat rolls, open hat accents
+    [1,  0, 1,  0],  [0, 0, .8, 0],  [.6,0, 1,  0],  [0, 0, .7, 0],   // double kick
+    [0, 1,  .9, 0],  [0, 0, .8, 0],  [0, 0, 1,  0],  [0, 0, 1,  0],   // hat roll
+    [1,  0, .8,.8],  [0, 0, 1,  0],  [0, 0, 1,  0],  [0, 0, .9, 0],   // open hat + hat roll
+    [.8,1,  1,  0],  [0, 0, .8, 0],  [0, 0, 1,  0],  [0, 0, .7, 0],   // kick+snare hit
   ],
   trap: [
     // Bar 1: heavy kick, rolling hats, snare on 5 & 13
