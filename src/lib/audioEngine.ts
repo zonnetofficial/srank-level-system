@@ -623,6 +623,122 @@ function houseHat(ctx: AudioContext, time: number, vel: number, open: boolean, d
   src.start(time);
 }
 
+// DARK TRAP KIT: deep 808 kick, dry clap/snare, crispy rolling hats
+function darkTrapKick(ctx: AudioContext, time: number, vel: number, dest: GainNode) {
+  // Very deep, long 808 kick — clean sub with slow pitch drop
+  const body = ctx.createOscillator();
+  const bg = ctx.createGain();
+  body.type = 'sine';
+  body.frequency.setValueAtTime(150, time);
+  body.frequency.exponentialRampToValueAtTime(28, time + 0.25);
+  bg.gain.setValueAtTime(0.45 * vel, time);
+  bg.gain.setValueAtTime(0.4 * vel, time + 0.2);
+  bg.gain.exponentialRampToValueAtTime(0.001, time + 0.8);
+  body.connect(bg); bg.connect(dest);
+  body.start(time); body.stop(time + 0.85);
+  // Subtle click layer
+  const clickBuf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.004), ctx.sampleRate);
+  const cd = clickBuf.getChannelData(0);
+  for (let i = 0; i < cd.length; i++) cd[i] = (Math.random() * 2 - 1) * (1 - i / cd.length);
+  const click = ctx.createBufferSource();
+  click.buffer = clickBuf;
+  const cg = ctx.createGain();
+  cg.gain.setValueAtTime(0.08 * vel, time);
+  const cf = ctx.createBiquadFilter();
+  cf.type = 'bandpass'; cf.frequency.setValueAtTime(3000, time); cf.Q.setValueAtTime(1.5, time);
+  click.connect(cf); cf.connect(cg); cg.connect(dest);
+  click.start(time);
+}
+
+function darkTrapSnare(ctx: AudioContext, time: number, vel: number, dest: GainNode) {
+  // Dry, crisp clap/snare — short, no reverb feel
+  const dur = 0.12;
+  const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur), ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const bp = ctx.createBiquadFilter();
+  bp.type = 'bandpass'; bp.frequency.setValueAtTime(3500, time); bp.Q.setValueAtTime(1, time);
+  const hp = ctx.createBiquadFilter();
+  hp.type = 'highpass'; hp.frequency.setValueAtTime(800, time);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.15 * vel, time);
+  g.gain.exponentialRampToValueAtTime(0.001, time + dur);
+  src.connect(bp); bp.connect(hp); hp.connect(g); g.connect(dest);
+  src.start(time);
+  // Tonal snap
+  const t1 = ctx.createOscillator();
+  const t1g = ctx.createGain();
+  t1.type = 'triangle'; t1.frequency.setValueAtTime(200, time);
+  t1g.gain.setValueAtTime(0.08 * vel, time);
+  t1g.gain.exponentialRampToValueAtTime(0.001, time + 0.05);
+  t1.connect(t1g); t1g.connect(dest);
+  t1.start(time); t1.stop(time + 0.06);
+}
+
+function darkTrapHat(ctx: AudioContext, time: number, vel: number, open: boolean, dest: GainNode) {
+  const dur = open ? 0.3 : 0.03;
+  const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur * 1.5), ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  // Crispy metallic character
+  const bp1 = ctx.createBiquadFilter();
+  bp1.type = 'bandpass'; bp1.frequency.setValueAtTime(9000, time); bp1.Q.setValueAtTime(2.5, time);
+  const hp = ctx.createBiquadFilter();
+  hp.type = 'highpass'; hp.frequency.setValueAtTime(6500, time);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.055 * vel, time);
+  g.gain.exponentialRampToValueAtTime(0.001, time + dur);
+  src.connect(bp1); bp1.connect(hp); hp.connect(g); g.connect(dest);
+  src.start(time);
+}
+
+// DEEP 808 SUB BASS for dark trap — clean, sustained, massive sub
+function scheduleDeep808(ctx: AudioContext, time: number, midi: number, duration: number, dest: GainNode) {
+  const freq = NOTE(midi);
+  // Very long sustained sine with gentle pitch intro
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(freq * 1.5, time);
+  osc.frequency.exponentialRampToValueAtTime(freq, time + 0.08);
+  // Gentle saturation
+  const shaper = ctx.createWaveShaper();
+  const curve = new Float32Array(256);
+  for (let i = 0; i < 256; i++) {
+    const x = (i / 128) - 1;
+    curve[i] = Math.tanh(x * 1.5); // soft saturation
+  }
+  shaper.curve = curve;
+  shaper.oversample = '2x';
+  // Keep it sub-heavy
+  const lp = ctx.createBiquadFilter();
+  lp.type = 'lowpass';
+  lp.frequency.setValueAtTime(freq * 3, time);
+  lp.frequency.exponentialRampToValueAtTime(freq * 1.2, time + duration * 0.5);
+  // Long sustain envelope
+  g.gain.setValueAtTime(0.001, time);
+  g.gain.linearRampToValueAtTime(0.28, time + 0.02);
+  g.gain.setValueAtTime(0.25, time + duration * 0.7);
+  g.gain.exponentialRampToValueAtTime(0.001, time + duration);
+  osc.connect(shaper); shaper.connect(lp); lp.connect(g); g.connect(dest);
+  osc.start(time); osc.stop(time + duration + 0.05);
+  // Pure sub harmonic
+  const sub = ctx.createOscillator();
+  const sg = ctx.createGain();
+  sub.type = 'sine';
+  sub.frequency.setValueAtTime(freq / 2, time);
+  sg.gain.setValueAtTime(0.001, time);
+  sg.gain.linearRampToValueAtTime(0.12, time + 0.03);
+  sg.gain.setValueAtTime(0.1, time + duration * 0.6);
+  sg.gain.exponentialRampToValueAtTime(0.001, time + duration);
+  sub.connect(sg); sg.connect(dest);
+  sub.start(time); sub.stop(time + duration + 0.05);
+}
+
 // AMBIENT KIT: soft textural hits
 function ambientKick(ctx: AudioContext, time: number, vel: number, dest: GainNode) {
   const osc = ctx.createOscillator();
@@ -659,7 +775,7 @@ function ambientPerc(ctx: AudioContext, time: number, vel: number, dest: GainNod
 
 interface ThemeConfig {
   bpm: number;
-  genre: 'trap' | 'house' | 'ambient';
+  genre: 'trap' | 'house' | 'ambient' | 'darktrap';
   chords: number[][];
   bassPattern: number[];
   keyPattern: number[]; // which 16th notes play keys (per bar)
@@ -671,21 +787,22 @@ interface ThemeConfig {
 
 const THEMES: Record<MusicTheme, ThemeConfig> = {
   home: {
-    bpm: 140,
-    genre: 'trap',
-    // Dark minor progression — Cm, Abmaj, Fm, Gm, Cm, Ebm, Abmaj, Bdim
+    bpm: 75,
+    genre: 'darktrap',
+    // Deep Cm minor — nocturnal, cold, elegant
+    // Cm(add9) → Ab → Fm7 → Gsus4 → Cm → Eb → Abmaj7 → Gm
     chords: [
-      [36,48,51,55],[44,48,51],[41,44,48],[43,46,50],
-      [36,48,51,55],[39,42,46],[44,48,51],[42,45,47],
+      [36, 48, 51, 55, 62], [44, 48, 51, 55], [41, 44, 48, 51], [43, 50, 55, 58],
+      [36, 48, 51, 55], [39, 46, 51, 55], [44, 48, 51, 56], [43, 46, 50, 55],
     ],
-    // Bouncy 808 pattern with slides — heavy on downbeats, syncopated hits
-    bassPattern: [1,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0, 1,0,0,1,0,0,0,0,0,0,1,0,0,0,1,0],
-    // Sparse dark key stabs
-    keyPattern:  [0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0],
-    // Minimal arps — dark melodic touches
-    arpPattern:  [0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0, 0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0],
-    padBrightness: 700,
-    padGain: 0.035,
+    // Sparse, sustained 808 hits — let them ring
+    bassPattern: [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0],
+    // Very sparse dark key touches
+    keyPattern:  [0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    // Ethereal plucks with space
+    arpPattern:  [0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0, 0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0],
+    padBrightness: 500,
+    padGain: 0.05,
     bassOctave: -1,
   },
   quest: {
@@ -763,7 +880,20 @@ const THEMES: Record<MusicTheme, ThemeConfig> = {
 // Drum patterns: 32 steps [kick, snare/clap, closedHat, openHat]
 type DrumStep = [number, number, number, number];
 
-const DRUM_PATTERNS: Record<'trap' | 'house' | 'ambient', DrumStep[]> = {
+const DRUM_PATTERNS: Record<'trap' | 'house' | 'ambient' | 'darktrap', DrumStep[]> = {
+  darktrap: [
+    // Bar 1: Slow dark trap — sparse kicks, rolling hi-hats with velocity variation
+    // At 75 BPM each 16th = ~200ms, so rolls feel spacious
+    [1,  0, .3, 0],  [0, 0, .5, 0],  [0, 0, .7, 0],  [0, 0, .4, 0],
+    [0, .7, .3, 0],  [0, 0, .6, 0],  [0, 0, .8, 0],  [0, 0, .9, 0],   // triplet-feel roll
+    [0,  0, .5, 0],  [0, 0, .7, 0],  [0, 0, .4,.4],  [0, 0, .6, 0],
+    [0, .6, .3, 0],  [0, 0, .5, 0],  [0, 0, .8, 0],  [0, 0, .7, 0],
+    // Bar 2: Ghost kicks, open hats, snare variations
+    [.7, 0, .4, 0],  [0, 0, .6, 0],  [0, 0, .9, 0],  [0, 0, .7, 0],   // fast roll
+    [0, .8, .5, 0],  [0, 0, .4, 0],  [0, 0, .6, 0],  [0, 0, .8, 0],
+    [0,  0, .3,.5],  [0, 0, .7, 0],  [0, 0, .9, 0],  [0, 0, .6, 0],   // triplets
+    [.4,.5, .4, 0],  [0, 0, .7, 0],  [0, 0, .8, 0],  [0, 0, .5, 0],
+  ],
   trap: [
     // Bar 1: heavy kick, rolling hats, snare on 5 & 13
     [1,  0, .6, 0],  [0, 0, .4, 0],  [0, 0, .7, 0],  [0, 0, .5, 0],
@@ -807,14 +937,16 @@ type DrumKit = {
   hat: (ctx: AudioContext, t: number, v: number, open: boolean, d: GainNode) => void;
 };
 
-const DRUM_KITS: Record<'trap' | 'house' | 'ambient', DrumKit> = {
+const DRUM_KITS: Record<'trap' | 'house' | 'ambient' | 'darktrap', DrumKit> = {
+  darktrap: { kick: darkTrapKick, snare: darkTrapSnare, hat: darkTrapHat },
   trap: { kick: trapKick, snare: trapSnare, hat: trapHat },
   house: { kick: houseKick, snare: houseClap, hat: houseHat },
   ambient: { kick: ambientKick, snare: ambientPerc, hat: (ctx, t, v, _o, d) => ambientPerc(ctx, t, v * 0.5, d) },
 };
 
 // Genre-specific bass dispatchers
-const BASS_FN: Record<'trap' | 'house' | 'ambient', (ctx: AudioContext, t: number, m: number, dur: number, d: GainNode) => void> = {
+const BASS_FN: Record<'trap' | 'house' | 'ambient' | 'darktrap', (ctx: AudioContext, t: number, m: number, dur: number, d: GainNode) => void> = {
+  darktrap: scheduleDeep808,
   trap: schedule808Sub,
   house: scheduleHouseBass,
   ambient: scheduleDrone,
@@ -850,13 +982,13 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
   outputGain.gain.setValueAtTime(0.001, ctx.currentTime);
   outputGain.connect(musicGain!);
 
-  // Delay send (tempo-synced)
+  // Delay send (tempo-synced) — darktrap gets more delay for atmosphere
   const delaySend = ctx.createDelay(2);
   delaySend.delayTime.setValueAtTime(sixteenthDur * 3, ctx.currentTime);
   const delayFb = ctx.createGain();
-  delayFb.gain.setValueAtTime(0.2, ctx.currentTime);
+  delayFb.gain.setValueAtTime(config.genre === 'darktrap' ? 0.35 : 0.2, ctx.currentTime);
   const delayOut = ctx.createGain();
-  delayOut.gain.setValueAtTime(0.2, ctx.currentTime);
+  delayOut.gain.setValueAtTime(config.genre === 'darktrap' ? 0.3 : 0.2, ctx.currentTime);
   const delaySendGain = ctx.createGain();
   delaySendGain.gain.setValueAtTime(1, ctx.currentTime);
   delaySendGain.connect(delaySend);
@@ -877,8 +1009,8 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
       // ── Warm Pad ──
       scheduleWarmPad(ctx, barStart, chord, barDur, config.padGain, config.padBrightness, outputGain);
 
-      // ── Drone layer (dungeon/ambient only) ──
-      if (config.genre === 'ambient' && bar % 4 === 0) {
+      // ── Drone layer (dungeon/ambient & darktrap atmospheric) ──
+      if ((config.genre === 'ambient' || config.genre === 'darktrap') && bar % 4 === 0) {
         scheduleDrone(ctx, barStart, rootMidi - 12, barDur * 4, outputGain);
       }
 
@@ -894,26 +1026,36 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
         if (hat > 0) kit.hat(ctx, stepTime, hat, false, outputGain);
         if (openHat > 0) kit.hat(ctx, stepTime, openHat, true, outputGain);
 
-        // Bass
+        // Bass — darktrap gets very long sustained notes
         if (config.bassPattern[patIdx]) {
           const bassMidi = rootMidi + config.bassOctave * 12;
-          const bassDur = config.genre === 'ambient' ? barDur : config.genre === 'trap' ? sixteenthDur * 6 : sixteenthDur * 3;
+          const bassDur = config.genre === 'darktrap' ? barDur * 1.5
+            : config.genre === 'ambient' ? barDur
+            : config.genre === 'trap' ? sixteenthDur * 6
+            : sixteenthDur * 3;
           bassFn(ctx, stepTime, bassMidi, bassDur, outputGain);
         }
 
-        // FM Keys (stabs/chords)
+        // FM Keys (stabs/chords) — darktrap uses very dark, soft keys
         if (config.keyPattern[patIdx]) {
-          const brightness = config.genre === 'house' ? 1.5 : config.genre === 'trap' ? 0.8 : 0.4;
-          chord.forEach(m => scheduleFMKeys(ctx, stepTime, m + 12, sixteenthDur * 4, brightness, 0.7, outputGain));
-          // Send keys to delay
-          chord.forEach(m => scheduleFMKeys(ctx, stepTime, m + 12, sixteenthDur * 4, brightness * 0.5, 0.3, delaySendGain));
+          const brightness = config.genre === 'darktrap' ? 0.3
+            : config.genre === 'house' ? 1.5
+            : config.genre === 'trap' ? 0.8 : 0.4;
+          const vel = config.genre === 'darktrap' ? 0.5 : 0.7;
+          chord.forEach(m => scheduleFMKeys(ctx, stepTime, m + 12, sixteenthDur * 6, brightness, vel, outputGain));
+          // Heavy delay send for dark atmosphere
+          chord.forEach(m => scheduleFMKeys(ctx, stepTime, m + 12, sixteenthDur * 6, brightness * 0.4, vel * 0.4, delaySendGain));
         }
 
-        // Pluck arpeggios
+        // Pluck arpeggios — darktrap sends more to delay for ethereal feel
         if (config.arpPattern[patIdx]) {
           const arpNote = chord[step % chord.length] + 12;
-          schedulePluck(ctx, stepTime, arpNote, sixteenthDur * 2, outputGain);
-          schedulePluck(ctx, stepTime, arpNote, sixteenthDur * 2, delaySendGain);
+          schedulePluck(ctx, stepTime, arpNote, sixteenthDur * 3, outputGain);
+          schedulePluck(ctx, stepTime, arpNote, sixteenthDur * 3, delaySendGain);
+          if (config.genre === 'darktrap') {
+            // Extra delay send for spacious reverb-like effect
+            schedulePluck(ctx, stepTime, arpNote + 12, sixteenthDur * 4, delaySendGain);
+          }
         }
       }
     }
