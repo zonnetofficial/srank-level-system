@@ -297,10 +297,9 @@ export function useGameState() {
       const newLog = [...prev.questLog];
       if (restDay) {
         newLog.push({ date: today, status: 'rest' });
-        // Rest day bonus: +1 INT, +1 VIT
-        const newStats = { ...prev.stats, int: prev.stats.int + 1, vit: prev.stats.vit + 1 };
-        const newPoints = { ...prev.statPoints, int: prev.statPoints.int + 1, vit: prev.statPoints.vit + 1 };
-        return { ...prev, questLog: newLog, stats: newStats, statPoints: newPoints };
+        // Rest day bonus goes to bank
+        const newBank = { ...prev.statBank, int: prev.statBank.int + 1, vit: prev.statBank.vit + 1 };
+        return { ...prev, questLog: newLog, statBank: newBank };
       } else {
         newLog.push({
           date: today,
