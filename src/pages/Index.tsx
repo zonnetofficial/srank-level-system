@@ -79,7 +79,7 @@ const Index = () => {
       {/* Class */}
       <div className="mt-4 text-center animate-slide-up delay-300">
         <div className="hud-label">Clase</div>
-        <div className="text-xl font-display font-bold text-accent text-glow-accent mt-1">
+        <div className="text-xl font-display font-bold text-accent text-glow-accent mt-1 animate-text-glitch-slow" style={{ animationDelay: '3s' }}>
           {currentClass.icon} {currentClass.name}
         </div>
         {nextClass && (
