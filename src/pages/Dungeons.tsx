@@ -356,8 +356,9 @@ export default function Dungeons() {
               <div className="flex items-center gap-1 flex-wrap">
                 <span className="text-[8px] font-display text-muted-foreground uppercase tracking-wider mr-1">Equipo:</span>
                 {loadout.map(l => (
-                  <span key={l.inventoryId} className="text-sm" title={`${l.name} x${l.quantity}`}>
-                    {l.icon}{l.quantity > 1 && <span className="text-[8px] text-muted-foreground">x{l.quantity}</span>}
+                  <span key={l.inventoryId} className="inline-flex items-center" title={`${l.name} x${l.quantity}`}>
+                    <ItemIcon name={l.name} fallbackEmoji={l.icon} size="sm" />
+                    {l.quantity > 1 && <span className="text-[8px] text-muted-foreground">x{l.quantity}</span>}
                   </span>
                 ))}
               </div>
