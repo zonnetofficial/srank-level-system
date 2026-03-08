@@ -45,7 +45,7 @@ const STR_TASKS: SkillTask[][] = [
     { name: 'Prueba de potencia', description: 'Ejercicios explosivos por 5 minutos', durationSeconds: 300 },
     { name: 'Circuito guerrero', description: '5 ejercicios compuestos, 5 rondas' },
     { name: 'Resistencia bajo carga', description: 'Mantén peso corporal en posiciones 4 min', durationSeconds: 240 },
-    { name: 'Tabata de fuerza', description: '8 intervalos de 20/10 con ejercicios pesados', durationSeconds: 240 },
+    { name: 'Tabata de fuerza', description: '8 intervalos de 20/10 con ejercicios pesados', durationSeconds: 240, timerRounds: 8 },
   ],
   [
     { name: 'Desafío del Titán', description: 'Circuito extremo de fuerza pura' },
