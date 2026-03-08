@@ -897,7 +897,7 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
         // Bass
         if (config.bassPattern[patIdx]) {
           const bassMidi = rootMidi + config.bassOctave * 12;
-          const bassDur = config.genre === 'ambient' ? barDur : sixteenthDur * 3;
+          const bassDur = config.genre === 'ambient' ? barDur : config.genre === 'trap' ? sixteenthDur * 6 : sixteenthDur * 3;
           bassFn(ctx, stepTime, bassMidi, bassDur, outputGain);
         }
 
