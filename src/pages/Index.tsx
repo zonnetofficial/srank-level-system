@@ -34,6 +34,7 @@ const Index = () => {
 
   const currentClass = getClassTitle(state.level, state.classTitles);
   const nextClass = getNextClassTitle(state.level, state.classTitles);
+  const activeMission = state.missionSchedule ? getActiveMission(state.missionSchedule) : null;
 
   return (
     <VictorianFrame>
