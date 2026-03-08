@@ -20,7 +20,7 @@ import { LogOut } from 'lucide-react';
 const statKeys: StatKey[] = ['int', 'str', 'agi', 'vit', 'end'];
 
 const Index = () => {
-  const { state, todayQuest, restDay, timeWarning, dismissTimeWarning } = useGameState();
+  const { state, todayQuest, restDay, timeWarning, dismissTimeWarning, assignBankPoints } = useGameState();
   const { signOut } = useAuth();
   const { currentNotification, acceptTitle, rejectTitle } = useTitleNotifications(state);
   const navigate = useNavigate();
