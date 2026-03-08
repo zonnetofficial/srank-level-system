@@ -29,14 +29,34 @@ serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const token = authHeader.replace('Bearer ', '');
-    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
     }
-    const userId = claimsData.claims.sub;
+    const userId = user.id;
 
     const { action, ...params } = await req.json();
+
+    // --- SIMULATE PAYMENT (dev/test only) ---
+    if (action === 'simulate_payment') {
+      const { penalty_amount, payer_email } = params;
+      const adminSupabase = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+      );
+      await adminSupabase.from('monarch_subscriptions').upsert({
+        user_id: userId,
+        status: 'active',
+        penalty_amount: penalty_amount || 10,
+        mp_preapproval_id: `sim_${Date.now()}`,
+        mp_payer_email: payer_email || user.email || 'test@test.com',
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id' });
+
+      return new Response(JSON.stringify({ status: 'active', simulated: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     if (action === 'create_subscription') {
       const { penalty_amount, payer_email, back_url } = params;
