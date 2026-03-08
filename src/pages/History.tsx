@@ -30,7 +30,7 @@ const History = () => {
       >
         ← Volver
       </button>
-      <h1 className="font-display text-xl font-bold text-center text-primary text-glow-primary mb-6 animate-glitch-in delay-100 animate-text-glitch-heavy" style={{ animationDelay: '6s' }}>
+      <h1 className="font-display text-xl font-bold text-center text-primary text-glow-primary mb-6 animate-glitch-in delay-100">
         📜 Historial
       </h1>
 
