@@ -66,7 +66,7 @@ export default function Dungeons() {
 
   const char = dungeonState.character;
   const run = dungeonState.currentRun;
-  const loadout = dungeonState.loadout;
+  const loadout = dungeonState.loadout || [];
   const bonuses = getLoadoutBonuses(loadout);
 
   // Get dungeon items from inventory
