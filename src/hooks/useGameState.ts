@@ -25,6 +25,7 @@ function loadState(): GameState {
     // Backward compat
     if (parsed.pendingPunishments === undefined) parsed.pendingPunishments = 0;
     if (!parsed.lastCheckedDate) parsed.lastCheckedDate = getToday();
+    if (!parsed.classChangeProgress) parsed.classChangeProgress = {};
     return parsed;
   } catch {
     return createInitialState();
