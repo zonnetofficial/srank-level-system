@@ -128,6 +128,11 @@ const Skills = () => {
     setTaskDialogTask(null);
   };
 
+  const handleTaskClose = () => {
+    setTaskDialogStat(null);
+    setTaskDialogTask(null);
+  };
+
   // INT Test Dialog
   const intTestDialog = (
     <Dialog open={testActive} onOpenChange={(o) => { if (!o && !testResult && testAnswers.length === 0) handleCloseTest(); }}>
