@@ -71,7 +71,7 @@ const Skills = () => {
         }
       }
 
-      if (result.score === 0) {
+      if (!result.passed) {
         completeIntTest(0, true, 0, newCorrect);
       } else if (result.perfect) {
         const newPerfects = perfectsToday + 1;
