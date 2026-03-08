@@ -1,5 +1,6 @@
 import { InventoryItem, ShopItem, getMarketPrice } from '@/hooks/useShop';
 import { RARITY_COLORS, RARITY_LABELS } from './shopConstants';
+import ItemIcon from '@/components/ItemIcon';
 
 interface Props {
   inventory: InventoryItem[];
