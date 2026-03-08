@@ -36,7 +36,7 @@ const History = () => {
 
       {/* Records */}
       <div className="rpg-panel mb-4 animate-slide-up delay-200">
-        <h2 className="text-xs font-display uppercase tracking-[0.3em] text-muted-foreground mb-3 animate-text-glitch-alt" style={{ animationDelay: '13s' }}>
+        <h2 className="text-xs font-display uppercase tracking-[0.3em] text-muted-foreground mb-3">
           🏆 Récords Personales
         </h2>
         <div className="grid grid-cols-3 gap-3 text-center">
