@@ -9,7 +9,6 @@ const DailyQuest = () => {
   const navigate = useNavigate();
   const [timerOpen, setTimerOpen] = useState(false);
 
-  const hasQuest = !!todayQuest;
   const allExercisesDone = todayQuest?.exercises?.every(e => e.completed) ?? false;
   const runDone = todayQuest?.runCompleted ?? false;
   const canComplete = allExercisesDone && runDone;
