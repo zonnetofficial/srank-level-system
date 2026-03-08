@@ -37,6 +37,118 @@ serve(async (req) => {
 
     const { action, ...params } = await req.json();
 
+    // --- BUY DARK POINTS ---
+    if (action === 'buy_dark_points') {
+      const { package_id, dark_points, amount, back_url } = params;
+
+      if (!amount || amount < 1) {
+        return new Response(JSON.stringify({ error: 'Monto inválido' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const mpResponse = await fetch(`${MP_API}/v1/payments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${MP_ACCESS_TOKEN}`,
+          'X-Idempotency-Key': `dp_${userId}_${package_id}_${Date.now()}`,
+        },
+        body: JSON.stringify({
+          transaction_amount: amount,
+          description: `Dark Points - ${dark_points} DP`,
+          payment_method_id: 'account_money',
+          payer: { email: user.email },
+          external_reference: `dp_${userId}_${package_id}`,
+          back_urls: {
+            success: back_url || 'https://srank-level-system.lovable.app/shop',
+            failure: back_url || 'https://srank-level-system.lovable.app/shop',
+          },
+          auto_return: 'approved',
+        }),
+      });
+
+      // For now use preference-based checkout
+      const prefResponse = await fetch(`${MP_API}/checkout/preferences`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${MP_ACCESS_TOKEN}`,
+        },
+        body: JSON.stringify({
+          items: [{
+            title: `Dark Points - ${dark_points} DP`,
+            quantity: 1,
+            unit_price: amount,
+            currency_id: 'MXN',
+          }],
+          payer: { email: user.email },
+          external_reference: `dp_${userId}_${package_id}_${dark_points}`,
+          back_urls: {
+            success: (back_url || 'https://srank-level-system.lovable.app/shop') + '?dp_success=true',
+            failure: (back_url || 'https://srank-level-system.lovable.app/shop') + '?dp_fail=true',
+          },
+          auto_return: 'approved',
+        }),
+      });
+
+      const prefData = await prefResponse.json();
+      if (!prefResponse.ok) {
+        console.error('MP preference error:', prefData);
+        throw new Error(`MercadoPago error [${prefResponse.status}]: ${JSON.stringify(prefData)}`);
+      }
+
+      return new Response(JSON.stringify({
+        init_point: prefData.init_point,
+        preference_id: prefData.id,
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // --- CONFIRM DP PURCHASE (webhook or manual) ---
+    if (action === 'confirm_dp_purchase') {
+      const { dark_points: dpAmount } = params;
+      const adminSupabase = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+      );
+
+      // Upsert dark_points balance
+      const { data: existing } = await adminSupabase
+        .from('dark_points')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (existing) {
+        await adminSupabase.from('dark_points').update({
+          balance: existing.balance + dpAmount,
+          total_earned: existing.total_earned + dpAmount,
+          updated_at: new Date().toISOString(),
+        }).eq('user_id', userId);
+      } else {
+        await adminSupabase.from('dark_points').insert({
+          user_id: userId,
+          balance: dpAmount,
+          total_earned: dpAmount,
+          total_spent: 0,
+        });
+      }
+
+      // Log transaction
+      await adminSupabase.from('dp_transactions').insert({
+        user_id: userId,
+        amount: dpAmount,
+        type: 'purchase',
+        description: `Compra de ${dpAmount} Dark Points`,
+      });
+
+      return new Response(JSON.stringify({ success: true, new_balance: (existing?.balance || 0) + dpAmount }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // --- SIMULATE PAYMENT (dev/test only) ---
     if (action === 'simulate_payment') {
       const { penalty_amount, payer_email } = params;
