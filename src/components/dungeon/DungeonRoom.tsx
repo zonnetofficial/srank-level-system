@@ -80,7 +80,7 @@ export default function DungeonRoom({ room, roomNumber, totalRooms, charClass, e
         <div className={`text-center py-8 font-display uppercase tracking-wider text-lg ${
           result ? 'text-accent' : 'text-destructive'
         } animate-scale-up`}>
-          {result ? '✓ Sala Superada' : `✗ -${room.damage} HP`}
+          {result ? '✓ Sala Superada' : `✗ -${effectiveDamage} HP`}
         </div>
       ) : (
         <div className="animate-slide-up">
