@@ -478,6 +478,55 @@ export function useGameState() {
     saveState(fresh);
   }, []);
 
+  const simulateDays = useCallback((days: number) => {
+    setState(prev => {
+      let s = { ...prev, stats: { ...prev.stats }, statPoints: { ...prev.statPoints }, questLog: [...prev.questLog] };
+      const todayDate = parseLocalDate(getToday());
+
+      for (let i = days; i >= 1; i--) {
+        const d = new Date(todayDate);
+        d.setDate(d.getDate() - i);
+        const dateStr = formatLocalDate(d);
+        if (s.questLog.find(q => q.date === dateStr)) continue;
+
+        const dayOfWeek = d.getDay();
+        if (dayOfWeek === 0 || dayOfWeek === 4) {
+          s.questLog.push({ date: dateStr, status: 'rest' });
+          s.stats = { ...s.stats, int: s.stats.int + 1, vit: s.stats.vit + 1 };
+          s.statPoints = { ...s.statPoints, int: s.statPoints.int + 1, vit: s.statPoints.vit + 1 };
+          continue;
+        }
+
+        s.questLog.push({ date: dateStr, status: 'completed', exercises: [], runCompleted: true });
+        s.totalCompleted++;
+        s.currentStreak++;
+
+        const xpGain = getQuestXP(s.level);
+        s.xp += xpGain;
+        while (s.xp >= s.xpToNext) {
+          s.xp -= s.xpToNext;
+          s.level++;
+          s.xpToNext = xpForLevel(s.level);
+        }
+
+        if (s.totalCompleted % 3 === 0) { s.stats.end++; s.statPoints.end++; }
+        if (s.totalCompleted % 4 === 0) { s.stats.agi++; s.statPoints.agi++; }
+        if (s.currentStreak % 5 === 0) { s.stats.int++; s.statPoints.int++; }
+        if (s.totalCompleted % 7 === 0) { s.stats.str++; s.statPoints.str++; s.stats.vit++; s.statPoints.vit++; }
+      }
+
+      s.classTitles = s.classTitles || prev.classTitles;
+      s.classTitles = prev.classTitles.map(t => ({ ...t, obtained: t.obtained || s.level >= t.requiredLevel }));
+      s.personalRecords = {
+        ...prev.personalRecords,
+        longestStreak: Math.max(prev.personalRecords.longestStreak, s.currentStreak),
+        maxLevel: Math.max(prev.personalRecords.maxLevel, s.level),
+      };
+
+      return s;
+    });
+  }, []);
+
   return {
     state,
     today,
@@ -495,5 +544,6 @@ export function useGameState() {
     resetGame,
     completePunishment,
     failPunishment,
+    simulateDays,
   };
 }

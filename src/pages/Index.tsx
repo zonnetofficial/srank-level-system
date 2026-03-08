@@ -17,7 +17,7 @@ import { LogOut } from 'lucide-react';
 const statKeys: StatKey[] = ['int', 'str', 'agi', 'vit', 'end'];
 
 const Index = () => {
-  const { state, todayQuest, restDay, timeWarning, dismissTimeWarning } = useGameState();
+  const { state, todayQuest, restDay, timeWarning, dismissTimeWarning, simulateDays } = useGameState();
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -176,6 +176,14 @@ const Index = () => {
           <div className="text-[10px] font-display uppercase tracking-wider text-muted-foreground">Mejor Racha</div>
         </div>
       </div>
+
+      {/* Dev tools */}
+      <button
+        onClick={() => simulateDays(50)}
+        className="mt-4 w-full py-2 border border-primary/30 text-primary font-display text-[10px] uppercase tracking-wider rounded hover:bg-primary/10 transition"
+      >
+        🧪 Simular 50 días (Dev)
+      </button>
     </VictorianFrame>
   );
 };
