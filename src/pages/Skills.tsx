@@ -27,7 +27,7 @@ const Skills = () => {
   const [testAnswers, setTestAnswers] = useState<number[]>([]);
   const [currentQ, setCurrentQ] = useState(0);
   const [showIntro, setShowIntro] = useState(true);
-  const [testResult, setTestResult] = useState<{ score: number; perfect: boolean; totalPoints: number } | null>(null);
+  const [testResult, setTestResult] = useState<{ score: number; perfect: boolean; passed: boolean; totalPoints: number } | null>(null);
   const perfectsToday = (state as any).intPerfectsToday || 0;
   const intTestsToday = (state as any).intTestsToday || 0;
 
@@ -71,7 +71,7 @@ const Skills = () => {
         }
       }
 
-      if (result.score === 0) {
+      if (!result.passed) {
         completeIntTest(0, true, 0, newCorrect);
       } else if (result.perfect) {
         const newPerfects = perfectsToday + 1;
@@ -153,22 +153,22 @@ const Skills = () => {
         {testResult ? (
           <div className="text-center py-6 space-y-4">
             <div className="text-5xl mb-2">
-              {testResult.perfect ? '🌟' : testResult.score > 0 ? '✅' : '❌'}
+              {testResult.perfect ? '🌟' : testResult.passed ? '✅' : '❌'}
             </div>
             <h2 className="font-display text-lg font-bold text-foreground">
-              {testResult.perfect ? '¡Perfecto!' : testResult.score > 0 ? 'Test Aprobado' : 'Test Reprobado'}
+              {testResult.perfect ? '¡Perfecto!' : testResult.passed ? 'Test Aprobado' : 'Test Reprobado'}
             </h2>
             <p className="text-sm text-muted-foreground">
-              {testResult.score}/{testQuestions.length} respuestas correctas
+              {testResult.score}/{testQuestions.length} respuestas correctas ({Math.round((testResult.score / testQuestions.length) * 100)}%)
             </p>
             {testResult.perfect && perfectsToday >= 5 && (
               <div className="text-accent font-display text-sm animate-pulse-glow p-2 rounded">
                 🏆 ¡5 Perfectos! Bonificación especial obtenida
               </div>
             )}
-            {testResult.score === 0 && (
+            {!testResult.passed && (
               <p className="text-xs text-destructive font-display">
-                El próximo test estará disponible en 2 días
+                Necesitas al menos 70% para aprobar
               </p>
             )}
             <div className="flex gap-2 mt-4">
@@ -338,8 +338,8 @@ const Skills = () => {
               <p className="text-xs text-muted-foreground leading-relaxed">
                 <span className="text-primary font-display font-bold">📋 Instrucciones:</span>{' '}
                 Primero leerás un texto introductorio. Después responderás entre 15 y 20 preguntas de opción múltiple. 
+                Necesitas al menos un <span className="text-primary font-bold">70%</span> de respuestas correctas para aprobar.
                 Un resultado perfecto te permite repetir el test. 5 perfectos desbloquean un test de rango superior.
-                Fallar todas las preguntas te bloquea por 2 días.
               </p>
             </div>
 

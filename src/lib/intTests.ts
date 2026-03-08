@@ -488,7 +488,7 @@ export function getTierFromPoints(intPoints: number): number {
   return 0;
 }
 
-export function evaluateTest(questions: TestQuestion[], answers: number[]): { score: number; perfect: boolean; totalPoints: number } {
+export function evaluateTest(questions: TestQuestion[], answers: number[]): { score: number; perfect: boolean; passed: boolean; totalPoints: number } {
   let correct = 0;
   let totalPoints = 0;
   for (let i = 0; i < questions.length; i++) {
@@ -497,9 +497,11 @@ export function evaluateTest(questions: TestQuestion[], answers: number[]): { sc
       totalPoints += questions[i].points;
     }
   }
+  const ratio = questions.length > 0 ? correct / questions.length : 0;
   return {
     score: correct,
     perfect: correct === questions.length,
+    passed: ratio >= 0.7,
     totalPoints,
   };
 }
