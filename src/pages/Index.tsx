@@ -180,6 +180,15 @@ const Index = () => {
         </div>
       </div>
 
+      {/* Title unlock modal */}
+      {currentNotification && (
+        <TitleUnlockModal
+          notification={currentNotification}
+          onAccept={acceptTitle}
+          onReject={rejectTitle}
+        />
+      )}
+
     </VictorianFrame>
   );
 };

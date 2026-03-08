@@ -35,7 +35,7 @@ const Titles = () => {
       {/* Class Titles */}
       <div className="rpg-panel mb-4">
         <h2 className="text-xs font-display uppercase tracking-[0.3em] text-muted-foreground mb-4">
-          🧙‍♂️ Títulos de Clase
+          🧙‍♂️ Clases
         </h2>
 
         <div className="space-y-2">
