@@ -622,6 +622,34 @@ export function useGameState() {
     });
   }, []);
 
+  const completeMandatoryMission = useCallback(() => {
+    setState(prev => {
+      if (!prev.missionSchedule) return prev;
+      const today = getToday();
+      const missions = prev.missionSchedule.missions.map(m =>
+        m.date === today && m.status === 'active' ? { ...m, status: 'completed' as const } : m
+      );
+      return { ...prev, missionSchedule: { ...prev.missionSchedule, missions } };
+    });
+  }, []);
+
+  const failMandatoryMission = useCallback(() => {
+    setState(prev => {
+      if (!prev.missionSchedule) return prev;
+      const today = getToday();
+      const missions = prev.missionSchedule.missions.map(m =>
+        m.date === today && m.status === 'active' ? { ...m, status: 'failed' as const } : m
+      );
+      // Lose 50% of current XP
+      const newXp = Math.floor(prev.xp * 0.5);
+      return {
+        ...prev,
+        xp: newXp,
+        missionSchedule: { ...prev.missionSchedule, missions },
+      };
+    });
+  }, []);
+
   return {
     state,
     today,
@@ -642,5 +670,7 @@ export function useGameState() {
     simulateDays,
     completeClassChallengeTask,
     assignBankPoints,
+    completeMandatoryMission,
+    failMandatoryMission,
   };
 }
