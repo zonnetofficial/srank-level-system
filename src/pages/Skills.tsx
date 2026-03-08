@@ -153,22 +153,22 @@ const Skills = () => {
         {testResult ? (
           <div className="text-center py-6 space-y-4">
             <div className="text-5xl mb-2">
-              {testResult.perfect ? '🌟' : testResult.score > 0 ? '✅' : '❌'}
+              {testResult.perfect ? '🌟' : testResult.passed ? '✅' : '❌'}
             </div>
             <h2 className="font-display text-lg font-bold text-foreground">
-              {testResult.perfect ? '¡Perfecto!' : testResult.score > 0 ? 'Test Aprobado' : 'Test Reprobado'}
+              {testResult.perfect ? '¡Perfecto!' : testResult.passed ? 'Test Aprobado' : 'Test Reprobado'}
             </h2>
             <p className="text-sm text-muted-foreground">
-              {testResult.score}/{testQuestions.length} respuestas correctas
+              {testResult.score}/{testQuestions.length} respuestas correctas ({Math.round((testResult.score / testQuestions.length) * 100)}%)
             </p>
             {testResult.perfect && perfectsToday >= 5 && (
               <div className="text-accent font-display text-sm animate-pulse-glow p-2 rounded">
                 🏆 ¡5 Perfectos! Bonificación especial obtenida
               </div>
             )}
-            {testResult.score === 0 && (
+            {!testResult.passed && (
               <p className="text-xs text-destructive font-display">
-                El próximo test estará disponible en 2 días
+                Necesitas al menos 70% para aprobar
               </p>
             )}
             <div className="flex gap-2 mt-4">
