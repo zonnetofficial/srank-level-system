@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 
 const MonarchMode = () => {
   const navigate = useNavigate();
-  const { monarchStatus, loading, createSubscription, cancelSubscription, checkStatus } = useMonarch();
+  const { monarchStatus, loading, createSubscription, cancelSubscription, checkStatus, simulatePayment } = useMonarch();
   const { state } = useGameState();
   const { user } = useAuth();
   const [penaltyAmount, setPenaltyAmount] = useState(10);
