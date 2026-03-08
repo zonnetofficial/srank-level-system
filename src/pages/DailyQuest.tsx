@@ -289,7 +289,7 @@ const DailyQuest = () => {
           </button>
         </div>
       )}
-    </div>
+    </VictorianFrame>
   );
 };
 

@@ -338,7 +338,7 @@ const Skills = () => {
 
       {intTestDialog}
       {skillTaskDialog}
-    </div>
+    </VictorianFrame>
   );
 };
 

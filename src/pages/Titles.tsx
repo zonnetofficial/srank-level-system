@@ -129,7 +129,7 @@ const Titles = () => {
           })}
         </div>
       </div>
-    </div>
+    </VictorianFrame>
   );
 };
 

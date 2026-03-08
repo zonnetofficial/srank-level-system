@@ -116,7 +116,7 @@ const History = () => {
           Resetear Progreso
         </button>
       </div>
-    </div>
+    </VictorianFrame>
   );
 };
 
