@@ -26,6 +26,15 @@ export interface DPPackage {
   icon: string;
 }
 
+export interface TPPackage {
+  id: string;
+  name: string;
+  t_points: number;
+  price_mxn: number;
+  bonus_points: number;
+  icon: string;
+}
+
 export interface InventoryItem {
   id: string;
   item_id: string;
@@ -45,29 +54,48 @@ export interface MarketplaceListing {
   item?: ShopItem;
 }
 
+// Marketplace prices are ~60% of shop price
+const RARITY_MARKET_DISCOUNT: Record<string, number> = {
+  common: 0.5,
+  uncommon: 0.55,
+  rare: 0.6,
+  epic: 0.65,
+  legendary: 0.7,
+};
+
+export function getMarketPrice(item: ShopItem): number {
+  const discount = RARITY_MARKET_DISCOUNT[item.rarity] || 0.6;
+  return Math.max(1, Math.floor(item.price * discount));
+}
+
 export function useShop() {
   const { user } = useAuth();
-  const [balance, setBalance] = useState(0);
+  const [dpBalance, setDpBalance] = useState(0);
+  const [tpBalance, setTpBalance] = useState(0);
   const [items, setItems] = useState<ShopItem[]>([]);
-  const [packages, setPackages] = useState<DPPackage[]>([]);
+  const [dpPackages, setDpPackages] = useState<DPPackage[]>([]);
+  const [tpPackages, setTpPackages] = useState<TPPackage[]>([]);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [listings, setListings] = useState<MarketplaceListing[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchBalance = useCallback(async () => {
+  const fetchBalances = useCallback(async () => {
     if (!user) return;
-    const { data } = await supabase
-      .from('dark_points')
-      .select('balance')
-      .eq('user_id', user.id)
-      .single();
+    const [dpRes, tpRes] = await Promise.all([
+      supabase.from('dark_points').select('balance').eq('user_id', user.id).single(),
+      supabase.from('t_points' as any).select('balance').eq('user_id', user.id).single(),
+    ]);
     
-    if (data) {
-      setBalance(data.balance);
-    } else {
-      // Create initial balance
+    if (dpRes.data) setDpBalance((dpRes.data as any).balance);
+    else {
       await supabase.from('dark_points').insert({ user_id: user.id, balance: 0, total_earned: 0, total_spent: 0 });
-      setBalance(0);
+      setDpBalance(0);
+    }
+
+    if (tpRes.data) setTpBalance((tpRes.data as any).balance);
+    else {
+      await supabase.from('t_points' as any).insert({ user_id: user.id, balance: 0, total_earned: 0, total_spent: 0 } as any);
+      setTpBalance(0);
     }
   }, [user]);
 
@@ -75,32 +103,34 @@ export function useShop() {
     if (!user) return;
     setLoading(true);
 
-    const [itemsRes, pkgRes, invRes, listRes] = await Promise.all([
+    const [itemsRes, dpPkgRes, tpPkgRes, invRes, listRes] = await Promise.all([
       supabase.from('shop_items').select('*').eq('is_active', true),
       supabase.from('dp_packages').select('*').eq('is_active', true).order('price_mxn'),
+      supabase.from('tp_packages' as any).select('*').eq('is_active', true).order('price_mxn'),
       supabase.from('user_inventory').select('*').eq('user_id', user.id),
       supabase.from('marketplace_listings').select('*').eq('status', 'active'),
     ]);
 
     if (itemsRes.data) setItems(itemsRes.data as ShopItem[]);
-    if (pkgRes.data) setPackages(pkgRes.data as DPPackage[]);
+    if (dpPkgRes.data) setDpPackages(dpPkgRes.data as DPPackage[]);
+    if (tpPkgRes.data) setTpPackages((tpPkgRes.data as any) as TPPackage[]);
     if (invRes.data) setInventory(invRes.data as InventoryItem[]);
     if (listRes.data) setListings(listRes.data as MarketplaceListing[]);
 
-    await fetchBalance();
+    await fetchBalances();
     setLoading(false);
-  }, [user, fetchBalance]);
+  }, [user, fetchBalances]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
-  const buyItem = useCallback(async (item: ShopItem) => {
+  // Buy from creator shop with DP
+  const buyItemWithDP = useCallback(async (item: ShopItem) => {
     if (!user) return false;
-    if (balance < item.price) {
+    if (dpBalance < item.price) {
       toast({ title: 'DP insuficientes', description: `Necesitas ${item.price} DP`, variant: 'destructive' });
       return false;
     }
 
-    // Check max per user
     if (item.max_per_user) {
       const existing = inventory.find(i => i.item_id === item.id);
       if (existing && existing.quantity >= item.max_per_user) {
@@ -109,36 +139,140 @@ export function useShop() {
       }
     }
 
-    // Deduct balance
-    const newBalance = balance - item.price;
+    const newBalance = dpBalance - item.price;
     await supabase.from('dark_points')
-      .update({ balance: newBalance, total_spent: balance - newBalance, updated_at: new Date().toISOString() })
+      .update({ balance: newBalance, total_spent: dpBalance - newBalance, updated_at: new Date().toISOString() })
       .eq('user_id', user.id);
 
-    // Add to inventory (upsert)
     const existing = inventory.find(i => i.item_id === item.id);
     if (existing) {
-      await supabase.from('user_inventory')
-        .update({ quantity: existing.quantity + 1 })
-        .eq('id', existing.id);
+      await supabase.from('user_inventory').update({ quantity: existing.quantity + 1 }).eq('id', existing.id);
     } else {
-      await supabase.from('user_inventory')
-        .insert({ user_id: user.id, item_id: item.id, quantity: 1, source: 'shop' });
+      await supabase.from('user_inventory').insert({ user_id: user.id, item_id: item.id, quantity: 1, source: 'shop' });
     }
 
-    // Log transaction
     await supabase.from('dp_transactions')
       .insert({ user_id: user.id, amount: -item.price, type: 'spend', description: `Compra: ${item.name}`, reference_id: item.id });
 
     toast({ title: '¡Compra exitosa!', description: `${item.icon} ${item.name} añadido a tu inventario` });
     await fetchAll();
     return true;
-  }, [user, balance, inventory, fetchAll]);
+  }, [user, dpBalance, inventory, fetchAll]);
+
+  // Buy from marketplace or shop with TP
+  const buyItemWithTP = useCallback(async (item: ShopItem, marketPrice?: number) => {
+    if (!user) return false;
+    const price = marketPrice ?? getMarketPrice(item);
+    if (tpBalance < price) {
+      toast({ title: 'TP insuficientes', description: `Necesitas ${price} TP`, variant: 'destructive' });
+      return false;
+    }
+
+    if (item.max_per_user) {
+      const existing = inventory.find(i => i.item_id === item.id);
+      if (existing && existing.quantity >= item.max_per_user) {
+        toast({ title: 'Límite alcanzado', description: 'Ya tienes el máximo de este item', variant: 'destructive' });
+        return false;
+      }
+    }
+
+    const newBalance = tpBalance - price;
+    await supabase.from('t_points' as any)
+      .update({ balance: newBalance, total_spent: (tpBalance - newBalance), updated_at: new Date().toISOString() } as any)
+      .eq('user_id', user.id);
+
+    const existing = inventory.find(i => i.item_id === item.id);
+    if (existing) {
+      await supabase.from('user_inventory').update({ quantity: existing.quantity + 1 }).eq('id', existing.id);
+    } else {
+      await supabase.from('user_inventory').insert({ user_id: user.id, item_id: item.id, quantity: 1, source: 'market' });
+    }
+
+    await supabase.from('tp_transactions' as any)
+      .insert({ user_id: user.id, amount: -price, type: 'spend', description: `Compra: ${item.name}`, reference_id: item.id } as any);
+
+    toast({ title: '¡Compra exitosa!', description: `${item.icon} ${item.name} añadido (TP)` });
+    await fetchAll();
+    return true;
+  }, [user, tpBalance, inventory, fetchAll]);
+
+  // Buy marketplace listing with TP
+  const buyListing = useCallback(async (listing: MarketplaceListing) => {
+    if (!user) return false;
+    if (listing.seller_id === user.id) {
+      toast({ title: 'Error', description: 'No puedes comprar tu propio item', variant: 'destructive' });
+      return false;
+    }
+    if (tpBalance < listing.price) {
+      toast({ title: 'TP insuficientes', description: `Necesitas ${listing.price} TP`, variant: 'destructive' });
+      return false;
+    }
+
+    // Deduct TP
+    const newBalance = tpBalance - listing.price;
+    await supabase.from('t_points' as any)
+      .update({ balance: newBalance, total_spent: (tpBalance - newBalance), updated_at: new Date().toISOString() } as any)
+      .eq('user_id', user.id);
+
+    // Mark listing as sold
+    await supabase.from('marketplace_listings')
+      .update({ status: 'sold', buyer_id: user.id, sold_at: new Date().toISOString() })
+      .eq('id', listing.id);
+
+    // Add item to buyer inventory
+    const existing = inventory.find(i => i.item_id === listing.item_id);
+    if (existing) {
+      await supabase.from('user_inventory').update({ quantity: existing.quantity + 1 }).eq('id', existing.id);
+    } else {
+      await supabase.from('user_inventory').insert({ user_id: user.id, item_id: listing.item_id, quantity: 1, source: 'marketplace' });
+    }
+
+    // Credit seller TP (seller gets the listing price)
+    const { data: sellerTP } = await supabase.from('t_points' as any).select('balance, total_earned').eq('user_id', listing.seller_id).single();
+    if (sellerTP) {
+      await supabase.from('t_points' as any)
+        .update({ balance: (sellerTP as any).balance + listing.price, total_earned: (sellerTP as any).total_earned + listing.price, updated_at: new Date().toISOString() } as any)
+        .eq('user_id', listing.seller_id);
+    }
+
+    await supabase.from('tp_transactions' as any)
+      .insert({ user_id: user.id, amount: -listing.price, type: 'market_buy', description: `Compra mercado`, reference_id: listing.id } as any);
+
+    toast({ title: '¡Compra exitosa!', description: 'Item adquirido del mercado' });
+    await fetchAll();
+    return true;
+  }, [user, tpBalance, inventory, fetchAll]);
+
+  // Sell item on marketplace
+  const sellItem = useCallback(async (invItem: InventoryItem, item: ShopItem) => {
+    if (!user) return false;
+    if (invItem.quantity < 1) return false;
+
+    const price = getMarketPrice(item);
+
+    // Reduce inventory
+    if (invItem.quantity === 1) {
+      // Can't delete due to RLS, set quantity to 0
+      await supabase.from('user_inventory').update({ quantity: 0 }).eq('id', invItem.id);
+    } else {
+      await supabase.from('user_inventory').update({ quantity: invItem.quantity - 1 }).eq('id', invItem.id);
+    }
+
+    // Create listing
+    await supabase.from('marketplace_listings').insert({
+      seller_id: user.id,
+      item_id: item.id,
+      price,
+      status: 'active',
+    });
+
+    toast({ title: '¡Item en venta!', description: `${item.icon} ${item.name} por 🔷${price} TP` });
+    await fetchAll();
+    return true;
+  }, [user, fetchAll]);
 
   const buyDPPackage = useCallback(async (pkg: DPPackage) => {
     if (!user) return null;
-
-    // Call MercadoPago edge function to create payment
     const { data, error } = await supabase.functions.invoke('mercadopago', {
       body: {
         action: 'buy_dark_points',
@@ -148,27 +282,50 @@ export function useShop() {
         back_url: window.location.origin + '/shop',
       },
     });
-
     if (error) {
       toast({ title: 'Error', description: 'No se pudo iniciar el pago', variant: 'destructive' });
       return null;
     }
+    return data;
+  }, [user]);
 
+  const buyTPPackage = useCallback(async (pkg: TPPackage) => {
+    if (!user) return null;
+    const { data, error } = await supabase.functions.invoke('mercadopago', {
+      body: {
+        action: 'buy_t_points',
+        package_id: pkg.id,
+        t_points: pkg.t_points + pkg.bonus_points,
+        amount: pkg.price_mxn,
+        back_url: window.location.origin + '/shop',
+      },
+    });
+    if (error) {
+      toast({ title: 'Error', description: 'No se pudo iniciar el pago', variant: 'destructive' });
+      return null;
+    }
     return data;
   }, [user]);
 
   const getItemById = useCallback((id: string) => items.find(i => i.id === id), [items]);
 
   return {
-    balance,
+    dpBalance,
+    tpBalance,
     items,
-    packages,
+    dpPackages,
+    tpPackages,
     inventory,
     listings,
     loading,
-    buyItem,
+    buyItemWithDP,
+    buyItemWithTP,
+    buyListing,
+    sellItem,
     buyDPPackage,
+    buyTPPackage,
     getItemById,
+    getMarketPrice,
     refreshShop: fetchAll,
   };
 }

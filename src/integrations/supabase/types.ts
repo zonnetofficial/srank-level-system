@@ -297,6 +297,99 @@ export type Database = {
         }
         Relationships: []
       }
+      t_points: {
+        Row: {
+          balance: number
+          created_at: string
+          id: string
+          total_earned: number
+          total_spent: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          id?: string
+          total_earned?: number
+          total_spent?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          id?: string
+          total_earned?: number
+          total_spent?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      tp_packages: {
+        Row: {
+          bonus_points: number
+          created_at: string
+          icon: string
+          id: string
+          is_active: boolean
+          name: string
+          price_mxn: number
+          t_points: number
+        }
+        Insert: {
+          bonus_points?: number
+          created_at?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          price_mxn: number
+          t_points: number
+        }
+        Update: {
+          bonus_points?: number
+          created_at?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          price_mxn?: number
+          t_points?: number
+        }
+        Relationships: []
+      }
+      tp_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          id: string
+          reference_id: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          reference_id?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          reference_id?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_inventory: {
         Row: {
           acquired_at: string
