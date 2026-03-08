@@ -982,13 +982,13 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
   outputGain.gain.setValueAtTime(0.001, ctx.currentTime);
   outputGain.connect(musicGain!);
 
-  // Delay send (tempo-synced)
+  // Delay send (tempo-synced) — darktrap gets more delay for atmosphere
   const delaySend = ctx.createDelay(2);
   delaySend.delayTime.setValueAtTime(sixteenthDur * 3, ctx.currentTime);
   const delayFb = ctx.createGain();
-  delayFb.gain.setValueAtTime(0.2, ctx.currentTime);
+  delayFb.gain.setValueAtTime(config.genre === 'darktrap' ? 0.35 : 0.2, ctx.currentTime);
   const delayOut = ctx.createGain();
-  delayOut.gain.setValueAtTime(0.2, ctx.currentTime);
+  delayOut.gain.setValueAtTime(config.genre === 'darktrap' ? 0.3 : 0.2, ctx.currentTime);
   const delaySendGain = ctx.createGain();
   delaySendGain.gain.setValueAtTime(1, ctx.currentTime);
   delaySendGain.connect(delaySend);
