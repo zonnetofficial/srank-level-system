@@ -14,6 +14,11 @@ import {
   parseLocalDate,
   formatLocalDate,
 } from '@/lib/gameData';
+import {
+  createInitialSchedule,
+  checkAndScheduleMission,
+  getXPPenalty,
+} from '@/lib/mandatoryMissions';
 
 const STORAGE_KEY = 'daily-quest-rpg-state';
 
@@ -27,6 +32,7 @@ function loadState(): GameState {
     if (!parsed.lastCheckedDate) parsed.lastCheckedDate = getToday();
     if (!parsed.classChangeProgress) parsed.classChangeProgress = {};
     if (!parsed.statBank) parsed.statBank = { int: 0, str: 0, agi: 0, vit: 0, end: 0 };
+    if (!parsed.missionSchedule) parsed.missionSchedule = createInitialSchedule();
     return parsed;
   } catch {
     return createInitialState();
@@ -97,6 +103,20 @@ function detectAndApplyPunishments(state: GameState): GameState {
     newPoints[key] = Math.max(0, newPoints[key] - totalPenalty);
   }
 
+  // Also fail expired mandatory missions
+  let missionSchedule = state.missionSchedule;
+  if (missionSchedule) {
+    let missionXpLoss = 0;
+    const updatedMissions = missionSchedule.missions.map(m => {
+      if (m.status === 'active' && m.date < today) {
+        missionXpLoss += Math.floor(state.xp * 0.5);
+        return { ...m, status: 'failed' as const };
+      }
+      return m;
+    });
+    missionSchedule = { ...missionSchedule, missions: updatedMissions };
+  }
+
   return {
     ...state,
     stats: newStats,
@@ -106,6 +126,7 @@ function detectAndApplyPunishments(state: GameState): GameState {
     totalFailed: state.totalFailed + failedDays,
     pendingPunishments: state.pendingPunishments + failedDays,
     lastCheckedDate: today,
+    missionSchedule,
   };
 }
 
@@ -142,6 +163,9 @@ export function useGameState() {
         loaded = { ...loaded, questLog: newLog };
       }
     }
+    // Schedule mandatory missions
+    if (!loaded.missionSchedule) loaded.missionSchedule = createInitialSchedule();
+    loaded.missionSchedule = checkAndScheduleMission(loaded.missionSchedule, loaded.level);
     return loaded;
   });
   const [timeWarning, setTimeWarning] = useState(false);
@@ -613,6 +637,34 @@ export function useGameState() {
     });
   }, []);
 
+  const completeMandatoryMission = useCallback(() => {
+    setState(prev => {
+      if (!prev.missionSchedule) return prev;
+      const today = getToday();
+      const missions = prev.missionSchedule.missions.map(m =>
+        m.date === today && m.status === 'active' ? { ...m, status: 'completed' as const } : m
+      );
+      return { ...prev, missionSchedule: { ...prev.missionSchedule, missions } };
+    });
+  }, []);
+
+  const failMandatoryMission = useCallback(() => {
+    setState(prev => {
+      if (!prev.missionSchedule) return prev;
+      const today = getToday();
+      const missions = prev.missionSchedule.missions.map(m =>
+        m.date === today && m.status === 'active' ? { ...m, status: 'failed' as const } : m
+      );
+      // Lose 50% of current XP
+      const newXp = Math.floor(prev.xp * 0.5);
+      return {
+        ...prev,
+        xp: newXp,
+        missionSchedule: { ...prev.missionSchedule, missions },
+      };
+    });
+  }, []);
+
   return {
     state,
     today,
@@ -633,5 +685,7 @@ export function useGameState() {
     simulateDays,
     completeClassChallengeTask,
     assignBankPoints,
+    completeMandatoryMission,
+    failMandatoryMission,
   };
 }

@@ -14,6 +14,7 @@ import {
   getClassTitle,
   getNextClassTitle,
 } from '@/lib/gameData';
+import { getActiveMission } from '@/lib/mandatoryMissions';
 import { useNavigate } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
 
@@ -33,6 +34,7 @@ const Index = () => {
 
   const currentClass = getClassTitle(state.level, state.classTitles);
   const nextClass = getNextClassTitle(state.level, state.classTitles);
+  const activeMission = state.missionSchedule ? getActiveMission(state.missionSchedule) : null;
 
   return (
     <VictorianFrame>
@@ -60,6 +62,26 @@ const Index = () => {
         >
           ⚠️ SYSTEM ALERT: Time anomaly detected
         </div>
+      )}
+
+      {/* Mandatory mission alert */}
+      {activeMission && (
+        <button
+          onClick={() => navigate('/mission')}
+          className="mb-4 w-full p-3 bg-destructive/10 border border-destructive/40 text-left animate-pulse-glow"
+          style={{ clipPath: 'polygon(0 4px, 4px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px))' }}
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-xl">{activeMission.icon}</span>
+            <div className="flex-1">
+              <div className="text-[10px] font-display uppercase tracking-wider text-destructive font-bold">
+                ⚠️ Misión Obligatoria
+              </div>
+              <div className="text-xs text-foreground font-display">{activeMission.title}</div>
+            </div>
+            <span className="text-[10px] font-display text-destructive">→</span>
+          </div>
+        </button>
       )}
 
       {/* Time display */}
