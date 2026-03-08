@@ -69,10 +69,10 @@ const Index = () => {
       {/* Level & XP */}
       <XPBar xp={state.xp} xpToNext={state.xpToNext} level={state.level} />
 
-      {/* Class Title */}
+      {/* Class */}
       <div className="mt-4 text-center">
         <div className="text-xs font-display uppercase tracking-[0.2em] text-muted-foreground">
-          Clase Actual
+          Clase
         </div>
         <div className="text-xl font-display font-bold text-accent text-glow-accent mt-1">
           {currentClass.icon} {currentClass.name}
