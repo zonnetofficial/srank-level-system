@@ -103,6 +103,20 @@ function detectAndApplyPunishments(state: GameState): GameState {
     newPoints[key] = Math.max(0, newPoints[key] - totalPenalty);
   }
 
+  // Also fail expired mandatory missions
+  let missionSchedule = state.missionSchedule;
+  if (missionSchedule) {
+    let missionXpLoss = 0;
+    const updatedMissions = missionSchedule.missions.map(m => {
+      if (m.status === 'active' && m.date < today) {
+        missionXpLoss += Math.floor(state.xp * 0.5);
+        return { ...m, status: 'failed' as const };
+      }
+      return m;
+    });
+    missionSchedule = { ...missionSchedule, missions: updatedMissions };
+  }
+
   return {
     ...state,
     stats: newStats,
@@ -112,6 +126,7 @@ function detectAndApplyPunishments(state: GameState): GameState {
     totalFailed: state.totalFailed + failedDays,
     pendingPunishments: state.pendingPunishments + failedDays,
     lastCheckedDate: today,
+    missionSchedule,
   };
 }
 
