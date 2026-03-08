@@ -302,8 +302,7 @@ const Skills = () => {
       </h1>
 
       <div className="space-y-4">
-        {statKeys.map(key => {
-          const available = isSkillAvailable(key);
+        {statKeys.filter(key => isSkillAvailable(key)).map(key => {
           const glowClass = `glow-${key}`;
           const currentTitle = getSkillTitle(key, state.statPoints[key]);
 
@@ -329,14 +328,9 @@ const Skills = () => {
 
               <button
                 onClick={() => handleStartSkill(key)}
-                disabled={!available}
-                className={`w-full py-2 rounded font-display text-xs uppercase tracking-wider transition-colors ${
-                  available
-                    ? 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-                    : 'bg-muted text-muted-foreground cursor-not-allowed opacity-50'
-                }`}
+                className="w-full py-2 rounded font-display text-xs uppercase tracking-wider transition-colors bg-secondary text-secondary-foreground hover:bg-secondary/80"
               >
-                {available ? (key === 'int' ? 'Iniciar Test' : 'Iniciar Tarea') : 'No disponible'}
+                {key === 'int' ? 'Iniciar Test' : 'Iniciar Tarea'}
               </button>
             </div>
           );
