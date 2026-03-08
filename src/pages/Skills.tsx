@@ -339,7 +339,6 @@ const Skills = () => {
                 <span className="text-primary font-display font-bold">📋 Instrucciones:</span>{' '}
                 Primero leerás un texto introductorio. Después responderás entre 15 y 20 preguntas de opción múltiple. 
                 Necesitas al menos un <span className="text-primary font-bold">70%</span> de respuestas correctas para aprobar.
-                Un resultado perfecto te permite repetir el test. 5 perfectos desbloquean un test de rango superior.
               </p>
             </div>
 
