@@ -27,4 +27,5 @@ export const CATEGORY_LABELS: Record<string, string> = {
   booster: 'Mejora',
   consumable: 'Consumible',
   special: 'Especial',
+  dungeon: 'Mazmorra',
 };

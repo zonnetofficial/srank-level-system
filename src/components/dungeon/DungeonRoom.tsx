@@ -12,6 +12,8 @@ interface Props {
   roomNumber: number;
   totalRooms: number;
   charClass: CharacterClass;
+  extraTime?: number;
+  damageReduction?: number;
   onComplete: (success: boolean) => void;
 }
 
