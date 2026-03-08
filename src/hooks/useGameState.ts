@@ -473,9 +473,8 @@ export function useGameState() {
   const completePunishment = useCallback(() => {
     setState(prev => {
       const newPunishments = Math.max(0, prev.pendingPunishments - 1);
-      // Recover INT +1
-      const newStats = { ...prev.stats, int: prev.stats.int + 1 };
-      const newPoints = { ...prev.statPoints, int: prev.statPoints.int + 1 };
+      // Recover INT +1 to bank
+      const newBank = { ...prev.statBank, int: prev.statBank.int + 1 };
       // Gain 1/4 of current XP
       const xpBonus = Math.floor(prev.xp / 4);
       let newXp = prev.xp + xpBonus;
@@ -489,8 +488,7 @@ export function useGameState() {
       return {
         ...prev,
         pendingPunishments: newPunishments,
-        stats: newStats,
-        statPoints: newPoints,
+        statBank: newBank,
         xp: newXp,
         level: newLevel,
         xpToNext: newXpToNext,
