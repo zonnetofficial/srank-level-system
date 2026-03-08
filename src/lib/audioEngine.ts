@@ -556,7 +556,7 @@ export function playMusic(theme: MusicTheme) {
       // ── PAD: one sustained chord per bar ──
       schedulePad(ctx, barStart, chord, barDuration, config.padGain, config.filterCutoff, musicGain!);
       // Send pads to delay too for atmosphere
-      schedulePad(ctx, barStart, chord, barDuration, config.padGain * 0.3, config.filterCutoff, delaySend);
+      schedulePad(ctx, barStart, chord, barDuration, config.padGain * 0.3, config.filterCutoff, delaySendGain);
 
       // ── DRUMS + BASS: 16 steps per bar ──
       for (let step = 0; step < 16; step++) {
