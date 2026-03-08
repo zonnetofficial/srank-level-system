@@ -1,4 +1,5 @@
 import { useGameState } from '@/hooks/useGameState';
+import { useNavigate } from 'react-router-dom';
 import {
   STAT_LABELS,
   STAT_ICONS,
@@ -13,12 +14,19 @@ const statKeys: StatKey[] = ['int', 'str', 'agi', 'vit', 'end'];
 
 const Titles = () => {
   const { state } = useGameState();
+  const navigate = useNavigate();
   const currentClass = getClassTitle(state.level, state.classTitles);
   const nextClass = getNextClassTitle(state.level, state.classTitles);
   const obtainedClasses = state.classTitles.filter(t => t.obtained);
 
   return (
     <div className="min-h-screen bg-background pb-20 px-4 pt-6 max-w-lg mx-auto">
+      <button
+        onClick={() => navigate('/')}
+        className="text-muted-foreground hover:text-foreground text-xs font-display uppercase tracking-wider mb-4 flex items-center gap-1 transition-colors"
+      >
+        ← Volver
+      </button>
       <h1 className="font-display text-xl font-bold text-center text-primary text-glow-primary mb-6">
         🏷️ Títulos
       </h1>

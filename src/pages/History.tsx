@@ -1,4 +1,5 @@
 import { useGameState } from '@/hooks/useGameState';
+import { useNavigate } from 'react-router-dom';
 
 const statusIcons: Record<string, string> = {
   completed: '✅',
@@ -16,10 +17,17 @@ const statusLabels: Record<string, string> = {
 
 const History = () => {
   const { state, resetGame } = useGameState();
+  const navigate = useNavigate();
   const sortedLog = [...state.questLog].reverse();
 
   return (
     <div className="min-h-screen bg-background pb-20 px-4 pt-6 max-w-lg mx-auto">
+      <button
+        onClick={() => navigate('/')}
+        className="text-muted-foreground hover:text-foreground text-xs font-display uppercase tracking-wider mb-4 flex items-center gap-1 transition-colors"
+      >
+        ← Volver
+      </button>
       <h1 className="font-display text-xl font-bold text-center text-primary text-glow-primary mb-6">
         📜 Historial
       </h1>
