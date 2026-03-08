@@ -764,7 +764,20 @@ const THEMES: Record<MusicTheme, ThemeConfig> = {
 // Drum patterns: 32 steps [kick, snare/clap, closedHat, openHat]
 type DrumStep = [number, number, number, number];
 
-const DRUM_PATTERNS: Record<'trap' | 'house' | 'ambient', DrumStep[]> = {
+const DRUM_PATTERNS: Record<'trap' | 'house' | 'ambient' | 'darktrap', DrumStep[]> = {
+  darktrap: [
+    // Bar 1: Slow dark trap — sparse kicks, rolling hi-hats with velocity variation
+    // At 75 BPM each 16th = ~200ms, so rolls feel spacious
+    [1,  0, .3, 0],  [0, 0, .5, 0],  [0, 0, .7, 0],  [0, 0, .4, 0],
+    [0, .7, .3, 0],  [0, 0, .6, 0],  [0, 0, .8, 0],  [0, 0, .9, 0],   // triplet-feel roll
+    [0,  0, .5, 0],  [0, 0, .7, 0],  [0, 0, .4,.4],  [0, 0, .6, 0],
+    [0, .6, .3, 0],  [0, 0, .5, 0],  [0, 0, .8, 0],  [0, 0, .7, 0],
+    // Bar 2: Ghost kicks, open hats, snare variations
+    [.7, 0, .4, 0],  [0, 0, .6, 0],  [0, 0, .9, 0],  [0, 0, .7, 0],   // fast roll
+    [0, .8, .5, 0],  [0, 0, .4, 0],  [0, 0, .6, 0],  [0, 0, .8, 0],
+    [0,  0, .3,.5],  [0, 0, .7, 0],  [0, 0, .9, 0],  [0, 0, .6, 0],   // triplets
+    [.4,.5, .4, 0],  [0, 0, .7, 0],  [0, 0, .8, 0],  [0, 0, .5, 0],
+  ],
   trap: [
     // Bar 1: heavy kick, rolling hats, snare on 5 & 13
     [1,  0, .6, 0],  [0, 0, .4, 0],  [0, 0, .7, 0],  [0, 0, .5, 0],
