@@ -531,8 +531,7 @@ export function useGameState() {
         const dayOfWeek = d.getDay();
         if (dayOfWeek === 0 || dayOfWeek === 4) {
           s.questLog.push({ date: dateStr, status: 'rest' });
-          s.stats = { ...s.stats, int: s.stats.int + 1, vit: s.stats.vit + 1 };
-          s.statPoints = { ...s.statPoints, int: s.statPoints.int + 1, vit: s.statPoints.vit + 1 };
+          s.statBank = { ...s.statBank, int: s.statBank.int + 1, vit: s.statBank.vit + 1 };
           continue;
         }
 
