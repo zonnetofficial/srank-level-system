@@ -22,6 +22,7 @@ import { RARITY_COLORS as SHOP_RARITY_COLORS, RARITY_LABELS } from '@/components
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import ItemIcon from '@/components/ItemIcon';
 
 const ranks: DungeonRank[] = ['E', 'D', 'C', 'B', 'A', 'S'];
 const RANK_ORDER: Record<string, number> = { E: 1, D: 2, C: 3, B: 4, A: 5, S: 6 };
@@ -355,8 +356,9 @@ export default function Dungeons() {
               <div className="flex items-center gap-1 flex-wrap">
                 <span className="text-[8px] font-display text-muted-foreground uppercase tracking-wider mr-1">Equipo:</span>
                 {loadout.map(l => (
-                  <span key={l.inventoryId} className="text-sm" title={`${l.name} x${l.quantity}`}>
-                    {l.icon}{l.quantity > 1 && <span className="text-[8px] text-muted-foreground">x{l.quantity}</span>}
+                  <span key={l.inventoryId} className="inline-flex items-center" title={`${l.name} x${l.quantity}`}>
+                    <ItemIcon name={l.name} fallbackEmoji={l.icon} size="sm" />
+                    {l.quantity > 1 && <span className="text-[8px] text-muted-foreground">x{l.quantity}</span>}
                   </span>
                 ))}
               </div>
@@ -373,18 +375,18 @@ export default function Dungeons() {
                 <button
                   key={l.inventoryId}
                   onClick={() => usePotion('hp')}
-                  className="text-[9px] font-display px-2 py-1 border border-stat-vit/30 text-stat-vit hover:bg-stat-vit/10 transition-all"
+                  className="text-[9px] font-display px-2 py-1 border border-stat-vit/30 text-stat-vit hover:bg-stat-vit/10 transition-all flex items-center gap-1"
                 >
-                  {l.icon} HP x{l.quantity}
+                  <ItemIcon name={l.name} fallbackEmoji={l.icon} size="sm" /> HP x{l.quantity}
                 </button>
               ))}
               {loadout.filter(l => l.effect_type === 'stamina_potion').map(l => (
                 <button
                   key={l.inventoryId}
                   onClick={() => usePotion('stamina')}
-                  className="text-[9px] font-display px-2 py-1 border border-primary/30 text-primary hover:bg-primary/10 transition-all"
+                  className="text-[9px] font-display px-2 py-1 border border-primary/30 text-primary hover:bg-primary/10 transition-all flex items-center gap-1"
                 >
-                  {l.icon} STA x{l.quantity}
+                  <ItemIcon name={l.name} fallbackEmoji={l.icon} size="sm" /> STA x{l.quantity}
                 </button>
               ))}
             </div>
@@ -461,7 +463,7 @@ export default function Dungeons() {
               <div className="space-y-2">
                 {loadout.map(l => (
                   <div key={l.inventoryId} className={`flex items-center gap-2 p-2 border border-border/30 ${SHOP_RARITY_COLORS[l.rarity]}`}>
-                    <span className="text-lg">{l.icon}</span>
+                    <ItemIcon name={l.name} fallbackEmoji={l.icon} size="md" />
                     <div className="flex-1 min-w-0">
                       <div className="font-display text-[10px] truncate">{l.name}</div>
                       <div className="text-[8px] text-muted-foreground">{RARITY_LABELS[l.rarity]} · x{l.quantity}</div>
@@ -526,7 +528,7 @@ export default function Dungeons() {
                       key={inv.id}
                       className={`rpg-panel p-3 flex items-center gap-3 ${SHOP_RARITY_COLORS[item.rarity]}`}
                     >
-                      <span className="text-2xl">{item.icon}</span>
+                      <ItemIcon name={item.name} fallbackEmoji={item.icon} size="lg" />
                       <div className="flex-1 min-w-0">
                         <div className="font-display text-xs font-bold truncate">{item.name}</div>
                         <div className="text-[9px] text-muted-foreground">
