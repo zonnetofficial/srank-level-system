@@ -22,6 +22,7 @@ import { RARITY_COLORS as SHOP_RARITY_COLORS, RARITY_LABELS } from '@/components
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import ItemIcon from '@/components/ItemIcon';
 
 const ranks: DungeonRank[] = ['E', 'D', 'C', 'B', 'A', 'S'];
 const RANK_ORDER: Record<string, number> = { E: 1, D: 2, C: 3, B: 4, A: 5, S: 6 };
