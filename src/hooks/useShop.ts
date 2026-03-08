@@ -358,6 +358,42 @@ export function useShop() {
     return true;
   }, [user, dpBalance, fetchAll]);
 
+  // Cancel an active listing — refund DP or item
+  const cancelListing = useCallback(async (listing: MarketplaceListing) => {
+    if (!user || listing.seller_id !== user.id || listing.status !== 'active') return false;
+
+    // Mark as cancelled
+    await supabase.from('marketplace_listings')
+      .update({ status: 'cancelled' } as any)
+      .eq('id', listing.id);
+
+    if (listing.listing_type === 'dp' && listing.dp_amount) {
+      // Refund DP
+      const { data: dp } = await supabase.from('dark_points').select('balance').eq('user_id', user.id).single();
+      if (dp) {
+        await supabase.from('dark_points').update({
+          balance: dp.balance + listing.dp_amount,
+          updated_at: new Date().toISOString(),
+        }).eq('user_id', user.id);
+      }
+      await supabase.from('dp_transactions')
+        .insert({ user_id: user.id, amount: listing.dp_amount, type: 'refund', description: `Cancelación venta: ${listing.dp_amount} DP` });
+      toast({ title: 'Venta cancelada', description: `💎 ${listing.dp_amount} DP devueltos` });
+    } else if (listing.item_id) {
+      // Refund item
+      const existing = inventory.find(i => i.item_id === listing.item_id);
+      if (existing) {
+        await supabase.from('user_inventory').update({ quantity: existing.quantity + 1 }).eq('id', existing.id);
+      } else {
+        await supabase.from('user_inventory').insert({ user_id: user.id, item_id: listing.item_id, quantity: 1, source: 'refund' });
+      }
+      toast({ title: 'Venta cancelada', description: 'Item devuelto a tu inventario' });
+    }
+
+    await fetchAll();
+    return true;
+  }, [user, inventory, fetchAll]);
+
   const getItemById = useCallback((id: string) => items.find(i => i.id === id), [items]);
 
   return {
@@ -374,6 +410,7 @@ export function useShop() {
     buyListing,
     sellItem,
     sellDP,
+    cancelListing,
     buyDPPackage,
     buyTPPackage,
     getItemById,

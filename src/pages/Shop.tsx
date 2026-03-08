@@ -152,6 +152,7 @@ const Shop = () => {
             setBuying(false);
           }}
           onSellDP={(amount) => shop.sellDP(amount)}
+          onCancel={(listing) => shop.cancelListing(listing)}
         />
       )}
 
