@@ -4,6 +4,8 @@ import VictorianFrame from '@/components/VictorianFrame';
 import { StatBar } from '@/components/StatBar';
 import { useGameState } from '@/hooks/useGameState';
 import { useAuth } from '@/hooks/useAuth';
+import { useTitleNotifications } from '@/hooks/useTitleNotifications';
+import { TitleUnlockModal } from '@/components/TitleUnlockModal';
 import {
   STAT_LABELS,
   STAT_ICONS,
@@ -19,6 +21,7 @@ const statKeys: StatKey[] = ['int', 'str', 'agi', 'vit', 'end'];
 const Index = () => {
   const { state, todayQuest, restDay, timeWarning, dismissTimeWarning } = useGameState();
   const { signOut } = useAuth();
+  const { currentNotification, acceptTitle, rejectTitle } = useTitleNotifications(state);
   const navigate = useNavigate();
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -66,10 +69,10 @@ const Index = () => {
       {/* Level & XP */}
       <XPBar xp={state.xp} xpToNext={state.xpToNext} level={state.level} />
 
-      {/* Class Title */}
+      {/* Class */}
       <div className="mt-4 text-center">
         <div className="text-xs font-display uppercase tracking-[0.2em] text-muted-foreground">
-          Clase Actual
+          Clase
         </div>
         <div className="text-xl font-display font-bold text-accent text-glow-accent mt-1">
           {currentClass.icon} {currentClass.name}
@@ -176,6 +179,15 @@ const Index = () => {
           <div className="text-[10px] font-display uppercase tracking-wider text-muted-foreground">Mejor Racha</div>
         </div>
       </div>
+
+      {/* Title unlock modal */}
+      {currentNotification && (
+        <TitleUnlockModal
+          notification={currentNotification}
+          onAccept={acceptTitle}
+          onReject={rejectTitle}
+        />
+      )}
 
     </VictorianFrame>
   );
