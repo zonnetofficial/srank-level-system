@@ -323,6 +323,41 @@ export function useShop() {
     return data;
   }, [user]);
 
+  // Sell DP on marketplace for TP
+  // DP to TP conversion: ~0.7 TP per 1 DP (cheaper than buying DP from store)
+  const sellDP = useCallback(async (dpAmount: number) => {
+    if (!user) return false;
+    if (dpBalance < dpAmount || dpAmount < 10) {
+      toast({ title: 'Error', description: 'Mínimo 10 DP para vender', variant: 'destructive' });
+      return false;
+    }
+
+    const tpPrice = Math.floor(dpAmount * 0.7); // 0.7 TP per DP
+
+    // Deduct DP from seller
+    const newDpBalance = dpBalance - dpAmount;
+    await supabase.from('dark_points')
+      .update({ balance: newDpBalance, total_spent: dpBalance - newDpBalance, updated_at: new Date().toISOString() })
+      .eq('user_id', user.id);
+
+    // Create listing
+    await supabase.from('marketplace_listings').insert({
+      seller_id: user.id,
+      item_id: null,
+      price: tpPrice,
+      status: 'active',
+      listing_type: 'dp',
+      dp_amount: dpAmount,
+    } as any);
+
+    await supabase.from('dp_transactions')
+      .insert({ user_id: user.id, amount: -dpAmount, type: 'market_sell', description: `Venta: ${dpAmount} DP en mercado` });
+
+    toast({ title: '¡DP en venta!', description: `💎 ${dpAmount} DP por 🔷${tpPrice} TP` });
+    await fetchAll();
+    return true;
+  }, [user, dpBalance, fetchAll]);
+
   const getItemById = useCallback((id: string) => items.find(i => i.id === id), [items]);
 
   return {
@@ -338,6 +373,7 @@ export function useShop() {
     buyItemWithTP,
     buyListing,
     sellItem,
+    sellDP,
     buyDPPackage,
     buyTPPackage,
     getItemById,
