@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 
 const MonarchMode = () => {
   const navigate = useNavigate();
-  const { monarchStatus, loading, createSubscription, cancelSubscription, checkStatus } = useMonarch();
+  const { monarchStatus, loading, createSubscription, cancelSubscription, checkStatus, simulatePayment } = useMonarch();
   const { state } = useGameState();
   const { user } = useAuth();
   const [penaltyAmount, setPenaltyAmount] = useState(10);
@@ -162,6 +162,13 @@ const MonarchMode = () => {
                   {loading ? '...' : 'Confirmar'}
                 </button>
               </div>
+              <button
+                onClick={() => simulatePayment(penaltyAmount, payerEmail || user?.email || '')}
+                disabled={loading}
+                className="w-full mt-2 py-2 border border-primary/50 text-primary font-display text-[10px] uppercase tracking-wider rounded hover:bg-primary/10 transition disabled:opacity-40"
+              >
+                {loading ? '...' : '🧪 Simular Pago (Dev)'}
+              </button>
             </div>
           )}
         </>
