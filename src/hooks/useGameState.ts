@@ -64,9 +64,10 @@ function detectAndApplyPunishments(state: GameState): GameState {
 
   while (currentDate < todayDate) {
     const dateStr = formatLocalDate(currentDate);
-    const isSunday = currentDate.getDay() === 0;
+    const dayOfWeek = currentDate.getDay();
+    const isRest = dayOfWeek === 0 || dayOfWeek === 4; // Sunday or Thursday
 
-    if (!isSunday) {
+    if (!isRest) {
       const existing = updatedLog.find(q => q.date === dateStr);
       if (!existing) {
         failedDays++;
