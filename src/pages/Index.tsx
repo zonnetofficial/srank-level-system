@@ -153,7 +153,7 @@ const Index = () => {
           style={{ borderColor: 'hsl(45 100% 60% / 0.3)' }}
         >
           <span className="text-2xl">👑</span>
-          <span className="font-display text-[10px] uppercase tracking-[0.15em] text-accent animate-text-glitch-heavy" style={{ animationDelay: '8s' }}>
+          <span className="font-display text-[10px] uppercase tracking-[0.15em] text-accent">
             Ruta del Monarca
           </span>
         </button>

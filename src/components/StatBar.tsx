@@ -17,14 +17,6 @@ const statColorClasses: Record<StatKey, { bar: string; text: string; glow: strin
   end: { bar: 'bg-stat-end', text: 'text-stat-end', glow: 'glow-end' },
 };
 
-// Assign different glitch classes per stat for visual variety
-const statGlitchClasses: Record<StatKey, string> = {
-  int: 'animate-text-glitch',
-  str: 'animate-text-glitch-alt',
-  agi: 'animate-text-glitch-heavy',
-  vit: 'animate-text-glitch',
-  end: 'animate-text-glitch-alt',
-};
 
 export function StatBar({ stat, value, points, label, icon }: StatBarProps) {
   const colors = statColorClasses[stat];
