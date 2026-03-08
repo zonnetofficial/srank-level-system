@@ -51,7 +51,14 @@ const DailyQuest = () => {
       {!restDay && !hasQuest && (
         <div className="animate-fade-in">
           <div className="rpg-panel-glow text-center py-8 mb-5">
-            <h2 className="font-display text-sm font-bold uppercase tracking-[0.3em] mb-2 text-primary text-glow-primary">Quest Info</h2>
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <div className="border border-primary/60 rounded-sm h-8 w-8 flex items-center justify-center">
+                <span className="font-display text-sm font-bold text-primary text-glow-primary">!</span>
+              </div>
+              <div className="border border-primary/60 rounded-sm h-8 px-4 flex items-center justify-center">
+                <h2 className="font-display text-sm font-bold uppercase tracking-[0.3em] text-primary text-glow-primary">Quest Info</h2>
+              </div>
+            </div>
             <p className="text-sm text-foreground/80 font-body italic mb-4">(Daily Quest: Strength Training has arrived!)</p>
             <h3 className="font-display text-sm font-bold uppercase tracking-[0.3em] text-primary text-glow-primary">Goal</h3>
           </div>
