@@ -212,9 +212,9 @@
     opacity: 0;
     mix-blend-mode: screen;
     animation: 
-      glitch-horizontal 12s ease-in-out infinite,
-      glitch-chromatic 18s ease-in-out infinite 3s,
-      glitch-scanline-tear 15s ease-in-out infinite 7s;
+      glitch-horizontal 8s ease-in-out infinite,
+      glitch-chromatic 11s ease-in-out infinite 2s,
+      glitch-scanline-tear 9s ease-in-out infinite 5s;
   }
 
   .hud-glitch::after {
