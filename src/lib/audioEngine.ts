@@ -1062,7 +1062,7 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
       // ── Per-step instruments ──
       for (let step = 0; step < 16; step++) {
         const stepTime = barStart + step * sixteenthDur;
-        const patIdx = (bar % 2) * 16 + step;
+        const patIdx = ((bar * 16) + step) % drumPattern.length;
         const [kick, snare, hat, openHat] = drumPattern[patIdx];
 
         // Drums
@@ -1072,7 +1072,8 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
         if (openHat > 0) kit.hat(ctx, stepTime, openHat, true, outputGain);
 
         // Bass — darktrap gets very long sustained notes
-        if (config.bassPattern[patIdx]) {
+        const bassPatIdx = ((bar * 16) + step) % config.bassPattern.length;
+        if (config.bassPattern[bassPatIdx]) {
           const bassMidi = rootMidi + config.bassOctave * 12;
           const bassDur = config.genre === 'darktrap' ? barDur * 1.5
             : config.genre === 'ambient' ? barDur
@@ -1082,7 +1083,8 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
         }
 
         // FM Keys (stabs/chords) — darktrap uses very dark, soft keys
-        if (config.keyPattern[patIdx]) {
+        const keyPatIdx = ((bar * 16) + step) % config.keyPattern.length;
+        if (config.keyPattern[keyPatIdx]) {
           const brightness = config.genre === 'darktrap' ? 0.3
             : config.genre === 'house' ? 1.5
             : config.genre === 'trap' ? 0.8 : 0.4;
@@ -1093,7 +1095,8 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
         }
 
         // Pluck arpeggios — darktrap sends more to delay for ethereal feel
-        if (config.arpPattern[patIdx]) {
+        const arpPatIdx = ((bar * 16) + step) % config.arpPattern.length;
+        if (config.arpPattern[arpPatIdx]) {
           const arpNote = chord[step % chord.length] + 12;
           schedulePluck(ctx, stepTime, arpNote, sixteenthDur * 3, outputGain);
           schedulePluck(ctx, stepTime, arpNote, sixteenthDur * 3, delaySendGain);
