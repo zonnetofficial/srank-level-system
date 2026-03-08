@@ -32,7 +32,7 @@ export function StatBar({ stat, value, points, label, icon }: StatBarProps) {
 
   return (
     <div className="flex items-center gap-3 group">
-      <div className="flex items-center justify-center w-8 h-8 text-lg">
+      <div className="flex items-center justify-center w-8 h-8 text-lg transition-transform duration-200 group-hover:scale-125">
         {icon}
       </div>
       <div className="flex-1 min-w-0">
@@ -46,7 +46,7 @@ export function StatBar({ stat, value, points, label, icon }: StatBarProps) {
         </div>
         <div className="stat-bar-track h-1.5">
           <div
-            className={`stat-bar-fill ${colors.bar}`}
+            className={`stat-bar-fill ${colors.bar} animate-bar-fill`}
             style={{ width: `${pct}%` }}
           />
         </div>
