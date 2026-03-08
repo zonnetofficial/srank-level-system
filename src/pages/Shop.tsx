@@ -144,12 +144,14 @@ const Shop = () => {
           listings={shop.listings}
           getItemById={shop.getItemById}
           tpBalance={shop.tpBalance}
+          dpBalance={shop.dpBalance}
           buying={buying}
           onBuy={async (listing) => {
             setBuying(true);
             await shop.buyListing(listing);
             setBuying(false);
           }}
+          onSellDP={(amount) => shop.sellDP(amount)}
         />
       )}
 
