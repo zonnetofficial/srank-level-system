@@ -179,7 +179,7 @@ const DailyQuest = () => {
       {todayQuest?.status === 'completed' && (
         <div className="text-center">
           <div className="rpg-panel-glow py-10 animate-scale-up">
-            <div className="text-6xl mb-4 animate-icon-bounce delay-200">🏆</div>
+            <div className="text-6xl mb-4 animate-slide-nudge delay-200">🏆</div>
             <h2 className="font-display text-2xl font-bold text-accent text-glow-accent mb-2 animate-glitch-in delay-300">
               ¡Misión Completada!
             </h2>

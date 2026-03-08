@@ -152,7 +152,7 @@ const Index = () => {
           className="hud-nav-btn py-4 col-span-2 animate-scale-up delay-800"
           style={{ borderColor: 'hsl(45 100% 60% / 0.3)' }}
         >
-          <span className="text-2xl animate-icon-bounce" style={{ animationDelay: '1100ms' }}>👑</span>
+          <span className="text-2xl animate-slide-nudge" style={{ animationDelay: '1100ms' }}>👑</span>
           <span className="font-display text-[10px] uppercase tracking-[0.15em] text-accent animate-text-glitch-heavy" style={{ animationDelay: '8s' }}>
             Ruta del Monarca
           </span>

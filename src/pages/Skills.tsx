@@ -311,7 +311,7 @@ const Skills = () => {
             <div key={key} className={`rpg-panel ${glowClass} animate-slide-up`} style={{ animationDelay: `${200 + i * 120}ms` }}>
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-xl animate-icon-bounce" style={{ animationDelay: `${400 + i * 120}ms` }}>{STAT_ICONS[key]}</span>
+                  <span className="text-xl animate-slide-nudge" style={{ animationDelay: `${400 + i * 120}ms` }}>{STAT_ICONS[key]}</span>
                   <h3 className={`font-display text-sm uppercase tracking-wider text-stat-${key}`}>
                     {STAT_LABELS[key]}
                   </h3>
