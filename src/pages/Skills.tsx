@@ -35,7 +35,6 @@ const Skills = () => {
   const [taskDialogStat, setTaskDialogStat] = useState<StatKey | null>(null);
   const [taskDialogTask, setTaskDialogTask] = useState<SkillTask | null>(null);
 
-  // Show skill intro first, then launch the actual INT test
   const handleShowIntSkillIntro = () => {
     setIntSkillIntro(true);
   };
@@ -63,7 +62,6 @@ const Skills = () => {
       const result = evaluateTest(testQuestions, newAnswers);
       setTestResult(result);
 
-      // Collect correctly answered question IDs
       const newCorrect: string[] = [];
       for (let i = 0; i < testQuestions.length; i++) {
         if (newAnswers[i] === testQuestions[i].correctIndex) {
@@ -96,16 +94,12 @@ const Skills = () => {
 
   const canDoAnotherTest = () => {
     if (!testResult) return false;
-    // Max 6 tests: 5 perfects + 1 superior
     if (intTestsToday >= 6) return false;
-    // Can only continue if perfect and under 5 perfects
     if (testResult.perfect && perfectsToday < 5) return true;
-    // 5th perfect unlocks 1 superior test (6th total)
     if (testResult.perfect && perfectsToday === 5 && intTestsToday < 6) return true;
     return false;
   };
 
-  // Skill task handling
   const handleStartSkill = (key: StatKey) => {
     if (key === 'int') {
       handleShowIntSkillIntro();
@@ -114,7 +108,6 @@ const Skills = () => {
     const titleIdx = getTitleIndex(key, state.statPoints[key]);
     const tasks = getTasksForStat(key, titleIdx);
     if (tasks.length === 0) return;
-    // Deterministic daily task: seed from date + stat key
     const dateStr = new Date().toISOString().slice(0, 10);
     const seed = Array.from(dateStr + key).reduce((acc, c) => acc + c.charCodeAt(0), 0);
     const task = tasks[seed % tasks.length];
@@ -153,11 +146,11 @@ const Skills = () => {
         </DialogHeader>
 
         {testResult ? (
-          <div className="text-center py-6 space-y-4">
-            <div className="text-5xl mb-2">
+          <div className="text-center py-6 space-y-4 animate-scale-up">
+            <div className="text-5xl mb-2 animate-icon-bounce">
               {testResult.perfect ? '🌟' : testResult.passed ? '✅' : '❌'}
             </div>
-            <h2 className="font-display text-lg font-bold text-foreground">
+            <h2 className="font-display text-lg font-bold text-foreground animate-glitch-in delay-200">
               {testResult.perfect ? '¡Perfecto!' : testResult.passed ? 'Test Aprobado' : 'Test Reprobado'}
             </h2>
             <p className="text-sm text-muted-foreground">
@@ -174,14 +167,13 @@ const Skills = () => {
               </p>
             )}
 
-            {/* Retroalimentación de errores */}
             {(() => {
               const wrongIndices = testQuestions
                 .map((q, i) => (testAnswers[i] !== q.correctIndex ? i : -1))
                 .filter(i => i >= 0);
               if (wrongIndices.length === 0) return null;
               return (
-                <div className="text-left rpg-panel space-y-2 mt-2">
+                <div className="text-left rpg-panel space-y-2 mt-2 animate-slide-up delay-300">
                   <p className="text-xs font-display text-primary uppercase tracking-wider mb-2">
                     📝 Retroalimentación
                   </p>
@@ -222,7 +214,7 @@ const Skills = () => {
             </div>
           </div>
         ) : showIntro && testTheme ? (
-          <div className="space-y-4 py-2">
+          <div className="space-y-4 py-2 animate-fade-in">
             <h3 className="font-display text-sm text-primary uppercase tracking-wider text-center">
               📖 {testTheme.name}
             </h3>
@@ -242,7 +234,7 @@ const Skills = () => {
             </button>
           </div>
         ) : testQuestions[currentQ] ? (
-          <div className="space-y-5 py-2">
+          <div className="space-y-5 py-2 animate-slide-up">
             <div className="flex justify-between items-center">
               <span className="text-xs font-display text-muted-foreground uppercase tracking-wider">
                 Pregunta {currentQ + 1} de {testQuestions.length}
@@ -265,7 +257,8 @@ const Skills = () => {
                 <button
                   key={i}
                   onClick={() => handleAnswer(i)}
-                  className="w-full text-left py-3 px-4 rounded-lg bg-secondary text-secondary-foreground font-body text-sm hover:bg-primary/20 hover:border-primary/40 border border-border transition-colors"
+                  className="w-full text-left py-3 px-4 rounded-lg bg-secondary text-secondary-foreground font-body text-sm hover:bg-primary/20 hover:border-primary/40 border border-border transition-colors animate-slide-up"
+                  style={{ animationDelay: `${i * 80}ms` }}
                 >
                   {opt}
                 </button>
@@ -289,28 +282,36 @@ const Skills = () => {
     />
   );
 
+  const availableSkills = statKeys.filter(key => isSkillAvailable(key));
+
   return (
     <VictorianFrame>
       <button
         onClick={() => navigate('/')}
-        className="text-muted-foreground hover:text-foreground text-xs font-display uppercase tracking-wider mb-4 flex items-center gap-1 transition-colors"
+        className="text-muted-foreground hover:text-foreground text-xs font-display uppercase tracking-wider mb-4 flex items-center gap-1 transition-colors animate-slide-down"
       >
         ← Volver
       </button>
-      <h1 className="font-display text-xl font-bold text-center text-primary text-glow-primary mb-6">
+      <h1 className="font-display text-xl font-bold text-center text-primary text-glow-primary mb-6 animate-glitch-in delay-100">
         ✨ Skills
       </h1>
 
       <div className="space-y-4">
-        {statKeys.filter(key => isSkillAvailable(key)).map(key => {
+        {availableSkills.length === 0 && (
+          <div className="rpg-panel text-center py-8 animate-fade-in">
+            <div className="text-4xl mb-3">🌙</div>
+            <p className="text-sm text-muted-foreground font-display">No hay tareas disponibles hoy</p>
+          </div>
+        )}
+        {availableSkills.map((key, i) => {
           const glowClass = `glow-${key}`;
           const currentTitle = getSkillTitle(key, state.statPoints[key]);
 
           return (
-            <div key={key} className={`rpg-panel ${glowClass}`}>
+            <div key={key} className={`rpg-panel ${glowClass} animate-slide-up`} style={{ animationDelay: `${200 + i * 120}ms` }}>
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-xl">{STAT_ICONS[key]}</span>
+                  <span className="text-xl animate-icon-bounce" style={{ animationDelay: `${400 + i * 120}ms` }}>{STAT_ICONS[key]}</span>
                   <h3 className={`font-display text-sm uppercase tracking-wider text-stat-${key}`}>
                     {STAT_LABELS[key]}
                   </h3>
@@ -346,7 +347,7 @@ const Skills = () => {
             </DialogTitle>
           </DialogHeader>
           <div className="px-6 py-6 space-y-5">
-            <div className="rpg-panel space-y-3">
+            <div className="rpg-panel space-y-3 animate-slide-up">
               <div className="flex items-center gap-2 mb-1">
                 <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                 <span className="text-[10px] font-display text-primary uppercase tracking-[0.2em]">
@@ -361,7 +362,7 @@ const Skills = () => {
               </p>
             </div>
 
-            <div className="rpg-panel bg-primary/5 border-primary/20">
+            <div className="rpg-panel bg-primary/5 border-primary/20 animate-slide-up delay-200">
               <p className="text-xs text-muted-foreground leading-relaxed">
                 <span className="text-primary font-display font-bold">📋 Instrucciones:</span>{' '}
                 Primero leerás un texto introductorio. Después responderás entre 15 y 20 preguntas de opción múltiple. 
@@ -371,7 +372,7 @@ const Skills = () => {
 
             <button
               onClick={handleStartInt}
-              className="w-full py-3.5 rounded-lg bg-primary text-primary-foreground font-display text-sm uppercase tracking-[0.2em] glow-primary hover:opacity-90 transition-all"
+              className="w-full py-3.5 rounded-lg bg-primary text-primary-foreground font-display text-sm uppercase tracking-[0.2em] glow-primary hover:opacity-90 transition-all animate-scale-up delay-300"
             >
               ▶ Iniciar Test
             </button>

@@ -36,7 +36,7 @@ const Index = () => {
   return (
     <VictorianFrame>
       {/* Header bar */}
-      <div className="flex justify-between items-center mb-3">
+      <div className="flex justify-between items-center mb-3 animate-slide-down">
         <div className="flex items-center gap-2">
           <div className="hud-status-dot bg-stat-agi" />
           <span className="hud-label">Online</span>
@@ -53,7 +53,7 @@ const Index = () => {
       {/* Time warning */}
       {timeWarning && (
         <div
-          className="mb-4 p-3 bg-destructive/10 border border-destructive/30 text-destructive text-sm font-body cursor-pointer"
+          className="mb-4 p-3 bg-destructive/10 border border-destructive/30 text-destructive text-sm font-body cursor-pointer animate-glitch-in"
           onClick={dismissTimeWarning}
           style={{ clipPath: 'polygon(0 4px, 4px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px))' }}
         >
@@ -62,7 +62,7 @@ const Index = () => {
       )}
 
       {/* Time display */}
-      <div className="text-center mb-4">
+      <div className="text-center mb-4 animate-slide-up delay-100">
         <div className="hud-label">
           {currentTime.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
         </div>
@@ -72,10 +72,12 @@ const Index = () => {
       </div>
 
       {/* Level & XP */}
-      <XPBar xp={state.xp} xpToNext={state.xpToNext} level={state.level} />
+      <div className="animate-scale-up delay-200">
+        <XPBar xp={state.xp} xpToNext={state.xpToNext} level={state.level} />
+      </div>
 
       {/* Class */}
-      <div className="mt-4 text-center">
+      <div className="mt-4 text-center animate-slide-up delay-300">
         <div className="hud-label">Clase</div>
         <div className="text-xl font-display font-bold text-accent text-glow-accent mt-1">
           {currentClass.icon} {currentClass.name}
@@ -87,7 +89,7 @@ const Index = () => {
             </div>
             <div className="stat-bar-track h-1.5 mt-1 max-w-48 mx-auto">
               <div
-                className="stat-bar-fill bg-accent/60"
+                className="stat-bar-fill bg-accent/60 animate-bar-fill"
                 style={{
                   width: `${Math.min((state.level / nextClass.requiredLevel) * 100, 100)}%`,
                 }}
@@ -97,10 +99,10 @@ const Index = () => {
         )}
       </div>
 
-      <div className="hud-divider" />
+      <div className="hud-divider animate-hud-boot delay-400" />
 
       {/* Stats */}
-      <div className="rpg-panel space-y-3">
+      <div className="rpg-panel space-y-3 animate-slide-up delay-400">
         <div className="flex items-center justify-between mb-2">
           <h2 className="hud-label">
             Estadísticas
@@ -109,68 +111,47 @@ const Index = () => {
             Nv.{String(state.level).padStart(2, '0')}
           </span>
         </div>
-        {statKeys.map(key => (
-          <StatBar
-            key={key}
-            stat={key}
-            value={state.stats[key]}
-            points={state.statPoints[key]}
-            label={STAT_LABELS[key]}
-            icon={STAT_ICONS[key]}
-          />
+        {statKeys.map((key, i) => (
+          <div key={key} className="animate-slide-up" style={{ animationDelay: `${500 + i * 80}ms` }}>
+            <StatBar
+              stat={key}
+              value={state.stats[key]}
+              points={state.statPoints[key]}
+              label={STAT_LABELS[key]}
+              icon={STAT_ICONS[key]}
+            />
+          </div>
         ))}
       </div>
 
-      <div className="hud-divider" />
+      <div className="hud-divider animate-hud-boot delay-700" />
 
       {/* Navigation Cards */}
       <div className="grid grid-cols-2 gap-2.5">
-        <button
-          onClick={() => navigate('/quest')}
-          className={`hud-nav-btn py-5 ${todayQuest?.status === 'completed' ? '' : 'animate-pulse-glow'}`}
-        >
-          <span className="text-2xl">{restDay ? '💤' : '⚔️'}</span>
-          <span className="font-display text-[10px] uppercase tracking-[0.15em] text-primary">
-            {todayQuest?.status === 'completed'
-              ? '✅ Completada'
-              : restDay
-              ? 'Día de Descanso'
-              : 'Daily Quest'}
-          </span>
-        </button>
-        <button
-          onClick={() => navigate('/skills')}
-          className="hud-nav-btn py-5"
-        >
-          <span className="text-2xl">✨</span>
-          <span className="font-display text-[10px] uppercase tracking-[0.15em] text-foreground">
-            Skills
-          </span>
-        </button>
-        <button
-          onClick={() => navigate('/titles')}
-          className="hud-nav-btn py-5"
-        >
-          <span className="text-2xl">🏷️</span>
-          <span className="font-display text-[10px] uppercase tracking-[0.15em] text-foreground">
-            Títulos
-          </span>
-        </button>
-        <button
-          onClick={() => navigate('/history')}
-          className="hud-nav-btn py-5"
-        >
-          <span className="text-2xl">📜</span>
-          <span className="font-display text-[10px] uppercase tracking-[0.15em] text-foreground">
-            Historial
-          </span>
-        </button>
+        {[
+          { path: '/quest', icon: restDay ? '💤' : '⚔️', label: todayQuest?.status === 'completed' ? '✅ Completada' : restDay ? 'Día de Descanso' : 'Daily Quest', glow: todayQuest?.status !== 'completed', primary: true },
+          { path: '/skills', icon: '✨', label: 'Skills' },
+          { path: '/titles', icon: '🏷️', label: 'Títulos' },
+          { path: '/history', icon: '📜', label: 'Historial' },
+        ].map((item, i) => (
+          <button
+            key={item.path}
+            onClick={() => navigate(item.path)}
+            className={`hud-nav-btn py-5 animate-scale-up ${item.glow ? 'animate-pulse-glow' : ''}`}
+            style={{ animationDelay: `${700 + i * 100}ms` }}
+          >
+            <span className="text-2xl animate-icon-bounce" style={{ animationDelay: `${900 + i * 100}ms` }}>{item.icon}</span>
+            <span className={`font-display text-[10px] uppercase tracking-[0.15em] ${item.primary ? 'text-primary' : 'text-foreground'}`}>
+              {item.label}
+            </span>
+          </button>
+        ))}
         <button
           onClick={() => navigate('/monarch')}
-          className="hud-nav-btn py-4 col-span-2"
+          className="hud-nav-btn py-4 col-span-2 animate-scale-up delay-800"
           style={{ borderColor: 'hsl(45 100% 60% / 0.3)' }}
         >
-          <span className="text-2xl">👑</span>
+          <span className="text-2xl animate-icon-bounce" style={{ animationDelay: '1100ms' }}>👑</span>
           <span className="font-display text-[10px] uppercase tracking-[0.15em] text-accent">
             Ruta del Monarca
           </span>
@@ -178,20 +159,20 @@ const Index = () => {
       </div>
 
       {/* Streak counters */}
-      <div className="mt-4 rpg-panel">
+      <div className="mt-4 rpg-panel animate-slide-up" style={{ animationDelay: '900ms' }}>
         <div className="flex justify-around text-center">
           <div>
-            <div className="hud-data text-2xl font-bold text-primary text-glow-primary">{String(state.currentStreak).padStart(2, '0')}</div>
+            <div className="hud-data text-2xl font-bold text-primary text-glow-primary animate-number-pop" style={{ animationDelay: '1000ms' }}>{String(state.currentStreak).padStart(2, '0')}</div>
             <div className="hud-label mt-0.5">Racha</div>
           </div>
           <div className="w-px bg-border/30 self-stretch" />
           <div>
-            <div className="hud-data text-2xl font-bold text-accent text-glow-accent">{String(state.totalCompleted).padStart(3, '0')}</div>
+            <div className="hud-data text-2xl font-bold text-accent text-glow-accent animate-number-pop" style={{ animationDelay: '1100ms' }}>{String(state.totalCompleted).padStart(3, '0')}</div>
             <div className="hud-label mt-0.5">Completadas</div>
           </div>
           <div className="w-px bg-border/30 self-stretch" />
           <div>
-            <div className="hud-data text-2xl font-bold text-foreground">{String(state.personalRecords.longestStreak).padStart(2, '0')}</div>
+            <div className="hud-data text-2xl font-bold text-foreground animate-number-pop" style={{ animationDelay: '1200ms' }}>{String(state.personalRecords.longestStreak).padStart(2, '0')}</div>
             <div className="hud-label mt-0.5">Mejor Racha</div>
           </div>
         </div>
