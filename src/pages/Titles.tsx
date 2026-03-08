@@ -45,7 +45,7 @@ const Titles = () => {
       >
         ← Volver
       </button>
-      <h1 className="font-display text-xl font-bold text-center text-primary text-glow-primary mb-6 animate-glitch-in delay-100">
+      <h1 className="font-display text-xl font-bold text-center text-primary text-glow-primary mb-6 animate-glitch-in animate-text-glitch-combo delay-100">
         🏷️ Títulos
       </h1>
 

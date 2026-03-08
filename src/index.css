@@ -616,73 +616,81 @@
 }
 
 /* ═══════════════════════════════════════════════════
-   TEXT GLITCH VARIATIONS
+   TEXT GLITCH: Color Slide
+   RGB color shift sliding across text
    ═══════════════════════════════════════════════════ */
-@keyframes text-glitch-1 {
-  0%, 92%, 94.5%, 100% {
+@keyframes text-color-slide {
+  0%, 90%, 95%, 100% {
     text-shadow: none;
-    transform: none;
+    filter: none;
+  }
+  91% {
+    text-shadow: -2px 0 hsl(0 100% 55% / 0.6), 2px 0 hsl(195 100% 55% / 0.6);
+    filter: hue-rotate(15deg);
   }
   93% {
-    text-shadow: -2px 0 hsl(0 100% 55% / 0.5), 2px 0 hsl(195 100% 55% / 0.5);
-    transform: translateX(2px) skewX(-1deg);
+    text-shadow: 2px 0 hsl(45 100% 60% / 0.5), -1px 0 hsl(195 100% 55% / 0.4);
+    filter: hue-rotate(-10deg);
   }
   94% {
-    text-shadow: 1px 0 hsl(195 100% 55% / 0.3), -1px 0 hsl(0 100% 55% / 0.3);
+    text-shadow: -1px 0 hsl(0 100% 55% / 0.3), 1px 0 hsl(150 85% 52% / 0.4);
+    filter: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   TEXT GLITCH: Flicker
+   Quick opacity flicker
+   ═══════════════════════════════════════════════════ */
+@keyframes text-flicker {
+  0%, 88%, 92%, 100% {
+    opacity: 1;
+  }
+  89% {
+    opacity: 0.4;
+  }
+  90% {
+    opacity: 1;
+  }
+  91% {
+    opacity: 0.6;
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   TEXT GLITCH: Slide-Return (quick nudge right)
+   Small fast displacement and snap back
+   ═══════════════════════════════════════════════════ */
+@keyframes text-slide-return {
+  0%, 93%, 96%, 100% {
+    transform: translateX(0);
+  }
+  94% {
+    transform: translateX(4px);
+  }
+  95% {
     transform: translateX(-1px);
   }
 }
 
-@keyframes text-glitch-2 {
-  0%, 88%, 91%, 100% {
-    text-shadow: none;
-    transform: none;
-    letter-spacing: inherit;
-  }
-  89% {
-    text-shadow: 0 2px hsl(195 100% 55% / 0.3), 0 -2px hsl(0 100% 55% / 0.2);
-    transform: translateY(1px);
-    letter-spacing: 0.15em;
-  }
-  90% {
-    text-shadow: 0 -1px hsl(45 100% 60% / 0.3);
-    transform: translateY(-1px);
-    letter-spacing: inherit;
-  }
+.animate-text-color-slide {
+  animation: text-color-slide 14s ease-in-out infinite;
 }
 
-@keyframes text-glitch-3 {
-  0%, 95%, 97.5%, 100% {
-    text-shadow: none;
-    transform: none;
-    opacity: 1;
-  }
-  96% {
-    opacity: 0.4;
-    text-shadow: 3px 0 hsl(195 100% 55% / 0.6), -3px 0 hsl(0 100% 55% / 0.4);
-    transform: translateX(-3px) skewX(2deg);
-  }
-  97% {
-    opacity: 0.7;
-    text-shadow: -1px 1px hsl(45 100% 60% / 0.4);
-    transform: translateX(1px) skewX(-0.5deg);
-  }
+.animate-text-flicker {
+  animation: text-flicker 18s ease-in-out infinite;
 }
 
-.animate-text-glitch {
-  animation: text-glitch-1 18s ease-in-out infinite;
+.animate-text-slide-return {
+  animation: text-slide-return 16s ease-in-out infinite;
 }
 
-.animate-text-glitch-alt {
-  animation: text-glitch-2 24s ease-in-out infinite;
-}
-
-.animate-text-glitch-heavy {
-  animation: text-glitch-3 30s ease-in-out infinite;
-}
-
-.animate-text-glitch-slow {
-  animation: text-glitch-1 28s ease-in-out infinite, text-glitch-2 36s ease-in-out infinite 8s;
+/* Combined text glitch: all three effects staggered */
+.animate-text-glitch-combo {
+  animation: 
+    text-color-slide 12s ease-in-out infinite,
+    text-flicker 20s ease-in-out infinite 4s,
+    text-slide-return 15s ease-in-out infinite 7s;
 }
 
 /* ═══════════════════════════════════════════════════

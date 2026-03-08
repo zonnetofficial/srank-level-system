@@ -12,7 +12,7 @@ export function XPBar({ xp, xpToNext, level }: XPBarProps) {
   return (
     <div className="rpg-panel-glow text-center py-5">
       <div className="hud-label mb-1">Player Level</div>
-      <div className="font-display text-5xl font-black text-primary text-glow-primary mb-3 animate-data-flicker">
+      <div className="font-display text-5xl font-black text-primary text-glow-primary mb-3 animate-text-glitch-combo">
         <SlotNumber value={String(level).padStart(2, '0')} delay={300} className="inline-flex" />
       </div>
       <div className="relative mx-2">
