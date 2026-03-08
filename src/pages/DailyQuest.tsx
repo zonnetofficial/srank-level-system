@@ -25,21 +25,12 @@ const DailyQuest = () => {
         ← Volver
       </button>
 
-      {/* Header */}
-      <div className="text-center mb-6">
-        <h1 className="font-display text-2xl font-bold text-primary text-glow-primary tracking-wider">
-          ⚔️ DAILY QUEST
-        </h1>
-        <div className="text-xs font-display text-muted-foreground uppercase tracking-wider mt-1">
-          {new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
+      {todayQuest?.status === 'pending' && (
+        <div className="mb-4 flex items-center justify-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+          <span className="text-[10px] font-display text-primary uppercase tracking-widest">En progreso</span>
         </div>
-        {todayQuest?.status === 'pending' && (
-          <div className="mt-2 flex items-center justify-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-            <span className="text-[10px] font-display text-primary uppercase tracking-widest">En progreso</span>
-          </div>
-        )}
-      </div>
+      )}
 
       {/* Rest Day */}
       {restDay && !hasQuest && (
