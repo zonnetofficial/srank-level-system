@@ -10,6 +10,7 @@ import Skills from "./pages/Skills";
 import Titles from "./pages/Titles";
 import History from "./pages/History";
 import Auth from "./pages/Auth";
+import MonarchMode from "./pages/MonarchMode";
 import NotFound from "./pages/NotFound";
 import PunishmentOverlay from "./components/PunishmentOverlay";
 import { useGameState } from "./hooks/useGameState";
