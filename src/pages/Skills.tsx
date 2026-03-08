@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import VictorianFrame from '@/components/VictorianFrame';
+import SkillTaskDialog from '@/components/SkillTaskDialog';
 import { useGameState } from '@/hooks/useGameState';
 import { STAT_LABELS, STAT_ICONS, StatKey, getSkillTitle } from '@/lib/gameData';
 import { getTasksForStat, getTitleIndex } from '@/lib/skillTasks';
@@ -127,6 +128,11 @@ const Skills = () => {
     setTaskDialogTask(null);
   };
 
+  const handleTaskClose = () => {
+    setTaskDialogStat(null);
+    setTaskDialogTask(null);
+  };
+
   // INT Test Dialog
   const intTestDialog = (
     <Dialog open={testActive} onOpenChange={(o) => { if (!o && !testResult && testAnswers.length === 0) handleCloseTest(); }}>
@@ -233,53 +239,14 @@ const Skills = () => {
     </Dialog>
   );
 
-  // Skill Task Dialog
   const skillTaskDialog = (
-    <Dialog open={!!taskDialogStat} onOpenChange={(o) => { if (!o) { setTaskDialogStat(null); setTaskDialogTask(null); } }}>
-      <DialogContent className="bg-background border-border max-w-sm">
-        <DialogHeader>
-          <DialogTitle className="font-display text-center">
-            {taskDialogStat && (
-              <span className={`text-stat-${taskDialogStat}`}>
-                {STAT_ICONS[taskDialogStat]} {STAT_LABELS[taskDialogStat]}
-              </span>
-            )}
-          </DialogTitle>
-        </DialogHeader>
-
-        {taskDialogTask && (
-          <div className="space-y-6 py-4">
-            <div className="rpg-panel text-center">
-              <h3 className="font-display text-base font-bold text-foreground mb-2">
-                {taskDialogTask.name}
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                {taskDialogTask.description}
-              </p>
-            </div>
-
-            <p className="text-xs text-center text-muted-foreground font-display">
-              ¿Completaste esta tarea?
-            </p>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => handleTaskResult(true)}
-                className="flex-1 py-3 rounded-lg bg-primary text-primary-foreground font-display text-sm uppercase tracking-wider hover:bg-primary/80 transition-colors"
-              >
-                ✅ Sí
-              </button>
-              <button
-                onClick={() => handleTaskResult(false)}
-                className="flex-1 py-3 rounded-lg bg-destructive text-destructive-foreground font-display text-sm uppercase tracking-wider hover:bg-destructive/80 transition-colors"
-              >
-                ❌ No
-              </button>
-            </div>
-          </div>
-        )}
-      </DialogContent>
-    </Dialog>
+    <SkillTaskDialog
+      stat={taskDialogStat}
+      task={taskDialogTask}
+      open={!!taskDialogStat}
+      onResult={handleTaskResult}
+      onClose={handleTaskClose}
+    />
   );
 
   return (
