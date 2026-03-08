@@ -63,8 +63,9 @@ export default function DungeonRoom({ room, roomNumber, totalRooms, charClass, e
           </p>
 
           <div className="flex justify-center gap-4 text-[10px] font-display uppercase tracking-wider">
-            <span className="text-destructive">Daño: {room.damage} HP</span>
+            <span className="text-destructive">Daño: {effectiveDamage} HP{damageReduction > 0 ? ` (-${damageReduction}%)` : ''}</span>
             <span className="text-accent">XP: +{room.xpReward}</span>
+            {extraTime > 0 && <span className="text-primary">+{extraTime}s</span>}
           </div>
 
           <button
