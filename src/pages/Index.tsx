@@ -18,6 +18,7 @@ const statKeys: StatKey[] = ['int', 'str', 'agi', 'vit', 'end'];
 
 const Index = () => {
   const { state, todayQuest, restDay, timeWarning, dismissTimeWarning } = useGameState();
+  const { signOut } = useAuth();
   const navigate = useNavigate();
   const [currentTime, setCurrentTime] = useState(new Date());
 
