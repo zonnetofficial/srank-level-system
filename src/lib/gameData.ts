@@ -47,6 +47,7 @@ export interface GameState {
   xpToNext: number;
   stats: PlayerStats;
   statPoints: PlayerStats; // accumulated points for skill titles
+  statBank: PlayerStats; // unassigned stat points waiting for manual assignment
   questLog: DailyQuestLog[];
   classTitles: ClassTitle[];
   lastSavedTime: string; // ISO timestamp
