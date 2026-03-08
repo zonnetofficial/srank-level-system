@@ -242,19 +242,14 @@ export function useGameState() {
       const newStats = { ...prev.stats };
       const newPoints = { ...prev.statPoints };
 
-      if (newCompleted % 3 === 0) { newStats.end++; newPoints.end++; }
-      if (newCompleted % 4 === 0) { newStats.agi++; newPoints.agi++; }
-      if (newStreak % 5 === 0) { newStats.int++; newPoints.int++; }
-
-      const nonRest = [...prev.questLog.filter(q => q.status !== 'rest'), { date: today, status: 'completed' as QuestStatus }];
-      const last7 = nonRest.slice(-7);
-      if (last7.length >= 7) {
-        const fails = last7.filter(q => q.status === 'failed').length;
-        if (fails <= 2 && newCompleted % 7 === 0) {
-          newStats.str++; newPoints.str++;
-          newStats.vit++; newPoints.vit++;
-        }
-      }
+      // Physical stats grow faster (real body progression)
+      if (newCompleted % 3 === 0) { newStats.str++; newPoints.str++; }
+      if (newCompleted % 3 === 0) { newStats.agi++; newPoints.agi++; }
+      // Endurance/vitality grow moderately
+      if (newCompleted % 4 === 0) { newStats.end++; newPoints.end++; }
+      if (newCompleted % 5 === 0) { newStats.vit++; newPoints.vit++; }
+      // INT grows slowest from quests (boosted by skill tasks)
+      if (newStreak % 7 === 0) { newStats.int++; newPoints.int++; }
 
       const newExercises = getNextExercises(prev.exerciseProgression);
       const newRunProg = prev.runMode === 'time'
@@ -509,10 +504,11 @@ export function useGameState() {
           s.xpToNext = xpForLevel(s.level);
         }
 
-        if (s.totalCompleted % 3 === 0) { s.stats.end++; s.statPoints.end++; }
-        if (s.totalCompleted % 4 === 0) { s.stats.agi++; s.statPoints.agi++; }
-        if (s.currentStreak % 5 === 0) { s.stats.int++; s.statPoints.int++; }
-        if (s.totalCompleted % 7 === 0) { s.stats.str++; s.statPoints.str++; s.stats.vit++; s.statPoints.vit++; }
+        if (s.totalCompleted % 3 === 0) { s.stats.str++; s.statPoints.str++; }
+        if (s.totalCompleted % 3 === 0) { s.stats.agi++; s.statPoints.agi++; }
+        if (s.totalCompleted % 4 === 0) { s.stats.end++; s.statPoints.end++; }
+        if (s.totalCompleted % 5 === 0) { s.stats.vit++; s.statPoints.vit++; }
+        if (s.currentStreak % 7 === 0) { s.stats.int++; s.statPoints.int++; }
       }
 
       s.classTitles = s.classTitles || prev.classTitles;

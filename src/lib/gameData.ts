@@ -258,29 +258,25 @@ export function calculateStatGains(questLog: DailyQuestLog[]): Partial<PlayerSta
   const completed = questLog.filter(q => q.status === 'completed');
   const nonRest = questLog.filter(q => q.status !== 'rest');
 
-  // INT: +1 per 5 consecutive completed (no rests counted)
+  // STR: +1 per 3 completed (physical — grows fast)
+  if (completed.length > 0 && completed.length % 3 === 0) gains.str = 1;
+
+  // AGI: +1 per 3 completed (physical — grows fast)
+  if (completed.length > 0 && completed.length % 3 === 0) gains.agi = 1;
+
+  // END: +1 per 4 completed (moderate)
+  if (completed.length > 0 && completed.length % 4 === 0) gains.end = 1;
+
+  // VIT: +1 per 5 completed (moderate, also boosted by rest days)
+  if (completed.length > 0 && completed.length % 5 === 0) gains.vit = 1;
+
+  // INT: +1 per 7 consecutive completed (slowest, boosted by skill tasks)
   let streak = 0;
   for (let i = nonRest.length - 1; i >= 0; i--) {
     if (nonRest[i].status === 'completed') streak++;
     else break;
   }
-  if (streak > 0 && streak % 5 === 0) gains.int = 1;
-
-  // END: +1 per 3 completed
-  if (completed.length > 0 && completed.length % 3 === 0) gains.end = 1;
-
-  // AGI: +1 per 4 completed
-  if (completed.length > 0 && completed.length % 4 === 0) gains.agi = 1;
-
-  // STR & VIT: +1 per 7 quests with max 2 fails
-  const last7 = nonRest.slice(-7);
-  if (last7.length >= 7) {
-    const fails = last7.filter(q => q.status === 'failed').length;
-    if (fails <= 2) {
-      gains.str = 1;
-      gains.vit = 1;
-    }
-  }
+  if (streak > 0 && streak % 7 === 0) gains.int = 1;
 
   return gains;
 }
