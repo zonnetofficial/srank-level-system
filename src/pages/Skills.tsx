@@ -20,6 +20,7 @@ const Skills = () => {
   const navigate = useNavigate();
 
   // INT test state
+  const [intSkillIntro, setIntSkillIntro] = useState(false);
   const [testActive, setTestActive] = useState(false);
   const [testTheme, setTestTheme] = useState<TestTheme | null>(null);
   const [testQuestions, setTestQuestions] = useState<TestQuestion[]>([]);
@@ -34,7 +35,13 @@ const Skills = () => {
   const [taskDialogStat, setTaskDialogStat] = useState<StatKey | null>(null);
   const [taskDialogTask, setTaskDialogTask] = useState<{ name: string; description: string } | null>(null);
 
+  // Show skill intro first, then launch the actual INT test
+  const handleShowIntSkillIntro = () => {
+    setIntSkillIntro(true);
+  };
+
   const handleStartInt = () => {
+    setIntSkillIntro(false);
     const tier = getTierFromPoints(state.statPoints.int);
     const answeredCorrectly: string[] = (state as any).answeredCorrectly || [];
     const { theme, questions } = getTestForTier(tier, answeredCorrectly);
