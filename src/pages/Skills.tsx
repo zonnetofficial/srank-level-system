@@ -15,6 +15,7 @@ const statKeys: StatKey[] = ['int', 'str', 'agi', 'vit', 'end'];
 
 const Skills = () => {
   const { state, completeSkillTask, completeIntTest, isSkillAvailable } = useGameState();
+  const navigate = useNavigate();
 
   // INT test state
   const [testActive, setTestActive] = useState(false);
