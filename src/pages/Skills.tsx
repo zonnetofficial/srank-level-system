@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useGameState } from '@/hooks/useGameState';
 import { STAT_LABELS, STAT_ICONS, StatKey, getSkillTitle } from '@/lib/gameData';
 import { getTasksForStat, getTitleIndex } from '@/lib/skillTasks';

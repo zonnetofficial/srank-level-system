@@ -1,4 +1,5 @@
 import { useGameState } from '@/hooks/useGameState';
+import { useNavigate } from 'react-router-dom';
 import {
   STAT_LABELS,
   STAT_ICONS,
