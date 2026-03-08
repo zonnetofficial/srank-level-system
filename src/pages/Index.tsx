@@ -17,7 +17,9 @@ import { LogOut } from 'lucide-react';
 const statKeys: StatKey[] = ['int', 'str', 'agi', 'vit', 'end'];
 
 const Index = () => {
-  const { state, todayQuest, restDay, timeWarning, dismissTimeWarning } = useGameState();
+  const { state, todayQuest, restDay, timeWarning, dismissTimeWarning, simulateDays, resetGame } = useGameState();
+  // DEV: expose simulate on window for screenshots
+  useEffect(() => { (window as any).__simulateDays = simulateDays; (window as any).__resetGame = resetGame; }, [simulateDays, resetGame]);
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const [currentTime, setCurrentTime] = useState(new Date());
