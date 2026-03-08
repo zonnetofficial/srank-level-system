@@ -35,7 +35,7 @@ const DailyQuest = () => {
       {/* Rest Day */}
       {restDay && (
         <div className="rpg-panel-glow text-center py-10 animate-scale-up">
-          <div className="text-6xl mb-4 animate-icon-bounce">💤</div>
+          <div className="text-6xl mb-4 animate-slide-nudge">💤</div>
           <h2 className="font-display text-xl font-bold text-accent text-glow-accent mb-2">Día de Descanso</h2>
           <p className="text-sm text-muted-foreground mb-2">Recovery Mission – Tu cuerpo se regenera</p>
           <p className="text-xs text-accent">+1 INT, +1 VIT registrados</p>
