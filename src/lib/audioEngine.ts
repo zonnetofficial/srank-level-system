@@ -539,6 +539,9 @@ export function playMusic(theme: MusicTheme) {
   delayFb.gain.setValueAtTime(0.25, ctx.currentTime);
   const delayOut = ctx.createGain();
   delayOut.gain.setValueAtTime(0.3, ctx.currentTime);
+  const delaySendGain = ctx.createGain();
+  delaySendGain.gain.setValueAtTime(1, ctx.currentTime);
+  delaySendGain.connect(delaySend);
   delaySend.connect(delayFb); delayFb.connect(delaySend);
   delaySend.connect(delayOut); delayOut.connect(musicGain!);
 
