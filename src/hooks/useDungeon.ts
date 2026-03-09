@@ -153,7 +153,7 @@ export function useDungeon(stats: PlayerStats, playerLevel: number) {
 
       const config = DUNGEON_RANKS[prev.currentRun.rank];
       const reduction = getCooldownReduction(playerLevel, config.recommendedLevel);
-      const cooldownMs = config.cooldownHours * 3600000 * reduction * 0.5;
+      const cooldownMs = config.cooldownHours * 3600000 * reduction * 0.15;
       const nextAvailable = new Date(Date.now() + cooldownMs).toISOString();
 
       return {
