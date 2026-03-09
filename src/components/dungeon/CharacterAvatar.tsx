@@ -51,14 +51,14 @@ export default function CharacterAvatar({ sprite, characterName, characterClass,
       )}
 
       {/* Character container with layers */}
-      <div className={`${s.container} relative flex items-center justify-center`}>
+      <div className={`${s.container} relative flex items-center justify-center overflow-visible`}>
         {/* Aura layer (behind everything) */}
         {auraImg && (
           <img
             src={auraImg}
             alt="Aura"
-            className="absolute inset-[-15%] w-[130%] h-[130%] object-contain animate-pulse pointer-events-none"
-            style={{ zIndex: 0, opacity: 0.6 }}
+            className="absolute w-full h-full object-contain animate-pulse pointer-events-none"
+            style={{ zIndex: 0, opacity: 0.4, scale: '1.4' }}
             draggable={false}
           />
         )}
@@ -68,8 +68,8 @@ export default function CharacterAvatar({ sprite, characterName, characterClass,
           <img
             src={frameImg}
             alt="Frame"
-            className="absolute inset-[-8%] w-[116%] h-[116%] object-contain pointer-events-none"
-            style={{ zIndex: 5, opacity: 0.85 }}
+            className="absolute w-full h-full object-contain pointer-events-none"
+            style={{ zIndex: 5, opacity: 0.9, scale: '1.12' }}
             draggable={false}
           />
         )}
@@ -87,41 +87,35 @@ export default function CharacterAvatar({ sprite, characterName, characterClass,
           <span className="text-5xl relative" style={{ zIndex: 1 }}>{sprite || '👤'}</span>
         )}
 
-        {/* Armor overlay */}
+        {/* Armor overlay — centered on torso */}
         {armorImg && (
           <img
             src={armorImg}
             alt="Armor"
-            className="absolute pointer-events-none"
-            style={{
-              ...LAYER_POSITIONS.armor,
-            }}
+            className="absolute pointer-events-none object-contain"
+            style={{ zIndex: 2, top: '10%', left: '10%', width: '80%', height: '65%' }}
             draggable={false}
           />
         )}
 
-        {/* Weapon overlay */}
+        {/* Weapon overlay — right side */}
         {weaponImg && (
           <img
             src={weaponImg}
             alt="Weapon"
-            className="absolute pointer-events-none"
-            style={{
-              ...LAYER_POSITIONS.weapon,
-            }}
+            className="absolute pointer-events-none object-contain"
+            style={{ zIndex: 3, bottom: '0%', right: '-20%', width: '50%', height: '75%', transform: 'rotate(-15deg)' }}
             draggable={false}
           />
         )}
 
-        {/* Accessory overlay */}
+        {/* Accessory overlay — top right */}
         {accessoryImg && (
           <img
             src={accessoryImg}
             alt="Accessory"
-            className="absolute pointer-events-none"
-            style={{
-              ...LAYER_POSITIONS.accessory,
-            }}
+            className="absolute pointer-events-none object-contain"
+            style={{ zIndex: 4, top: '2%', right: '2%', width: '28%', height: '28%' }}
             draggable={false}
           />
         )}
