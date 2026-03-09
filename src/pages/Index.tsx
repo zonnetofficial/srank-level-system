@@ -194,7 +194,8 @@ const Index = () => {
         ].map((item, i) => (
           <button
             key={item.path}
-            onClick={() => navigate(item.path)}
+            onClick={() => { navigate(item.path); sfxClick(); }}
+            onMouseEnter={() => sfxHover()}
             className={`hud-nav-btn py-5 animate-scale-up ${item.glow ? 'animate-pulse-glow' : ''}`}
             style={{ animationDelay: `${700 + i * 100}ms` }}
           >
