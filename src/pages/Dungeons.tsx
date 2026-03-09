@@ -25,6 +25,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import ItemIcon from '@/components/ItemIcon';
+import { CHARACTER_BASE_SPRITES } from '@/lib/characterAssets';
 
 const ranks: DungeonRank[] = ['E', 'D', 'C', 'B', 'A', 'S'];
 const RANK_ORDER: Record<string, number> = { E: 1, D: 2, C: 3, B: 4, A: 5, S: 6 };
@@ -318,7 +319,11 @@ export default function Dungeons() {
       {char && view !== 'create' && tab !== 'ranking' && (
         <div className="rpg-panel mb-4 animate-slide-up">
           <div className="flex items-center gap-3">
-            <span className="text-3xl">{char.sprite}</span>
+            {CHARACTER_BASE_SPRITES[char.className] ? (
+              <img src={CHARACTER_BASE_SPRITES[char.className]} alt={char.name} className="w-12 h-14 object-contain" draggable={false} />
+            ) : (
+              <span className="text-3xl">{char.sprite}</span>
+            )}
             <div className="flex-1 space-y-1">
               <div className="flex items-center justify-between">
                 <span className="font-display text-sm text-foreground">{char.name}</span>
@@ -424,7 +429,11 @@ export default function Dungeons() {
                   }`}>
                     {i + 1}
                   </div>
-                  <span className="text-xl">{entry.character_sprite || '👤'}</span>
+                  {entry.character_class && CHARACTER_BASE_SPRITES[entry.character_class] ? (
+                    <img src={CHARACTER_BASE_SPRITES[entry.character_class]} alt="" className="w-8 h-10 object-contain" draggable={false} />
+                  ) : (
+                    <span className="text-xl">{entry.character_sprite || '👤'}</span>
+                  )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="font-display text-xs text-foreground truncate">
