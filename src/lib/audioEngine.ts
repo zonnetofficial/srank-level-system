@@ -1788,6 +1788,16 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
             }
             const note = ghostMelody[keyHitCount % ghostMelody.length];
             scheduleFMKeys(ctx, stepTime, note, sixteenthDur * 6, 0.3, 0.5, outputGain);
+          } else if (config.genre === 'monarch') {
+            // Dark organ — ominous regal melody
+            const monarchMelody = [62,65,58,53,57,62,58,53];
+            let keyHitCount = 0;
+            const totalStep = (bar % 4) * 16 + step;
+            for (let s = 0; s < totalStep; s++) {
+              if (config.keyPattern[s % config.keyPattern.length]) keyHitCount++;
+            }
+            const note = monarchMelody[keyHitCount % monarchMelody.length];
+            scheduleDarkOrgan(ctx, stepTime, note, sixteenthDur * 8, 0.7, outputGain);
           } else {
             const brightness = config.genre === 'house' ? 1.5 : config.genre === 'trap' ? 0.8 : 0.4;
             const bellNote = chord[chord.length - 1] + 12;
@@ -1808,15 +1818,15 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
             const arpNote = counterMelody[arpHitCount % counterMelody.length];
             schedulePluck(ctx, stepTime, arpNote, sixteenthDur * 5, outputGain);
           } else if (config.genre === 'lofi') {
-            // Lo-fi pluck — mellow chord tones
             const arpNote = chord[step % chord.length] + 12;
             schedulePluck(ctx, stepTime, arpNote, sixteenthDur * 6, outputGain);
           } else if (config.genre === 'epic') {
-            // Choir swells on arp hits
             scheduleChoirPad(ctx, stepTime, chord.slice(0, 3), barDur * 2, config.padGain * 0.8, outputGain);
           } else if (config.genre === 'ghostly') {
-            // Haunting string swell
             scheduleHauntingStrings(ctx, stepTime, [chord[0], chord[1]], barDur, config.padGain * 0.6, outputGain);
+          } else if (config.genre === 'monarch') {
+            // Industrial texture hit
+            scheduleIndustrialHit(ctx, stepTime, barDur * 0.8, outputGain);
           } else {
             const arpNote = chord[step % chord.length] + 12;
             schedulePluck(ctx, stepTime, arpNote, sixteenthDur * 3, outputGain);
