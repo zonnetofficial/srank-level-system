@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { sfxClick, sfxHover, sfxSuccess, sfxError } from '@/lib/audioEngine';
 
 const statKeys: StatKey[] = ['int', 'str', 'agi', 'vit', 'end'];
 
