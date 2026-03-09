@@ -416,7 +416,8 @@ export default function Dungeons() {
               return (
                 <div
                   key={entry.id}
-                  className={`rpg-panel p-3 flex items-center gap-3 ${isMe ? 'border-primary/40' : ''}`}
+                  onClick={() => setProfileTarget(entry)}
+                  className={`rpg-panel p-3 flex items-center gap-3 cursor-pointer hover:border-primary/40 transition-all ${isMe ? 'border-primary/40' : ''}`}
                 >
                   <div className={`w-8 h-8 flex items-center justify-center rounded-full font-display text-sm ${
                     i === 0 ? 'bg-accent/20 text-accent' : i === 1 ? 'bg-muted text-foreground' : i === 2 ? 'bg-stat-end/20 text-stat-end' : 'bg-secondary text-muted-foreground'
