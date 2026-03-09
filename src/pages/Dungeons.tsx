@@ -160,9 +160,6 @@ export default function Dungeons() {
     setView('dungeon');
   };
 
-  const handleRoomComplete = (success: boolean) => {
-    completeRoom(success);
-  };
 
   const [roomDone, setRoomDone] = useState(false);
 
