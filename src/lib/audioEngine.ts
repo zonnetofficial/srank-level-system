@@ -453,28 +453,20 @@ function scheduleHouseBass(ctx: AudioContext, time: number, midi: number, durati
   sub.start(time); sub.stop(time + duration + 0.05);
 }
 
-// ─── INSTRUMENT: Dark Drone (for dungeon/ambient) ───
+// ─── INSTRUMENT: Dark Drone (optimized) ───
 function scheduleDrone(ctx: AudioContext, time: number, midi: number, duration: number, dest: GainNode) {
   const freq = NOTE(midi);
-  // Multiple detuned saws through heavy filtering
-  [-7, 0, 7, 12].forEach(det => {
+  // Reducido de 4 a 2 voces sin LFO
+  [0, 7].forEach(det => {
     const osc = ctx.createOscillator();
     const g = ctx.createGain();
     osc.type = 'sawtooth';
     osc.frequency.setValueAtTime(freq, time);
     osc.detune.setValueAtTime(det, time);
-    // Slow LFO
-    const lfo = ctx.createOscillator();
-    const lfoG = ctx.createGain();
-    lfo.type = 'sine';
-    lfo.frequency.setValueAtTime(0.1 + Math.random() * 0.2, time);
-    lfoG.gain.setValueAtTime(5, time);
-    lfo.connect(lfoG); lfoG.connect(osc.detune);
-    lfo.start(time); lfo.stop(time + duration + 0.1);
 
     g.gain.setValueAtTime(0.001, time);
-    g.gain.linearRampToValueAtTime(0.02, time + duration * 0.3);
-    g.gain.setValueAtTime(0.02, time + duration * 0.7);
+    g.gain.linearRampToValueAtTime(0.03, time + duration * 0.3);
+    g.gain.setValueAtTime(0.03, time + duration * 0.7);
     g.gain.linearRampToValueAtTime(0.001, time + duration);
     osc.connect(g); g.connect(dest);
     osc.start(time); osc.stop(time + duration + 0.1);
