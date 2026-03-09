@@ -300,77 +300,99 @@ function scheduleWarmPad(ctx: AudioContext, time: number, midiNotes: number[], d
   }
 }
 
-// ─── INSTRUMENT: FM Electric Piano / Keys ───
+// ─── INSTRUMENT: Dark Piano (inspired by "A 120" Gera MX) ───
 function scheduleFMKeys(ctx: AudioContext, time: number, midi: number, duration: number, brightness: number, velocity: number, dest: GainNode) {
   const freq = NOTE(midi);
-  // FM synthesis: carrier + modulator
-  const mod = ctx.createOscillator();
-  const modGain = ctx.createGain();
-  mod.type = 'sine';
-  mod.frequency.setValueAtTime(freq * 2, time); // 2:1 ratio (classic EP)
-  modGain.gain.setValueAtTime(freq * brightness * velocity, time);
-  modGain.gain.exponentialRampToValueAtTime(freq * 0.1, time + duration * 0.8);
-  mod.connect(modGain);
-
-  const carrier = ctx.createOscillator();
-  const carrierGain = ctx.createGain();
-  carrier.type = 'sine';
-  carrier.frequency.setValueAtTime(freq, time);
-  modGain.connect(carrier.frequency); // FM connection
-
-  // Sharp attack, natural decay
-  carrierGain.gain.setValueAtTime(0.001, time);
-  carrierGain.gain.linearRampToValueAtTime(0.12 * velocity, time + 0.005);
-  carrierGain.gain.exponentialRampToValueAtTime(0.05 * velocity, time + duration * 0.3);
-  carrierGain.gain.exponentialRampToValueAtTime(0.001, time + duration);
-
-  carrier.connect(carrierGain); carrierGain.connect(dest);
-  mod.start(time); carrier.start(time);
-  mod.stop(time + duration + 0.05); carrier.stop(time + duration + 0.05);
-
-  // Add a second harmonic for body
+  
+  // Layer 1: Main piano body (triangle + sine for mellow tone)
+  const osc1 = ctx.createOscillator();
+  const osc2 = ctx.createOscillator();
+  const g1 = ctx.createGain();
+  const g2 = ctx.createGain();
+  
+  osc1.type = 'triangle';
+  osc2.type = 'sine';
+  osc1.frequency.setValueAtTime(freq, time);
+  osc2.frequency.setValueAtTime(freq, time);
+  osc2.detune.setValueAtTime(-7, time); // slight detune for richness
+  
+  // Piano-like envelope: quick attack, sustained decay
+  g1.gain.setValueAtTime(0.001, time);
+  g1.gain.linearRampToValueAtTime(0.08 * velocity * brightness, time + 0.01);
+  g1.gain.exponentialRampToValueAtTime(0.03 * velocity * brightness, time + duration * 0.4);
+  g1.gain.exponentialRampToValueAtTime(0.001, time + duration);
+  
+  g2.gain.setValueAtTime(0.001, time);
+  g2.gain.linearRampToValueAtTime(0.05 * velocity * brightness, time + 0.01);
+  g2.gain.exponentialRampToValueAtTime(0.02 * velocity * brightness, time + duration * 0.4);
+  g2.gain.exponentialRampToValueAtTime(0.001, time + duration);
+  
+  // Low-pass filter for dark, mellow tone
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.setValueAtTime(1200, time);
+  filter.frequency.exponentialRampToValueAtTime(800, time + duration * 0.6);
+  filter.Q.setValueAtTime(0.7, time);
+  
+  osc1.connect(g1); g1.connect(filter);
+  osc2.connect(g2); g2.connect(filter);
+  filter.connect(dest);
+  
+  osc1.start(time); osc1.stop(time + duration + 0.05);
+  osc2.start(time); osc2.stop(time + duration + 0.05);
+  
+  // Layer 2: Subtle harmonic for depth
   const h2 = ctx.createOscillator();
   const h2g = ctx.createGain();
   h2.type = 'sine';
   h2.frequency.setValueAtTime(freq * 2, time);
   h2g.gain.setValueAtTime(0.001, time);
-  h2g.gain.linearRampToValueAtTime(0.03 * velocity, time + 0.005);
-  h2g.gain.exponentialRampToValueAtTime(0.001, time + duration * 0.5);
-  h2.connect(h2g); h2g.connect(dest);
-  h2.start(time); h2.stop(time + duration * 0.5 + 0.05);
+  h2g.gain.linearRampToValueAtTime(0.015 * velocity * brightness, time + 0.005);
+  h2g.gain.exponentialRampToValueAtTime(0.001, time + duration * 0.3);
+  h2.connect(h2g); h2g.connect(filter);
+  h2.start(time); h2.stop(time + duration * 0.3 + 0.05);
 }
 
-// ─── INSTRUMENT: Pluck/Bell (for arpeggios) ───
+// ─── INSTRUMENT: Atmospheric Strings (inspired by "A 120" Gera MX) ───
 function schedulePluck(ctx: AudioContext, time: number, midi: number, duration: number, dest: GainNode) {
   const freq = NOTE(midi);
-  // Karplus-Strong inspired: filtered noise burst + resonant body
-  const bufSize = Math.floor(ctx.sampleRate * 0.01);
-  const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
-  const d = buf.getChannelData(0);
-  for (let i = 0; i < bufSize; i++) d[i] = Math.random() * 2 - 1;
-  const noiseSrc = ctx.createBufferSource();
-  noiseSrc.buffer = buf;
-  const noiseG = ctx.createGain();
-  noiseG.gain.setValueAtTime(0.08, time);
-  noiseG.gain.exponentialRampToValueAtTime(0.001, time + 0.02);
-  noiseSrc.connect(noiseG); noiseG.connect(dest);
-  noiseSrc.start(time);
-
-  // Tonal body
-  const osc = ctx.createOscillator();
-  const g = ctx.createGain();
-  const filt = ctx.createBiquadFilter();
-  osc.type = 'triangle';
-  osc.frequency.setValueAtTime(freq, time);
-  filt.type = 'lowpass';
-  filt.frequency.setValueAtTime(freq * 6, time);
-  filt.frequency.exponentialRampToValueAtTime(freq * 1.5, time + duration);
-  filt.Q.setValueAtTime(2, time);
-  g.gain.setValueAtTime(0.001, time);
-  g.gain.linearRampToValueAtTime(0.06, time + 0.003);
-  g.gain.exponentialRampToValueAtTime(0.001, time + duration);
-  osc.connect(filt); filt.connect(g); g.connect(dest);
-  osc.start(time); osc.stop(time + duration + 0.05);
+  
+  // String pad: detuned sawtooth waves with slow attack
+  const detunes = [-10, -3, 3, 10];
+  detunes.forEach(det => {
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(freq, time);
+    osc.detune.setValueAtTime(det, time);
+    
+    // Slow attack for string-like swell
+    const attack = Math.min(0.8, duration * 0.3);
+    const release = Math.min(1.2, duration * 0.4);
+    g.gain.setValueAtTime(0.001, time);
+    g.gain.linearRampToValueAtTime(0.03, time + attack);
+    g.gain.setValueAtTime(0.03, time + duration - release);
+    g.gain.linearRampToValueAtTime(0.001, time + duration);
+    
+    // Dark filter
+    const filt = ctx.createBiquadFilter();
+    filt.type = 'lowpass';
+    filt.frequency.setValueAtTime(freq * 3, time);
+    filt.frequency.linearRampToValueAtTime(freq * 2, time + duration * 0.5);
+    filt.Q.setValueAtTime(0.5, time);
+    
+    // Subtle vibrato
+    const lfo = ctx.createOscillator();
+    const lfoG = ctx.createGain();
+    lfo.type = 'sine';
+    lfo.frequency.setValueAtTime(4.5 + Math.random() * 0.5, time);
+    lfoG.gain.setValueAtTime(3, time);
+    lfo.connect(lfoG); lfoG.connect(osc.detune);
+    
+    osc.connect(filt); filt.connect(g); g.connect(dest);
+    osc.start(time); osc.stop(time + duration + 0.1);
+    lfo.start(time); lfo.stop(time + duration + 0.1);
+  });
 }
 
 // ─── INSTRUMENT: Deep 808 Sub Bass ───
@@ -703,7 +725,7 @@ function darkTrapSnare(ctx: AudioContext, time: number, vel: number, dest: GainN
   crack.start(time);
 }
 
-function darkTrapHat(ctx: AudioContext, time: number, vel: number, open: boolean, dest: GainNode) {
+function darkTrapHat(ctx: AudioContext, time: number, vel: number, open: boolean | number, dest: GainNode) {
   const dur = 0.03; // Keep it crisp and short for both single hits and rolls
   
   const playHit = (t: number, v: number) => {
@@ -726,9 +748,13 @@ function darkTrapHat(ctx: AudioContext, time: number, vel: number, open: boolean
   };
 
   playHit(time, vel);
-  if (open) {
-    // 'open' flag triggers a 32nd note roll (double subdivision)
-    playHit(time + 0.1, vel * 0.8);
+  if (open === 1 || open === true) {
+    // Double roll (TT) - two 32nd notes
+    playHit(time + 0.05, vel * 0.8);
+  } else if (open === 2) {
+    // Triple roll (TTT) - three 32nd notes
+    playHit(time + 0.033, vel * 0.85);
+    playHit(time + 0.066, vel * 0.7);
   }
 }
 
@@ -825,18 +851,17 @@ const THEMES: Record<MusicTheme, ThemeConfig> = {
   home: {
     bpm: 75,
     genre: 'darktrap',
-    // Deep Cm minor — nocturnal, cold, elegant
-    // Cm(add9) → Ab → Fm7 → Gsus4 → Cm → Eb → Abmaj7 → Gm
+    // "A 120" style: Am → F → C → G (Natural Minor, melancholic)
     chords: [
-      [36, 48, 51, 55, 62], [44, 48, 51, 55], [41, 44, 48, 51], [43, 50, 55, 58],
-      [36, 48, 51, 55], [39, 46, 51, 55], [44, 48, 51, 56], [43, 46, 50, 55],
+      [57, 60, 64], [53, 57, 60], [60, 64, 67], [55, 59, 62],
+      [57, 60, 64], [53, 57, 60], [60, 64, 67], [55, 59, 62],
     ],
     // No separate bass — the 808 kick IS the bass
     bassPattern: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    // Very sparse dark key touches
-    keyPattern:  [0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    // Ethereal plucks with space
-    arpPattern:  [0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0, 0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0],
+    // Simple melancholic piano hits (like Gera MX style)
+    keyPattern:  [1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0, 0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
+    // Atmospheric string pads (slow, sustained)
+    arpPattern:  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0],
     padBrightness: 500,
     padGain: 0.05,
     bassOctave: -1,
@@ -913,31 +938,36 @@ const THEMES: Record<MusicTheme, ThemeConfig> = {
   },
 };
 
-// Drum patterns: 32 steps [kick, snare/clap, closedHat, openHat]
+// Drum patterns: [kick, snare, closedHat, openHat (0=none, 1=double roll, 2=triple roll)]
 type DrumStep = [number, number, number, number];
+
 
 const DRUM_PATTERNS: Record<'trap' | 'house' | 'ambient' | 'darktrap', DrumStep[]> = {
   darktrap: [
-    // Bar 1
-    [1, 0, 0, 0], [0, 0, .8, 0], [0, 0, 0, .9], [0, 0, .8, 0],
-    [0, 1, 0, 0], [0, 0, .8, 0], [1, 0, 0, 0], [0, 0, 0, .9],
-    [1, 0, 0, 0], [0, 0, .8, 0], [0, 0, 0, .9], [0, 0, .8, 0],
-    [0, 1, 0, 0], [0, 0, .8, 0], [1, 0, 0, 0], [0, 0, .8, 0],
-    // Bar 2
-    [0, 0, .8, 0], [1, 0, 0, 0], [0, 0, .8, 0], [0, 0, 0, .9],
-    [0, 1, 0, 0], [0, 0, .8, 0], [1, 0, 0, 0], [0, 0, .8, 0],
-    [1, 0, 0, 0], [0, 0, 0, .9], [0, 0, .8, 0], [1, 0, 0, 0],
-    [0, 1, 0, 0], [0, 0, .8, 0], [0, 0, 0, .9], [0, 0, .8, 0],
-    // Bar 3
-    [1, 0, 0, 0], [0, 0, .8, 0], [1, 0, 0, 0], [0, 0, .8, 0],
-    [0, 1, 0, 0], [0, 0, 0, .9], [0, 0, .8, 0], [1, 0, 0, 0],
-    [1, 0, 0, 0], [0, 0, .8, 0], [0, 0, 0, .9], [0, 0, .8, 0],
-    [0, 1, 0, 0], [0, 0, .8, 0], [1, 0, 0, 0], [0, 0, .8, 0],
-    // Bar 4
-    [1, 0, 0, 0], [0, 0, 0, .9], [0, 0, .8, 0], [1, 0, 0, 0],
-    [0, 1, 0, 0], [0, 0, .8, 0], [1, 0, 0, 0], [0, 0, .8, 0],
-    [1, 0, 0, 0], [0, 0, 0, .9], [0, 1, 0, 0], [0, 0, .8, 0],
-    [0, 1, 0, 0], [0, 0, 0, .9], [0, 0, .8, 0], [0, 0, .8, 0],
+    // K-T-TT-T-S-T-K-T (compás 1)
+    [1, 0, 0, 0], [0, 0, .9, 0], [0, 0, 0, 1], [0, 0, .9, 0],
+    [0, 1, 0, 0], [0, 0, .9, 0], [1, 0, 0, 0], [0, 0, .9, 0],
+    // T-K-T-TT-S-T-K-T (compás 2)
+    [0, 0, .9, 0], [1, 0, 0, 0], [0, 0, .9, 0], [0, 0, 0, 1],
+    [0, 1, 0, 0], [0, 0, .9, 0], [1, 0, 0, 0], [0, 0, .9, 0],
+    // K-T-K-T-S-TT-K-S (compás 3)
+    [1, 0, 0, 0], [0, 0, .9, 0], [1, 0, 0, 0], [0, 0, .9, 0],
+    [0, 1, 0, 0], [0, 0, 0, 1], [1, 0, 0, 0], [0, 1, 0, 0],
+    // K-TTT-T-K-S-T-K-T (compás 4)
+    [1, 0, 0, 0], [0, 0, 0, 2], [0, 0, .9, 0], [1, 0, 0, 0],
+    [0, 1, 0, 0], [0, 0, .9, 0], [1, 0, 0, 0], [0, 0, .9, 0],
+    // K-T-TT-T-S-T-K-T (compás 5)
+    [1, 0, 0, 0], [0, 0, .9, 0], [0, 0, 0, 1], [0, 0, .9, 0],
+    [0, 1, 0, 0], [0, 0, .9, 0], [1, 0, 0, 0], [0, 0, .9, 0],
+    // T-K-T-TT-S-T-K-T (compás 6)
+    [0, 0, .9, 0], [1, 0, 0, 0], [0, 0, .9, 0], [0, 0, 0, 1],
+    [0, 1, 0, 0], [0, 0, .9, 0], [1, 0, 0, 0], [0, 0, .9, 0],
+    // K-T-K-T-S-TT-K-S (compás 7)
+    [1, 0, 0, 0], [0, 0, .9, 0], [1, 0, 0, 0], [0, 0, .9, 0],
+    [0, 1, 0, 0], [0, 0, 0, 1], [1, 0, 0, 0], [0, 1, 0, 0],
+    // K-TTT-T-K-S-T-K-T (compás 8)
+    [1, 0, 0, 0], [0, 0, 0, 2], [0, 0, .9, 0], [1, 0, 0, 0],
+    [0, 1, 0, 0], [0, 0, .9, 0], [1, 0, 0, 0], [0, 0, .9, 0],
   ],
   trap: [
     // Bar 1: heavy kick, rolling hats, snare on 5 & 13
