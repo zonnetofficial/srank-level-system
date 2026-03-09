@@ -895,19 +895,19 @@ const THEMES: Record<MusicTheme, ThemeConfig> = {
   home: {
     bpm: 75,
     genre: 'darktrap',
-    // "A 120" style: Am → F → C → G (Natural Minor, melancholic)
+    // Am → F → C → G progression
     chords: [
       [57, 60, 64], [53, 57, 60], [60, 64, 67], [55, 59, 62],
       [57, 60, 64], [53, 57, 60], [60, 64, 67], [55, 59, 62],
     ],
     // No separate bass — the 808 kick IS the bass
     bassPattern: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    // Simple melancholic piano hits (like Gera MX style)
-    keyPattern:  [1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0, 0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
-    // Atmospheric string pads (slow, sustained)
+    // Trap bells — sparse, icy hits
+    keyPattern:  [1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0, 0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],
+    // Atmospheric string pads (sustained background)
     arpPattern:  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0],
     padBrightness: 500,
-    padGain: 0.05,
+    padGain: 0.04,
     bassOctave: -1,
   },
   quest: {
