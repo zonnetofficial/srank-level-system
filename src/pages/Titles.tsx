@@ -87,7 +87,8 @@ const Titles = () => {
               return (
                 <button
                   key={t.name}
-                  onClick={() => setChallengeClass(t.name)}
+                  onClick={() => { setChallengeClass(t.name); sfxClick(); }}
+                  onMouseEnter={() => sfxHover()}
                   className="w-full text-left p-3 rounded-lg border border-accent/40 bg-accent/5 hover:bg-accent/10 transition-all animate-scale-up"
                   style={{ animationDelay: `${500 + i * 100}ms` }}
                 >
