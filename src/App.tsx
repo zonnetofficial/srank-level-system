@@ -71,6 +71,7 @@ const AppContent = () => {
         <Route path="/shop" element={<ProtectedRoute><Shop /></ProtectedRoute>} />
         <Route path="/mission" element={<ProtectedRoute><MandatoryMission /></ProtectedRoute>} />
         <Route path="/dungeons" element={<ProtectedRoute><Dungeons /></ProtectedRoute>} />
+        <Route path="/install" element={<Install />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
 
