@@ -169,7 +169,8 @@ const Index = () => {
               ) : null)}
             </div>
             <button
-              onClick={assignBankPoints}
+              onClick={() => { assignBankPoints(); sfxSuccess(); }}
+              onMouseEnter={() => sfxHover()}
               className="w-full py-2 text-[10px] font-display uppercase tracking-[0.2em] text-primary border border-primary/30 hover:border-primary/60 hover:bg-primary/10 transition-all duration-200"
               style={{ clipPath: 'polygon(0 4px, 4px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px))' }}
             >
