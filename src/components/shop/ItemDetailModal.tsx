@@ -48,6 +48,7 @@ export default function ItemDetailModal({ item, dpBalance, tpBalance, buying, on
           </button>
           <button
             onClick={onBuyDP}
+            onMouseEnter={() => sfxHover()}
             disabled={buying || dpBalance < item.price}
             className="flex-1 py-2 text-[10px] font-display uppercase tracking-[0.15em] text-accent border border-accent/30 hover:border-accent/60 hover:bg-accent/10 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             style={{ clipPath: btnClip }}
