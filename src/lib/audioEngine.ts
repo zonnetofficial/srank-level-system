@@ -853,6 +853,131 @@ function scheduleDeep808(ctx: AudioContext, time: number, midi: number, duration
   prev808Nodes = { gains: [g, sg], oscs: [osc, sub], cutTime: time };
 }
 
+// ─── INSTRUMENT: Lo-Fi Rhodes (for Skills) ───
+function scheduleLofiKeys(ctx: AudioContext, time: number, midi: number, duration: number, brightness: number, velocity: number, dest: GainNode) {
+  const freq = NOTE(midi);
+  // Electric piano: sine + square harmonic
+  const osc1 = ctx.createOscillator();
+  const osc2 = ctx.createOscillator();
+  const g1 = ctx.createGain();
+  const g2 = ctx.createGain();
+  osc1.type = 'sine';
+  osc2.type = 'square';
+  osc1.frequency.setValueAtTime(freq, time);
+  osc2.frequency.setValueAtTime(freq * 2, time); // 2nd harmonic
+  osc2.detune.setValueAtTime(3, time);
+  const attack = 0.01;
+  const decay = duration * 0.6;
+  g1.gain.setValueAtTime(0.001, time);
+  g1.gain.linearRampToValueAtTime(0.12 * velocity, time + attack);
+  g1.gain.exponentialRampToValueAtTime(0.04 * velocity, time + attack + 0.15);
+  g1.gain.exponentialRampToValueAtTime(0.001, time + decay);
+  g2.gain.setValueAtTime(0.001, time);
+  g2.gain.linearRampToValueAtTime(0.03 * velocity, time + attack);
+  g2.gain.exponentialRampToValueAtTime(0.001, time + decay * 0.5);
+  // Lowpass + bitcrusher-like wobble
+  const lp = ctx.createBiquadFilter();
+  lp.type = 'lowpass';
+  lp.frequency.setValueAtTime(freq * 3 * brightness, time);
+  lp.frequency.exponentialRampToValueAtTime(freq * 1.5, time + decay * 0.4);
+  lp.Q.setValueAtTime(2, time);
+  osc1.connect(g1); g1.connect(lp);
+  osc2.connect(g2); g2.connect(lp);
+  lp.connect(dest);
+  osc1.start(time); osc1.stop(time + decay + 0.05);
+  osc2.start(time); osc2.stop(time + decay + 0.05);
+}
+
+// ─── INSTRUMENT: Crystal Bell (for Titles) ───
+function scheduleCrystalBell(ctx: AudioContext, time: number, midi: number, duration: number, velocity: number, dest: GainNode) {
+  const freq = NOTE(midi);
+  // Bell: sine + inharmonic partials
+  const partials = [1, 2.756, 4.07, 5.404];
+  const gains = [0.12, 0.06, 0.03, 0.015];
+  partials.forEach((p, i) => {
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq * p, time);
+    g.gain.setValueAtTime(0.001, time);
+    g.gain.linearRampToValueAtTime(gains[i] * velocity, time + 0.005);
+    g.gain.exponentialRampToValueAtTime(0.001, time + duration * (1 - i * 0.15));
+    osc.connect(g); g.connect(dest);
+    osc.start(time); osc.stop(time + duration + 0.1);
+  });
+}
+
+// ─── INSTRUMENT: Haunting Strings (for History) ───
+function scheduleHauntingStrings(ctx: AudioContext, time: number, midiNotes: number[], duration: number, gain: number, dest: GainNode) {
+  const masterFilt = ctx.createBiquadFilter();
+  masterFilt.type = 'lowpass';
+  masterFilt.frequency.setValueAtTime(800, time);
+  masterFilt.frequency.linearRampToValueAtTime(1200, time + duration * 0.3);
+  masterFilt.frequency.linearRampToValueAtTime(600, time + duration);
+  masterFilt.Q.setValueAtTime(1.5, time);
+  masterFilt.connect(dest);
+  midiNotes.forEach(midi => {
+    const freq = NOTE(midi);
+    // Sawtooth for string texture
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(freq, time);
+    osc.detune.setValueAtTime(Math.random() * 6 - 3, time);
+    const attack = Math.min(2.0, duration * 0.35);
+    const release = Math.min(2.0, duration * 0.3);
+    g.gain.setValueAtTime(0.001, time);
+    g.gain.linearRampToValueAtTime(gain * 0.2, time + attack);
+    g.gain.setValueAtTime(gain * 0.2, time + duration - release);
+    g.gain.linearRampToValueAtTime(0.001, time + duration);
+    osc.connect(g); g.connect(masterFilt);
+    osc.start(time); osc.stop(time + duration + 0.1);
+  });
+}
+
+// ─── INSTRUMENT: Vinyl Crackle (for Skills lo-fi) ───
+function scheduleVinylCrackle(ctx: AudioContext, time: number, duration: number, dest: GainNode) {
+  const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * duration), ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) {
+    d[i] = Math.random() > 0.997 ? (Math.random() * 0.3 - 0.15) : (Math.random() * 0.002 - 0.001);
+  }
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const hp = ctx.createBiquadFilter();
+  hp.type = 'highpass'; hp.frequency.setValueAtTime(2000, time);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.08, time);
+  src.connect(hp); hp.connect(g); g.connect(dest);
+  src.start(time);
+}
+
+// ─── INSTRUMENT: Choir Pad (for Titles) ───
+function scheduleChoirPad(ctx: AudioContext, time: number, midiNotes: number[], duration: number, gain: number, dest: GainNode) {
+  midiNotes.forEach(midi => {
+    const freq = NOTE(midi);
+    // Two detuned sines for "aah" choir
+    [-5, 5].forEach(det => {
+      const osc = ctx.createOscillator();
+      const g2 = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, time);
+      osc.detune.setValueAtTime(det, time);
+      const attack = Math.min(1.8, duration * 0.3);
+      const release = Math.min(2.0, duration * 0.35);
+      g2.gain.setValueAtTime(0.001, time);
+      g2.gain.linearRampToValueAtTime(gain * 0.25, time + attack);
+      g2.gain.setValueAtTime(gain * 0.25, time + duration - release);
+      g2.gain.linearRampToValueAtTime(0.001, time + duration);
+      // Formant filter for vowel
+      const bp = ctx.createBiquadFilter();
+      bp.type = 'bandpass'; bp.frequency.setValueAtTime(700, time); bp.Q.setValueAtTime(2, time);
+      osc.connect(bp); bp.connect(g2); g2.connect(dest);
+      osc.start(time); osc.stop(time + duration + 0.1);
+    });
+  });
+}
+
 // AMBIENT KIT: soft textural hits
 function ambientKick(ctx: AudioContext, time: number, vel: number, dest: GainNode) {
   const osc = ctx.createOscillator();
@@ -882,6 +1007,155 @@ function ambientPerc(ctx: AudioContext, time: number, vel: number, dest: GainNod
   g.gain.setValueAtTime(0.04 * vel, time);
   g.gain.exponentialRampToValueAtTime(0.001, time + dur);
   src.connect(lp); lp.connect(bp); bp.connect(g); g.connect(dest);
+  src.start(time);
+}
+
+// ─── LO-FI KIT (for Skills): muffled kick, rim shot, soft hat ───
+function lofiKick(ctx: AudioContext, time: number, vel: number, dest: GainNode) {
+  const body = ctx.createOscillator();
+  const bg = ctx.createGain();
+  body.type = 'sine';
+  body.frequency.setValueAtTime(90, time);
+  body.frequency.exponentialRampToValueAtTime(40, time + 0.08);
+  const lp = ctx.createBiquadFilter();
+  lp.type = 'lowpass'; lp.frequency.setValueAtTime(200, time);
+  bg.gain.setValueAtTime(0.25 * vel, time);
+  bg.gain.exponentialRampToValueAtTime(0.001, time + 0.3);
+  body.connect(lp); lp.connect(bg); bg.connect(dest);
+  body.start(time); body.stop(time + 0.35);
+}
+
+function lofiSnare(ctx: AudioContext, time: number, vel: number, dest: GainNode) {
+  // Rim shot - short tonal click
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.type = 'triangle';
+  osc.frequency.setValueAtTime(800, time);
+  osc.frequency.exponentialRampToValueAtTime(300, time + 0.02);
+  g.gain.setValueAtTime(0.12 * vel, time);
+  g.gain.exponentialRampToValueAtTime(0.001, time + 0.08);
+  const bp = ctx.createBiquadFilter();
+  bp.type = 'bandpass'; bp.frequency.setValueAtTime(1200, time); bp.Q.setValueAtTime(1, time);
+  osc.connect(bp); bp.connect(g); g.connect(dest);
+  osc.start(time); osc.stop(time + 0.1);
+}
+
+function lofiHat(ctx: AudioContext, time: number, vel: number, open: boolean, dest: GainNode) {
+  const dur = open ? 0.15 : 0.03;
+  const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur * 1.5), ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const lp = ctx.createBiquadFilter();
+  lp.type = 'lowpass'; lp.frequency.setValueAtTime(6000, time); // Muffled
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.04 * vel, time);
+  g.gain.exponentialRampToValueAtTime(0.001, time + dur);
+  src.connect(lp); lp.connect(g); g.connect(dest);
+  src.start(time);
+}
+
+// ─── EPIC KIT (for Titles): big reverby kick, orchestral snare, chimes ───
+function epicKick(ctx: AudioContext, time: number, vel: number, dest: GainNode) {
+  const body = ctx.createOscillator();
+  const bg = ctx.createGain();
+  body.type = 'sine';
+  body.frequency.setValueAtTime(150, time);
+  body.frequency.exponentialRampToValueAtTime(30, time + 0.2);
+  bg.gain.setValueAtTime(0.3 * vel, time);
+  bg.gain.exponentialRampToValueAtTime(0.001, time + 0.6);
+  body.connect(bg); bg.connect(dest);
+  body.start(time); body.stop(time + 0.65);
+  // Boom layer
+  const boom = ctx.createOscillator();
+  const boomG = ctx.createGain();
+  boom.type = 'sine';
+  boom.frequency.setValueAtTime(50, time);
+  boomG.gain.setValueAtTime(0.15 * vel, time);
+  boomG.gain.exponentialRampToValueAtTime(0.001, time + 0.8);
+  boom.connect(boomG); boomG.connect(dest);
+  boom.start(time); boom.stop(time + 0.85);
+}
+
+function epicSnare(ctx: AudioContext, time: number, vel: number, dest: GainNode) {
+  // Orchestral snare roll texture
+  const dur = 0.25;
+  const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur), ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const bp = ctx.createBiquadFilter();
+  bp.type = 'bandpass'; bp.frequency.setValueAtTime(3000, time); bp.Q.setValueAtTime(0.8, time);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.15 * vel, time);
+  g.gain.exponentialRampToValueAtTime(0.001, time + dur);
+  src.connect(bp); bp.connect(g); g.connect(dest);
+  src.start(time);
+  // Tonal body
+  const tone = ctx.createOscillator();
+  const tg = ctx.createGain();
+  tone.type = 'triangle'; tone.frequency.setValueAtTime(200, time);
+  tg.gain.setValueAtTime(0.08 * vel, time);
+  tg.gain.exponentialRampToValueAtTime(0.001, time + 0.1);
+  tone.connect(tg); tg.connect(dest);
+  tone.start(time); tone.stop(time + 0.12);
+}
+
+function epicHat(ctx: AudioContext, time: number, vel: number, open: boolean, dest: GainNode) {
+  // Chime-like metallic hit
+  const freq = open ? 4000 : 6000;
+  const dur = open ? 0.4 : 0.08;
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(freq, time);
+  g.gain.setValueAtTime(0.03 * vel, time);
+  g.gain.exponentialRampToValueAtTime(0.001, time + dur);
+  osc.connect(g); g.connect(dest);
+  osc.start(time); osc.stop(time + dur + 0.05);
+  // Harmonic
+  const osc2 = ctx.createOscillator();
+  const g2 = ctx.createGain();
+  osc2.type = 'sine';
+  osc2.frequency.setValueAtTime(freq * 2.7, time);
+  g2.gain.setValueAtTime(0.015 * vel, time);
+  g2.gain.exponentialRampToValueAtTime(0.001, time + dur * 0.7);
+  osc2.connect(g2); g2.connect(dest);
+  osc2.start(time); osc2.stop(time + dur + 0.05);
+}
+
+// ─── GHOSTLY KIT (for History): distant thuds, whisper perc ───
+function ghostKick(ctx: AudioContext, time: number, vel: number, dest: GainNode) {
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(60, time);
+  osc.frequency.exponentialRampToValueAtTime(25, time + 0.25);
+  const lp = ctx.createBiquadFilter();
+  lp.type = 'lowpass'; lp.frequency.setValueAtTime(100, time);
+  g.gain.setValueAtTime(0.1 * vel, time);
+  g.gain.exponentialRampToValueAtTime(0.001, time + 0.6);
+  osc.connect(lp); lp.connect(g); g.connect(dest);
+  osc.start(time); osc.stop(time + 0.65);
+}
+
+function ghostPerc(ctx: AudioContext, time: number, vel: number, dest: GainNode) {
+  // Whisper-like texture
+  const dur = 0.35;
+  const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur), ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const lp = ctx.createBiquadFilter();
+  lp.type = 'lowpass'; lp.frequency.setValueAtTime(1500, time);
+  lp.frequency.exponentialRampToValueAtTime(400, time + dur);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.025 * vel, time);
+  g.gain.exponentialRampToValueAtTime(0.001, time + dur);
+  src.connect(lp); lp.connect(g); g.connect(dest);
   src.start(time);
 }
 
