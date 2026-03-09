@@ -353,37 +353,46 @@ function scheduleFMKeys(ctx: AudioContext, time: number, midi: number, duration:
   h2.start(time); h2.stop(time + duration * 0.3 + 0.05);
 }
 
-// ─── INSTRUMENT: Pluck/Bell (for arpeggios) ───
+// ─── INSTRUMENT: Atmospheric Strings (inspired by "A 120" Gera MX) ───
 function schedulePluck(ctx: AudioContext, time: number, midi: number, duration: number, dest: GainNode) {
   const freq = NOTE(midi);
-  // Karplus-Strong inspired: filtered noise burst + resonant body
-  const bufSize = Math.floor(ctx.sampleRate * 0.01);
-  const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
-  const d = buf.getChannelData(0);
-  for (let i = 0; i < bufSize; i++) d[i] = Math.random() * 2 - 1;
-  const noiseSrc = ctx.createBufferSource();
-  noiseSrc.buffer = buf;
-  const noiseG = ctx.createGain();
-  noiseG.gain.setValueAtTime(0.08, time);
-  noiseG.gain.exponentialRampToValueAtTime(0.001, time + 0.02);
-  noiseSrc.connect(noiseG); noiseG.connect(dest);
-  noiseSrc.start(time);
-
-  // Tonal body
-  const osc = ctx.createOscillator();
-  const g = ctx.createGain();
-  const filt = ctx.createBiquadFilter();
-  osc.type = 'triangle';
-  osc.frequency.setValueAtTime(freq, time);
-  filt.type = 'lowpass';
-  filt.frequency.setValueAtTime(freq * 6, time);
-  filt.frequency.exponentialRampToValueAtTime(freq * 1.5, time + duration);
-  filt.Q.setValueAtTime(2, time);
-  g.gain.setValueAtTime(0.001, time);
-  g.gain.linearRampToValueAtTime(0.06, time + 0.003);
-  g.gain.exponentialRampToValueAtTime(0.001, time + duration);
-  osc.connect(filt); filt.connect(g); g.connect(dest);
-  osc.start(time); osc.stop(time + duration + 0.05);
+  
+  // String pad: detuned sawtooth waves with slow attack
+  const detunes = [-10, -3, 3, 10];
+  detunes.forEach(det => {
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(freq, time);
+    osc.detune.setValueAtTime(det, time);
+    
+    // Slow attack for string-like swell
+    const attack = Math.min(0.8, duration * 0.3);
+    const release = Math.min(1.2, duration * 0.4);
+    g.gain.setValueAtTime(0.001, time);
+    g.gain.linearRampToValueAtTime(0.03, time + attack);
+    g.gain.setValueAtTime(0.03, time + duration - release);
+    g.gain.linearRampToValueAtTime(0.001, time + duration);
+    
+    // Dark filter
+    const filt = ctx.createBiquadFilter();
+    filt.type = 'lowpass';
+    filt.frequency.setValueAtTime(freq * 3, time);
+    filt.frequency.linearRampToValueAtTime(freq * 2, time + duration * 0.5);
+    filt.Q.setValueAtTime(0.5, time);
+    
+    // Subtle vibrato
+    const lfo = ctx.createOscillator();
+    const lfoG = ctx.createGain();
+    lfo.type = 'sine';
+    lfo.frequency.setValueAtTime(4.5 + Math.random() * 0.5, time);
+    lfoG.gain.setValueAtTime(3, time);
+    lfo.connect(lfoG); lfoG.connect(osc.detune);
+    
+    osc.connect(filt); filt.connect(g); g.connect(dest);
+    osc.start(time); osc.stop(time + duration + 0.1);
+    lfo.start(time); lfo.stop(time + duration + 0.1);
+  });
 }
 
 // ─── INSTRUMENT: Deep 808 Sub Bass ───
