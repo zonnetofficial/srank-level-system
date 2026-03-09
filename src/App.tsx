@@ -40,7 +40,9 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 const AppContent = () => {
   const { state, completePunishment, failPunishment } = useGameState();
-  const { settings: audioSettings, setMasterVolume: setMaster, setMusicVolume: setMusic, setSfxVolume: setSfx, toggleMute } = useAudio();
+  const { monarchStatus } = useMonarch();
+  const isMonarchActive = monarchStatus.status === 'active';
+  const { settings: audioSettings, setMasterVolume: setMaster, setMusicVolume: setMusic, setSfxVolume: setSfx, toggleMute } = useAudio(isMonarchActive);
   let titleIdx = 0;
   for (let i = 0; i < state.classTitles.length; i++) {
     if (state.classTitles[i].obtained) titleIdx = i;

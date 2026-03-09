@@ -27,21 +27,27 @@ const ROUTE_THEMES: Record<string, MusicTheme> = {
   '/mission': 'battle',
 };
 
-export function useAudio() {
+export function useAudio(isMonarchActive = false) {
   const location = useLocation();
   const [settings, setSettings] = useState(getSettings());
   const [initialized, setInitialized] = useState(false);
+
+  const getTheme = useCallback((pathname: string): MusicTheme => {
+    const base = ROUTE_THEMES[pathname] || 'home';
+    // When monarch is active, home plays monarch theme
+    if (base === 'home' && isMonarchActive) return 'monarch';
+    return base;
+  }, [isMonarchActive]);
 
   // Initialize audio on first user interaction
   const init = useCallback(() => {
     if (!initialized) {
       initAudio();
       setInitialized(true);
-      // Start music for current route
-      const theme = ROUTE_THEMES[location.pathname] || 'home';
+      const theme = getTheme(location.pathname);
       playMusic(theme);
     }
-  }, [initialized, location.pathname]);
+  }, [initialized, location.pathname, getTheme]);
 
   // Listen for first interaction
   useEffect(() => {
@@ -53,14 +59,23 @@ export function useAudio() {
   // Change music on route change
   useEffect(() => {
     if (!initialized) return;
-    const theme = ROUTE_THEMES[location.pathname] || 'home';
+    const theme = getTheme(location.pathname);
     if (location.pathname !== '/auth') {
       playMusic(theme);
       sfxNavigate();
     } else {
       stopMusic();
     }
-  }, [location.pathname, initialized]);
+  }, [location.pathname, initialized, getTheme]);
+
+  // Re-trigger music when monarch status changes on home
+  useEffect(() => {
+    if (!initialized) return;
+    if (location.pathname === '/') {
+      const theme = getTheme('/');
+      playMusic(theme);
+    }
+  }, [isMonarchActive, initialized, getTheme, location.pathname]);
 
   // Cleanup
   useEffect(() => {
