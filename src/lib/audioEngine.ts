@@ -1138,9 +1138,9 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
         if (hat > 0) kit.hat(ctx, stepTime, hat, false, outputGain);
         if (openHat > 0) kit.hat(ctx, stepTime, openHat, true, outputGain);
 
-        // Bass — darktrap uses specific 808 note sequence in Am
+        // Bass — darktrap uses specific 808 note sequence in Am (solo en kick)
         const bassPatIdx = ((bar * 16) + step) % config.bassPattern.length;
-        if (config.bassPattern[bassPatIdx]) {
+        if (config.bassPattern[bassPatIdx] && kick > 0) { // SOLO cuando hay kick
           if (config.genre === 'darktrap') {
             // 808 bass: A2-A2---G2--- | A2---F2---E2 | A2-A2---G2--- | F2---E2---A2
             const bass808Notes = [
