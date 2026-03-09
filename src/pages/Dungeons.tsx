@@ -455,7 +455,35 @@ export default function Dungeons() {
         </div>
       )}
 
-      {/* EQUIPO TAB */}
+      {/* PERSONALIZAR TAB */}
+      {tab === 'personalizar' && showTabs && char && (
+        <EquipmentPanel
+          sprite={char.sprite}
+          characterName={char.name}
+          characterClass={char.className}
+        />
+      )}
+      {tab === 'personalizar' && showTabs && !char && (
+        <div className="text-center py-8 text-muted-foreground text-xs font-display">
+          Crea un personaje primero para personalizar tu avatar
+        </div>
+      )}
+
+      {/* Public Profile Modal */}
+      {profileTarget && (
+        <PublicProfileModal
+          userId={profileTarget.user_id}
+          displayName={profileTarget.display_name}
+          characterName={profileTarget.character_name}
+          characterClass={profileTarget.character_class}
+          characterSprite={profileTarget.character_sprite}
+          dungeonsCleared={profileTarget.dungeons_cleared}
+          highestRank={profileTarget.highest_rank}
+          totalXpEarned={profileTarget.total_xp_earned}
+          deaths={profileTarget.deaths}
+          onClose={() => setProfileTarget(null)}
+        />
+      )}
       {tab === 'equipo' && showTabs && (
         <div className="space-y-4 animate-slide-up">
           {/* Current loadout */}
