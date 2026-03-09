@@ -25,6 +25,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import ItemIcon from '@/components/ItemIcon';
+import { CHARACTER_BASE_SPRITES } from '@/lib/characterAssets';
 
 const ranks: DungeonRank[] = ['E', 'D', 'C', 'B', 'A', 'S'];
 const RANK_ORDER: Record<string, number> = { E: 1, D: 2, C: 3, B: 4, A: 5, S: 6 };
