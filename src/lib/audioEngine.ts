@@ -241,9 +241,8 @@ export function sfxPunishment() {
 type MusicTheme = 'home' | 'quest' | 'dungeon' | 'shop' | 'battle' | 'menu';
 const NOTE = (midi: number) => 440 * Math.pow(2, (midi - 69) / 12);
 
-// ─── INSTRUMENT: Warm Pad (layered, LFO-modulated, chorus-like) ───
+// ─── INSTRUMENT: Warm Pad (layered, optimized) ───
 function scheduleWarmPad(ctx: AudioContext, time: number, midiNotes: number[], duration: number, gain: number, brightness: number, dest: GainNode) {
-  // Master filter with slow sweep for movement
   const masterFilt = ctx.createBiquadFilter();
   masterFilt.type = 'lowpass';
   masterFilt.frequency.setValueAtTime(brightness * 0.6, time);
@@ -254,37 +253,26 @@ function scheduleWarmPad(ctx: AudioContext, time: number, midiNotes: number[], d
 
   midiNotes.forEach(midi => {
     const freq = NOTE(midi);
-    // 4 detuned voices per note for rich chorus
-    const detunes = [-12, -5, 5, 12];
-    const types: OscillatorType[] = ['sine', 'triangle', 'sine', 'triangle'];
-    detunes.forEach((det, j) => {
+    // Reducido de 4 a 2 voces para menos nodos
+    const detunes = [-8, 8];
+    detunes.forEach(det => {
       const osc = ctx.createOscillator();
       const g = ctx.createGain();
-      osc.type = types[j];
+      osc.type = 'sine';
       osc.frequency.setValueAtTime(freq, time);
       osc.detune.setValueAtTime(det, time);
-      // Slow LFO on detune for shimmer
-      const lfo = ctx.createOscillator();
-      const lfoGain = ctx.createGain();
-      lfo.type = 'sine';
-      lfo.frequency.setValueAtTime(0.3 + j * 0.15, time); // different rates
-      lfoGain.gain.setValueAtTime(3, time); // subtle pitch wobble
-      lfo.connect(lfoGain);
-      lfoGain.connect(osc.detune);
-      lfo.start(time); lfo.stop(time + duration + 0.2);
-      // Slow attack, sustained, slow release
       const attack = Math.min(1.2, duration * 0.2);
       const release = Math.min(1.5, duration * 0.25);
       g.gain.setValueAtTime(0.001, time);
-      g.gain.linearRampToValueAtTime(gain * 0.25, time + attack);
-      g.gain.setValueAtTime(gain * 0.25, time + duration - release);
+      g.gain.linearRampToValueAtTime(gain * 0.3, time + attack);
+      g.gain.setValueAtTime(gain * 0.3, time + duration - release);
       g.gain.linearRampToValueAtTime(0.001, time + duration);
       osc.connect(g); g.connect(masterFilt);
       osc.start(time); osc.stop(time + duration + 0.1);
     });
   });
 
-  // Sub layer (one octave down, just the root)
+  // Sub layer
   if (midiNotes.length > 0) {
     const subOsc = ctx.createOscillator();
     const subG = ctx.createGain();
@@ -295,7 +283,7 @@ function scheduleWarmPad(ctx: AudioContext, time: number, midiNotes: number[], d
     subG.gain.linearRampToValueAtTime(gain * 0.15, time + attack);
     subG.gain.setValueAtTime(gain * 0.15, time + duration - attack);
     subG.gain.linearRampToValueAtTime(0.001, time + duration);
-    subOsc.connect(subG); subG.connect(dest); // bypass filter for clean sub
+    subOsc.connect(subG); subG.connect(dest);
     subOsc.start(time); subOsc.stop(time + duration + 0.1);
   }
 }
