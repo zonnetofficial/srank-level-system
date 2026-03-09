@@ -288,25 +288,25 @@ function scheduleWarmPad(ctx: AudioContext, time: number, midiNotes: number[], d
   }
 }
 
-// ─── INSTRUMENT: Dark Trap Bells (más oscuras y agresivas) ───
+// ─── INSTRUMENT: Dark Trap Bells (hard, fast attack) ───
 function scheduleFMKeys(ctx: AudioContext, time: number, midi: number, duration: number, brightness: number, velocity: number, dest: GainNode) {
   const freq = NOTE(midi);
   
-  // Bells más oscuras — square + saw para sonido más duro
+  // Hard keys — square + saw para sonido más duro
   const osc1 = ctx.createOscillator();
   const osc2 = ctx.createOscillator();
   const g1 = ctx.createGain();
   const g2 = ctx.createGain();
   
   osc1.type = 'square';
-  osc2.type = 'sawtooth'; // Cambiado de triangle a saw para más grit
+  osc2.type = 'sawtooth';
   osc1.frequency.setValueAtTime(freq, time);
   osc2.frequency.setValueAtTime(freq, time);
-  osc2.detune.setValueAtTime(12, time); // Detuned más para sonido más wide
+  osc2.detune.setValueAtTime(12, time);
   
-  // Fast attack, decay más largo para sonido más sostenido y oscuro
-  const attack = 0.003;
-  const decay = duration * 0.8; // Más largo
+  // Almost instant attack para melodías rápidas y hard
+  const attack = 0.001; // Casi instantáneo
+  const decay = duration * 0.6; // Más corto para melodías rápidas
   
   g1.gain.setValueAtTime(0.001, time);
   g1.gain.linearRampToValueAtTime(0.18 * velocity * brightness, time + attack);
