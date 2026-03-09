@@ -429,7 +429,11 @@ export default function Dungeons() {
                   }`}>
                     {i + 1}
                   </div>
-                  <span className="text-xl">{entry.character_sprite || '👤'}</span>
+                  {entry.character_class && CHARACTER_BASE_SPRITES[entry.character_class] ? (
+                    <img src={CHARACTER_BASE_SPRITES[entry.character_class]} alt="" className="w-8 h-10 object-contain" draggable={false} />
+                  ) : (
+                    <span className="text-xl">{entry.character_sprite || '👤'}</span>
+                  )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="font-display text-xs text-foreground truncate">
