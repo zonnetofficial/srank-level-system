@@ -164,7 +164,9 @@ export default function Dungeons() {
     completeRoom(success);
   };
 
-  // Watch for death or room completion
+  const [roomDone, setRoomDone] = useState(false);
+
+  // Watch for death
   useEffect(() => {
     if (!run) return;
     if (view !== 'dungeon') return;
@@ -173,24 +175,25 @@ export default function Dungeons() {
       syncProfile(0, run.rank, run.xpEarned, true);
       removeLoadoutFromInventory();
       setView('result');
-      return;
     }
+  }, [run?.status, view]);
 
-    const currentRoom = run.rooms[run.currentRoom];
-    if (currentRoom?.completed) {
-      const timer = setTimeout(() => {
-        if (run.currentRoom + 1 >= run.rooms.length) {
-          advanceRoom();
-          setXpToApply(run.xpEarned);
-          setView('reward');
-        } else {
-          advanceRoom();
-          setView('dungeon');
-        }
-      }, 1800);
-      return () => clearTimeout(timer);
+  const handleRoomComplete = (success: boolean) => {
+    completeRoom(success);
+    setTimeout(() => setRoomDone(true), 1600);
+  };
+
+  const handleNextRoom = () => {
+    if (!run) return;
+    setRoomDone(false);
+    if (run.currentRoom + 1 >= run.rooms.length) {
+      advanceRoom();
+      setXpToApply(run.xpEarned);
+      setView('reward');
+    } else {
+      advanceRoom();
     }
-  }, [run?.status, run?.rooms, run?.currentRoom, view]);
+  };
 
   const handleRewardChoice = async (choice: 'heal' | 'luckbox') => {
     setRewardChoice(choice);
