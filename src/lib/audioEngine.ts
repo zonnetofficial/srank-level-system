@@ -238,7 +238,7 @@ export function sfxPunishment() {
 // ─── ADVANCED MUSIC ENGINE ───────────────────────────────
 // Rich synthesis: FM keys, layered pads w/ LFO, genre-specific drum kits
 
-type MusicTheme = 'home' | 'quest' | 'dungeon' | 'shop' | 'battle' | 'menu';
+type MusicTheme = 'home' | 'quest' | 'dungeon' | 'shop' | 'battle' | 'menu' | 'skills' | 'titles' | 'history';
 const NOTE = (midi: number) => 440 * Math.pow(2, (midi - 69) / 12);
 
 // ─── INSTRUMENT: Warm Pad (layered, optimized) ───
@@ -853,6 +853,131 @@ function scheduleDeep808(ctx: AudioContext, time: number, midi: number, duration
   prev808Nodes = { gains: [g, sg], oscs: [osc, sub], cutTime: time };
 }
 
+// ─── INSTRUMENT: Lo-Fi Rhodes (for Skills) ───
+function scheduleLofiKeys(ctx: AudioContext, time: number, midi: number, duration: number, brightness: number, velocity: number, dest: GainNode) {
+  const freq = NOTE(midi);
+  // Electric piano: sine + square harmonic
+  const osc1 = ctx.createOscillator();
+  const osc2 = ctx.createOscillator();
+  const g1 = ctx.createGain();
+  const g2 = ctx.createGain();
+  osc1.type = 'sine';
+  osc2.type = 'square';
+  osc1.frequency.setValueAtTime(freq, time);
+  osc2.frequency.setValueAtTime(freq * 2, time); // 2nd harmonic
+  osc2.detune.setValueAtTime(3, time);
+  const attack = 0.01;
+  const decay = duration * 0.6;
+  g1.gain.setValueAtTime(0.001, time);
+  g1.gain.linearRampToValueAtTime(0.12 * velocity, time + attack);
+  g1.gain.exponentialRampToValueAtTime(0.04 * velocity, time + attack + 0.15);
+  g1.gain.exponentialRampToValueAtTime(0.001, time + decay);
+  g2.gain.setValueAtTime(0.001, time);
+  g2.gain.linearRampToValueAtTime(0.03 * velocity, time + attack);
+  g2.gain.exponentialRampToValueAtTime(0.001, time + decay * 0.5);
+  // Lowpass + bitcrusher-like wobble
+  const lp = ctx.createBiquadFilter();
+  lp.type = 'lowpass';
+  lp.frequency.setValueAtTime(freq * 3 * brightness, time);
+  lp.frequency.exponentialRampToValueAtTime(freq * 1.5, time + decay * 0.4);
+  lp.Q.setValueAtTime(2, time);
+  osc1.connect(g1); g1.connect(lp);
+  osc2.connect(g2); g2.connect(lp);
+  lp.connect(dest);
+  osc1.start(time); osc1.stop(time + decay + 0.05);
+  osc2.start(time); osc2.stop(time + decay + 0.05);
+}
+
+// ─── INSTRUMENT: Crystal Bell (for Titles) ───
+function scheduleCrystalBell(ctx: AudioContext, time: number, midi: number, duration: number, velocity: number, dest: GainNode) {
+  const freq = NOTE(midi);
+  // Bell: sine + inharmonic partials
+  const partials = [1, 2.756, 4.07, 5.404];
+  const gains = [0.12, 0.06, 0.03, 0.015];
+  partials.forEach((p, i) => {
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq * p, time);
+    g.gain.setValueAtTime(0.001, time);
+    g.gain.linearRampToValueAtTime(gains[i] * velocity, time + 0.005);
+    g.gain.exponentialRampToValueAtTime(0.001, time + duration * (1 - i * 0.15));
+    osc.connect(g); g.connect(dest);
+    osc.start(time); osc.stop(time + duration + 0.1);
+  });
+}
+
+// ─── INSTRUMENT: Haunting Strings (for History) ───
+function scheduleHauntingStrings(ctx: AudioContext, time: number, midiNotes: number[], duration: number, gain: number, dest: GainNode) {
+  const masterFilt = ctx.createBiquadFilter();
+  masterFilt.type = 'lowpass';
+  masterFilt.frequency.setValueAtTime(800, time);
+  masterFilt.frequency.linearRampToValueAtTime(1200, time + duration * 0.3);
+  masterFilt.frequency.linearRampToValueAtTime(600, time + duration);
+  masterFilt.Q.setValueAtTime(1.5, time);
+  masterFilt.connect(dest);
+  midiNotes.forEach(midi => {
+    const freq = NOTE(midi);
+    // Sawtooth for string texture
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(freq, time);
+    osc.detune.setValueAtTime(Math.random() * 6 - 3, time);
+    const attack = Math.min(2.0, duration * 0.35);
+    const release = Math.min(2.0, duration * 0.3);
+    g.gain.setValueAtTime(0.001, time);
+    g.gain.linearRampToValueAtTime(gain * 0.2, time + attack);
+    g.gain.setValueAtTime(gain * 0.2, time + duration - release);
+    g.gain.linearRampToValueAtTime(0.001, time + duration);
+    osc.connect(g); g.connect(masterFilt);
+    osc.start(time); osc.stop(time + duration + 0.1);
+  });
+}
+
+// ─── INSTRUMENT: Vinyl Crackle (for Skills lo-fi) ───
+function scheduleVinylCrackle(ctx: AudioContext, time: number, duration: number, dest: GainNode) {
+  const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * duration), ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) {
+    d[i] = Math.random() > 0.997 ? (Math.random() * 0.3 - 0.15) : (Math.random() * 0.002 - 0.001);
+  }
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const hp = ctx.createBiquadFilter();
+  hp.type = 'highpass'; hp.frequency.setValueAtTime(2000, time);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.08, time);
+  src.connect(hp); hp.connect(g); g.connect(dest);
+  src.start(time);
+}
+
+// ─── INSTRUMENT: Choir Pad (for Titles) ───
+function scheduleChoirPad(ctx: AudioContext, time: number, midiNotes: number[], duration: number, gain: number, dest: GainNode) {
+  midiNotes.forEach(midi => {
+    const freq = NOTE(midi);
+    // Two detuned sines for "aah" choir
+    [-5, 5].forEach(det => {
+      const osc = ctx.createOscillator();
+      const g2 = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, time);
+      osc.detune.setValueAtTime(det, time);
+      const attack = Math.min(1.8, duration * 0.3);
+      const release = Math.min(2.0, duration * 0.35);
+      g2.gain.setValueAtTime(0.001, time);
+      g2.gain.linearRampToValueAtTime(gain * 0.25, time + attack);
+      g2.gain.setValueAtTime(gain * 0.25, time + duration - release);
+      g2.gain.linearRampToValueAtTime(0.001, time + duration);
+      // Formant filter for vowel
+      const bp = ctx.createBiquadFilter();
+      bp.type = 'bandpass'; bp.frequency.setValueAtTime(700, time); bp.Q.setValueAtTime(2, time);
+      osc.connect(bp); bp.connect(g2); g2.connect(dest);
+      osc.start(time); osc.stop(time + duration + 0.1);
+    });
+  });
+}
+
 // AMBIENT KIT: soft textural hits
 function ambientKick(ctx: AudioContext, time: number, vel: number, dest: GainNode) {
   const osc = ctx.createOscillator();
@@ -885,11 +1010,160 @@ function ambientPerc(ctx: AudioContext, time: number, vel: number, dest: GainNod
   src.start(time);
 }
 
+// ─── LO-FI KIT (for Skills): muffled kick, rim shot, soft hat ───
+function lofiKick(ctx: AudioContext, time: number, vel: number, dest: GainNode) {
+  const body = ctx.createOscillator();
+  const bg = ctx.createGain();
+  body.type = 'sine';
+  body.frequency.setValueAtTime(90, time);
+  body.frequency.exponentialRampToValueAtTime(40, time + 0.08);
+  const lp = ctx.createBiquadFilter();
+  lp.type = 'lowpass'; lp.frequency.setValueAtTime(200, time);
+  bg.gain.setValueAtTime(0.25 * vel, time);
+  bg.gain.exponentialRampToValueAtTime(0.001, time + 0.3);
+  body.connect(lp); lp.connect(bg); bg.connect(dest);
+  body.start(time); body.stop(time + 0.35);
+}
+
+function lofiSnare(ctx: AudioContext, time: number, vel: number, dest: GainNode) {
+  // Rim shot - short tonal click
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.type = 'triangle';
+  osc.frequency.setValueAtTime(800, time);
+  osc.frequency.exponentialRampToValueAtTime(300, time + 0.02);
+  g.gain.setValueAtTime(0.12 * vel, time);
+  g.gain.exponentialRampToValueAtTime(0.001, time + 0.08);
+  const bp = ctx.createBiquadFilter();
+  bp.type = 'bandpass'; bp.frequency.setValueAtTime(1200, time); bp.Q.setValueAtTime(1, time);
+  osc.connect(bp); bp.connect(g); g.connect(dest);
+  osc.start(time); osc.stop(time + 0.1);
+}
+
+function lofiHat(ctx: AudioContext, time: number, vel: number, open: boolean, dest: GainNode) {
+  const dur = open ? 0.15 : 0.03;
+  const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur * 1.5), ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const lp = ctx.createBiquadFilter();
+  lp.type = 'lowpass'; lp.frequency.setValueAtTime(6000, time); // Muffled
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.04 * vel, time);
+  g.gain.exponentialRampToValueAtTime(0.001, time + dur);
+  src.connect(lp); lp.connect(g); g.connect(dest);
+  src.start(time);
+}
+
+// ─── EPIC KIT (for Titles): big reverby kick, orchestral snare, chimes ───
+function epicKick(ctx: AudioContext, time: number, vel: number, dest: GainNode) {
+  const body = ctx.createOscillator();
+  const bg = ctx.createGain();
+  body.type = 'sine';
+  body.frequency.setValueAtTime(150, time);
+  body.frequency.exponentialRampToValueAtTime(30, time + 0.2);
+  bg.gain.setValueAtTime(0.3 * vel, time);
+  bg.gain.exponentialRampToValueAtTime(0.001, time + 0.6);
+  body.connect(bg); bg.connect(dest);
+  body.start(time); body.stop(time + 0.65);
+  // Boom layer
+  const boom = ctx.createOscillator();
+  const boomG = ctx.createGain();
+  boom.type = 'sine';
+  boom.frequency.setValueAtTime(50, time);
+  boomG.gain.setValueAtTime(0.15 * vel, time);
+  boomG.gain.exponentialRampToValueAtTime(0.001, time + 0.8);
+  boom.connect(boomG); boomG.connect(dest);
+  boom.start(time); boom.stop(time + 0.85);
+}
+
+function epicSnare(ctx: AudioContext, time: number, vel: number, dest: GainNode) {
+  // Orchestral snare roll texture
+  const dur = 0.25;
+  const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur), ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const bp = ctx.createBiquadFilter();
+  bp.type = 'bandpass'; bp.frequency.setValueAtTime(3000, time); bp.Q.setValueAtTime(0.8, time);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.15 * vel, time);
+  g.gain.exponentialRampToValueAtTime(0.001, time + dur);
+  src.connect(bp); bp.connect(g); g.connect(dest);
+  src.start(time);
+  // Tonal body
+  const tone = ctx.createOscillator();
+  const tg = ctx.createGain();
+  tone.type = 'triangle'; tone.frequency.setValueAtTime(200, time);
+  tg.gain.setValueAtTime(0.08 * vel, time);
+  tg.gain.exponentialRampToValueAtTime(0.001, time + 0.1);
+  tone.connect(tg); tg.connect(dest);
+  tone.start(time); tone.stop(time + 0.12);
+}
+
+function epicHat(ctx: AudioContext, time: number, vel: number, open: boolean, dest: GainNode) {
+  // Chime-like metallic hit
+  const freq = open ? 4000 : 6000;
+  const dur = open ? 0.4 : 0.08;
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(freq, time);
+  g.gain.setValueAtTime(0.03 * vel, time);
+  g.gain.exponentialRampToValueAtTime(0.001, time + dur);
+  osc.connect(g); g.connect(dest);
+  osc.start(time); osc.stop(time + dur + 0.05);
+  // Harmonic
+  const osc2 = ctx.createOscillator();
+  const g2 = ctx.createGain();
+  osc2.type = 'sine';
+  osc2.frequency.setValueAtTime(freq * 2.7, time);
+  g2.gain.setValueAtTime(0.015 * vel, time);
+  g2.gain.exponentialRampToValueAtTime(0.001, time + dur * 0.7);
+  osc2.connect(g2); g2.connect(dest);
+  osc2.start(time); osc2.stop(time + dur + 0.05);
+}
+
+// ─── GHOSTLY KIT (for History): distant thuds, whisper perc ───
+function ghostKick(ctx: AudioContext, time: number, vel: number, dest: GainNode) {
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(60, time);
+  osc.frequency.exponentialRampToValueAtTime(25, time + 0.25);
+  const lp = ctx.createBiquadFilter();
+  lp.type = 'lowpass'; lp.frequency.setValueAtTime(100, time);
+  g.gain.setValueAtTime(0.1 * vel, time);
+  g.gain.exponentialRampToValueAtTime(0.001, time + 0.6);
+  osc.connect(lp); lp.connect(g); g.connect(dest);
+  osc.start(time); osc.stop(time + 0.65);
+}
+
+function ghostPerc(ctx: AudioContext, time: number, vel: number, dest: GainNode) {
+  // Whisper-like texture
+  const dur = 0.35;
+  const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur), ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const lp = ctx.createBiquadFilter();
+  lp.type = 'lowpass'; lp.frequency.setValueAtTime(1500, time);
+  lp.frequency.exponentialRampToValueAtTime(400, time + dur);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.025 * vel, time);
+  g.gain.exponentialRampToValueAtTime(0.001, time + dur);
+  src.connect(lp); lp.connect(g); g.connect(dest);
+  src.start(time);
+}
+
 // ─── THEME CONFIGS ───────────────────────────────────────
 
 interface ThemeConfig {
   bpm: number;
-  genre: 'trap' | 'house' | 'ambient' | 'darktrap';
+  genre: 'trap' | 'house' | 'ambient' | 'darktrap' | 'lofi' | 'epic' | 'ghostly';
   chords: number[][];
   bassPattern: number[];
   keyPattern: number[]; // which 16th notes play keys (per bar)
@@ -991,13 +1265,78 @@ const THEMES: Record<MusicTheme, ThemeConfig> = {
     padGain: 0.05,
     bassOctave: -1,
   },
+  // ─── SKILLS: Lo-fi hip-hop chill ───
+  skills: {
+    bpm: 82,
+    genre: 'lofi',
+    // Jazzy chords: Dm9, Gm7, Cmaj7, Am7
+    chords: [
+      [50,53,57,60],[43,46,50,53],[48,52,55,59],[45,48,52,55],
+      [50,53,57,60],[43,46,50,53],[48,52,55,59],[45,48,52,55],
+    ],
+    // Lazy boom-bap pattern
+    bassPattern: [1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0, 1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,
+                  1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0, 1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0],
+    // Rhodes hits on off-beats
+    keyPattern:  [0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0, 0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,
+                  0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0, 0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0],
+    arpPattern:  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0],
+    padBrightness: 500,
+    padGain: 0.03,
+    bassOctave: -1,
+  },
+  // ─── TITLES: Epic cinematic ───
+  titles: {
+    bpm: 68,
+    genre: 'epic',
+    // Dm — Bb — F — C (cinematic)
+    chords: [
+      [50,53,57],[46,50,53],[53,57,60],[48,52,55],
+      [50,53,57],[46,50,53],[53,57,60],[48,52,55],
+    ],
+    // Sparse epic hits
+    bassPattern: [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                  1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0],
+    // Crystal bell melody
+    keyPattern:  [1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0, 0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,
+                  0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0, 0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0],
+    // Choir pad sustained
+    arpPattern:  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    padBrightness: 1000,
+    padGain: 0.06,
+    bassOctave: -2,
+  },
+  // ─── HISTORY: Ghostly, melancholic ───
+  history: {
+    bpm: 55,
+    genre: 'ghostly',
+    // Cm — Ab — Eb — Gm (dark melancholic)
+    chords: [
+      [48,51,55],[44,48,51],[51,55,58],[43,46,50],
+      [48,51,55],[44,48,51],[51,55,58],[43,46,50],
+    ],
+    // Very sparse
+    bassPattern: [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    // Haunting melody — very few notes
+    keyPattern:  [0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0],
+    // String pad
+    arpPattern:  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    padBrightness: 400,
+    padGain: 0.04,
+    bassOctave: -2,
+  },
 };
 
 // Drum patterns: [kick, snare, closedHat, openHat (0=none, 1=double roll, 2=triple roll)]
 type DrumStep = [number, number, number, number];
 
 
-const DRUM_PATTERNS: Record<'trap' | 'house' | 'ambient' | 'darktrap', DrumStep[]> = {
+const DRUM_PATTERNS: Record<'trap' | 'house' | 'ambient' | 'darktrap' | 'lofi' | 'epic' | 'ghostly', DrumStep[]> = {
   darktrap: [
     // K-T-TT-T-S-T-K-T (compás 1)
     [1, 0, 0, 0], [0, 0, .9, 0], [0, 0, 0, 1], [0, 0, .9, 0],
@@ -1058,6 +1397,39 @@ const DRUM_PATTERNS: Record<'trap' | 'house' | 'ambient' | 'darktrap', DrumStep[
     [.25, 0, 0, 0], [0,0,0,0],[0,0,0,0],[0,0,0,0],
     [0,  0, 0, 0],  [0,0,0,0],[0,0,.08,0],[0,0,0,0],
   ],
+  // Lo-fi: lazy boom-bap
+  lofi: [
+    [.6, 0, 0, 0],  [0,0,.3,0],[0,0,0,0],[0,0,.3,0],
+    [0, .5, 0, 0],  [0,0,.3,0],[0,0,0,0],[0,0,.2,0],
+    [0,  0, 0, 0],  [0,0,.3,0],[.5,0,0,0],[0,0,.3,0],
+    [0, .5, 0, 0],  [0,0,.2,0],[0,0,0,.3],[0,0,.2,0],
+    [.6, 0, 0, 0],  [0,0,.3,0],[0,0,0,0],[0,0,.3,0],
+    [0, .5, 0, 0],  [0,0,.3,0],[0,0,0,0],[0,0,.2,0],
+    [.4, 0, 0, 0],  [0,0,.3,0],[0,0,0,0],[0,0,.3,0],
+    [0, .5, 0, 0],  [0,0,.2,0],[0,0,0,0],[0,0,.2,0],
+  ],
+  // Epic: sparse cinematic hits
+  epic: [
+    [.8, 0, 0, 0],  [0,0,0,0],[0,0,0,0],[0,0,0,0],
+    [0,  0, 0, 0],  [0,0,0,0],[0,0,0,0],[0,0,0,0],
+    [0,  0, 0, 0],  [0,0,0,0],[0,0,0,.3],[0,0,0,0],
+    [0, .6, 0, 0],  [0,0,0,0],[0,0,0,0],[0,0,0,0],
+    [0,  0, 0, 0],  [0,0,0,0],[0,0,0,0],[0,0,0,0],
+    [.5, 0, 0, 0],  [0,0,0,0],[0,0,0,0],[0,0,0,0],
+    [0,  0, 0, 0],  [0,0,0,0],[0,0,0,.2],[0,0,0,0],
+    [0, .7, 0, 0],  [0,0,0,0],[0,0,0,0],[.3,0,0,0],
+  ],
+  // Ghostly: barely there
+  ghostly: [
+    [.2, 0, 0, 0],  [0,0,0,0],[0,0,0,0],[0,0,0,0],
+    [0,  0, 0, 0],  [0,0,0,0],[0,0,0,0],[0,0,0,0],
+    [0,  0, 0, 0],  [0,0,0,0],[0,0,0,0],[0,0,0,0],
+    [0,  0, 0, 0],  [0,0,0,0],[0,.15,0,0],[0,0,0,0],
+    [0,  0, 0, 0],  [0,0,0,0],[0,0,0,0],[0,0,0,0],
+    [.15, 0, 0, 0], [0,0,0,0],[0,0,0,0],[0,0,0,0],
+    [0,  0, 0, 0],  [0,0,0,0],[0,0,0,0],[0,0,0,0],
+    [0,  0, 0, 0],  [0,0,0,0],[0,0,0,0],[0,.1,0,0],
+  ],
 };
 
 // Genre-specific drum dispatchers
@@ -1067,19 +1439,25 @@ type DrumKit = {
   hat: (ctx: AudioContext, t: number, v: number, open: boolean, d: GainNode) => void;
 };
 
-const DRUM_KITS: Record<'trap' | 'house' | 'ambient' | 'darktrap', DrumKit> = {
+const DRUM_KITS: Record<'trap' | 'house' | 'ambient' | 'darktrap' | 'lofi' | 'epic' | 'ghostly', DrumKit> = {
   darktrap: { kick: darkTrapKick, snare: darkTrapSnare, hat: darkTrapHat },
   trap: { kick: trapKick, snare: trapSnare, hat: trapHat },
   house: { kick: houseKick, snare: houseClap, hat: houseHat },
   ambient: { kick: ambientKick, snare: ambientPerc, hat: (ctx, t, v, _o, d) => ambientPerc(ctx, t, v * 0.5, d) },
+  lofi: { kick: lofiKick, snare: lofiSnare, hat: lofiHat },
+  epic: { kick: epicKick, snare: epicSnare, hat: epicHat },
+  ghostly: { kick: ghostKick, snare: ghostPerc, hat: (ctx, t, v, _o, d) => ghostPerc(ctx, t, v * 0.3, d) },
 };
 
 // Genre-specific bass dispatchers
-const BASS_FN: Record<'trap' | 'house' | 'ambient' | 'darktrap', (ctx: AudioContext, t: number, m: number, dur: number, d: GainNode) => void> = {
+const BASS_FN: Record<'trap' | 'house' | 'ambient' | 'darktrap' | 'lofi' | 'epic' | 'ghostly', (ctx: AudioContext, t: number, m: number, dur: number, d: GainNode) => void> = {
   darktrap: scheduleDeep808,
   trap: schedule808Sub,
   house: scheduleHouseBass,
   ambient: scheduleDrone,
+  lofi: scheduleHouseBass,  // Filtered saw bass for lofi
+  epic: scheduleDrone,       // Deep drone for epic
+  ghostly: scheduleDrone,    // Ghostly drone
 };
 
 // ─── MAIN SEQUENCER WITH CROSSFADE (OPTIMIZED) ───
@@ -1113,13 +1491,18 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
   outputGain.gain.setValueAtTime(0.001, ctx.currentTime);
   outputGain.connect(musicGain!);
 
-  // Reverb/Delay más pronunciado para darktrap
+  // Reverb/Delay — genre-specific wetness
   const delaySend = ctx.createDelay(2);
   delaySend.delayTime.setValueAtTime(sixteenthDur * 3, ctx.currentTime);
   const delayFb = ctx.createGain();
-  delayFb.gain.setValueAtTime(config.genre === 'darktrap' ? 0.4 : 0.15, ctx.currentTime); // Más feedback
+  const reverbWet = config.genre === 'darktrap' ? 0.4
+    : config.genre === 'ghostly' ? 0.55
+    : config.genre === 'epic' ? 0.45
+    : config.genre === 'lofi' ? 0.3
+    : 0.15;
+  delayFb.gain.setValueAtTime(reverbWet, ctx.currentTime);
   const delayOut = ctx.createGain();
-  delayOut.gain.setValueAtTime(config.genre === 'darktrap' ? 0.35 : 0.15, ctx.currentTime); // Más wet
+  delayOut.gain.setValueAtTime(reverbWet * 0.9, ctx.currentTime);
   const delaySendGain = ctx.createGain();
   delaySendGain.gain.setValueAtTime(1, ctx.currentTime);
   delaySendGain.connect(delaySend);
@@ -1139,13 +1522,23 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
       const chord = config.chords[bar];
       const rootMidi = chord[0];
 
-      // ── Warm Pad (disabled for darktrap/home — removes ambient bass tension) ──
-      if (config.genre !== 'darktrap') {
+      // ── Pad layer — genre-specific ──
+      if (config.genre === 'lofi') {
+        // Lo-fi: warm pad + vinyl crackle
+        scheduleWarmPad(ctx, barStart, chord.slice(0, 3), barDur, config.padGain, config.padBrightness, outputGain);
+        if (bar % 2 === 0) scheduleVinylCrackle(ctx, barStart, barDur * 2, outputGain);
+      } else if (config.genre === 'epic') {
+        // Epic: choir pad
+        scheduleChoirPad(ctx, barStart, chord.slice(0, 3), barDur, config.padGain, outputGain);
+      } else if (config.genre === 'ghostly') {
+        // Ghostly: haunting strings
+        scheduleHauntingStrings(ctx, barStart, chord.slice(0, 3), barDur, config.padGain, outputGain);
+      } else if (config.genre !== 'darktrap') {
         scheduleWarmPad(ctx, barStart, chord, barDur, config.padGain, config.padBrightness, outputGain);
       }
 
-      // ── Drone layer (solo ambient, disabled for darktrap) ──
-      if (config.genre === 'ambient' && bar % 4 === 0) {
+      // ── Drone layer ──
+      if ((config.genre === 'ambient' || config.genre === 'ghostly') && bar % 4 === 0) {
         scheduleDrone(ctx, barStart, rootMidi - 12, barDur * 4, outputGain);
       }
 
@@ -1161,75 +1554,90 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
         if (hat > 0) kit.hat(ctx, stepTime, hat, false, outputGain);
         if (openHat > 0) kit.hat(ctx, stepTime, openHat, true, outputGain);
 
-        // Bass — darktrap uses specific 808 note sequence in Am (solo en kick)
+        // Bass
         const bassPatIdx = ((bar * 16) + step) % config.bassPattern.length;
-        if (config.bassPattern[bassPatIdx] && kick > 0) { // SOLO cuando hay kick
+        const bassPlays = config.genre === 'darktrap'
+          ? (config.bassPattern[bassPatIdx] && kick > 0)
+          : config.bassPattern[bassPatIdx];
+        if (bassPlays) {
           if (config.genre === 'darktrap') {
-            // 808 bass: A2-A2---G2--- | A2---F2---E2 | A2-A2---G2--- | F2---E2---A2
-            const bass808Notes = [
-              45,45,43, // Bar 1: A2, A2, G2
-              45,41,40, // Bar 2: A2, F2, E2
-              45,45,43, // Bar 3: A2, A2, G2
-              41,40,45, // Bar 4: F2, E2, A2
-            ];
-            // Count which bass hit this is across all bars
+            const bass808Notes = [45,45,43, 45,41,40, 45,45,43, 41,40,45];
             let bassHitCount = 0;
             const totalStep = (bar % 4) * 16 + step;
             for (let s = 0; s < totalStep; s++) {
               if (config.bassPattern[s % config.bassPattern.length]) bassHitCount++;
             }
             const bassMidi = bass808Notes[bassHitCount % bass808Notes.length];
-            const bassDur = barDur * 1.5;
-            bassFn(ctx, stepTime, bassMidi, bassDur, outputGain);
+            bassFn(ctx, stepTime, bassMidi, barDur * 1.5, outputGain);
           } else {
             const bassMidi = rootMidi + config.bassOctave * 12;
-            const bassDur = config.genre === 'ambient' ? barDur
+            const bassDur = (config.genre === 'ambient' || config.genre === 'ghostly' || config.genre === 'epic') ? barDur
               : config.genre === 'trap' ? sixteenthDur * 6
+              : config.genre === 'lofi' ? sixteenthDur * 4
               : sixteenthDur * 3;
             bassFn(ctx, stepTime, bassMidi, bassDur, outputGain);
           }
         }
 
-        // Lead melody — darktrap uses Am dark melody sequence
+        // Lead melody — genre-specific instruments
         const keyPatIdx = ((bar * 16) + step) % config.keyPattern.length;
         if (config.keyPattern[keyPatIdx]) {
-          const brightness = config.genre === 'darktrap' ? 0.6
-            : config.genre === 'house' ? 1.5
-            : config.genre === 'trap' ? 0.8 : 0.4;
-          const vel = config.genre === 'darktrap' ? 0.7 : 0.7;
           if (config.genre === 'darktrap') {
-            // Lead: A4-E5-G5-E5-A4-E5-C5-E5 | A4-E5-G5-E5-A4-E5-D5-C5 | ...
             const darkLead = [
-              69,76,79,76,69,76,72,76, // Bar 1: A4-E5-G5-E5-A4-E5-C5-E5
-              69,76,79,76,69,76,74,72, // Bar 2: A4-E5-G5-E5-A4-E5-D5-C5
-              69,79,76,72,69,72,74,76, // Bar 3: A4-G5-E5-C5-A4-C5-D5-E5
-              79,76,74,72,69,72,76,69, // Bar 4: G5-E5-D5-C5-A4-C5-E5-A4
+              69,76,79,76,69,76,72,76,
+              69,76,79,76,69,76,74,72,
+              69,79,76,72,69,72,74,76,
+              79,76,74,72,69,72,76,69,
             ];
-            // Each bar has 8 key hits (every 2 sixteenths)
             let keyHitCount = 0;
             const totalStep = (bar % 4) * 16 + step;
             for (let s = 0; s < totalStep; s++) {
               if (config.keyPattern[s % config.keyPattern.length]) keyHitCount++;
             }
             const bellNote = darkLead[keyHitCount % darkLead.length];
-            scheduleFMKeys(ctx, stepTime, bellNote, sixteenthDur * 2, brightness, vel, outputGain);
+            scheduleFMKeys(ctx, stepTime, bellNote, sixteenthDur * 2, 0.6, 0.7, outputGain);
+          } else if (config.genre === 'lofi') {
+            // Lo-fi Rhodes — jazzy chord tones
+            const lofiMelody = [65,69,72,67,64,69,67,72, 65,67,69,64,67,72,69,65];
+            let keyHitCount = 0;
+            const totalStep = (bar % 4) * 16 + step;
+            for (let s = 0; s < totalStep; s++) {
+              if (config.keyPattern[s % config.keyPattern.length]) keyHitCount++;
+            }
+            const note = lofiMelody[keyHitCount % lofiMelody.length];
+            scheduleLofiKeys(ctx, stepTime, note, sixteenthDur * 3, 0.7, 0.8, outputGain);
+          } else if (config.genre === 'epic') {
+            // Crystal bells — cinematic melody
+            const epicMelody = [74,77,72,69,74,72,77,74, 69,72,74,77,72,69,74,72];
+            let keyHitCount = 0;
+            const totalStep = (bar % 4) * 16 + step;
+            for (let s = 0; s < totalStep; s++) {
+              if (config.keyPattern[s % config.keyPattern.length]) keyHitCount++;
+            }
+            const note = epicMelody[keyHitCount % epicMelody.length];
+            scheduleCrystalBell(ctx, stepTime, note, sixteenthDur * 8, 0.8, outputGain);
+          } else if (config.genre === 'ghostly') {
+            // Haunting FM melody — very sparse, dark
+            const ghostMelody = [67,63,60,58,63,60,67,63];
+            let keyHitCount = 0;
+            const totalStep = (bar % 4) * 16 + step;
+            for (let s = 0; s < totalStep; s++) {
+              if (config.keyPattern[s % config.keyPattern.length]) keyHitCount++;
+            }
+            const note = ghostMelody[keyHitCount % ghostMelody.length];
+            scheduleFMKeys(ctx, stepTime, note, sixteenthDur * 6, 0.3, 0.5, outputGain);
           } else {
+            const brightness = config.genre === 'house' ? 1.5 : config.genre === 'trap' ? 0.8 : 0.4;
             const bellNote = chord[chord.length - 1] + 12;
-            scheduleFMKeys(ctx, stepTime, bellNote, sixteenthDur * 4, brightness, vel, outputGain);
+            scheduleFMKeys(ctx, stepTime, bellNote, sixteenthDur * 4, brightness, 0.7, outputGain);
           }
         }
 
-        // Counter melody / arp — darktrap uses slow dark pad notes
+        // Counter melody / arp
         const arpPatIdx = ((bar * 16) + step) % config.arpPattern.length;
         if (config.arpPattern[arpPatIdx]) {
           if (config.genre === 'darktrap') {
-            // Contra melodía: A3---C4---E4--- | G3---A3---E4--- | F3---A3---C4--- | G3---E4---A3---
-            const counterMelody = [
-              57,60,64, // Bar 1: A3, C4, E4
-              55,57,64, // Bar 2: G3, A3, E4
-              53,57,60, // Bar 3: F3, A3, C4
-              55,64,57, // Bar 4: G3, E4, A3
-            ];
+            const counterMelody = [57,60,64, 55,57,64, 53,57,60, 55,64,57];
             let arpHitCount = 0;
             const totalStep = (bar % 4) * 16 + step;
             for (let s = 0; s < totalStep; s++) {
@@ -1237,6 +1645,16 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
             }
             const arpNote = counterMelody[arpHitCount % counterMelody.length];
             schedulePluck(ctx, stepTime, arpNote, sixteenthDur * 5, outputGain);
+          } else if (config.genre === 'lofi') {
+            // Lo-fi pluck — mellow chord tones
+            const arpNote = chord[step % chord.length] + 12;
+            schedulePluck(ctx, stepTime, arpNote, sixteenthDur * 6, outputGain);
+          } else if (config.genre === 'epic') {
+            // Choir swells on arp hits
+            scheduleChoirPad(ctx, stepTime, chord.slice(0, 3), barDur * 2, config.padGain * 0.8, outputGain);
+          } else if (config.genre === 'ghostly') {
+            // Haunting string swell
+            scheduleHauntingStrings(ctx, stepTime, [chord[0], chord[1]], barDur, config.padGain * 0.6, outputGain);
           } else {
             const arpNote = chord[step % chord.length] + 12;
             schedulePluck(ctx, stepTime, arpNote, sixteenthDur * 3, outputGain);
