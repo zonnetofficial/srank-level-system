@@ -1614,6 +1614,7 @@ const BASS_FN: Record<'trap' | 'house' | 'ambient' | 'darktrap' | 'lofi' | 'epic
   lofi: scheduleHouseBass,  // Filtered saw bass for lofi
   epic: scheduleDrone,       // Deep drone for epic
   ghostly: scheduleDrone,    // Ghostly drone
+  monarch: scheduleDrone,    // Deep ominous drone for monarch
 };
 
 // ─── MAIN SEQUENCER WITH CROSSFADE (OPTIMIZED) ───
