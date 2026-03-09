@@ -465,16 +465,13 @@ export default function Dungeons() {
       )}
 
       {/* PERSONALIZAR TAB */}
-      {tab === 'personalizar' && showTabs && char && (
-        <EquipmentPanel
-          sprite={char.sprite}
-          characterName={char.name}
-          characterClass={char.className}
-        />
-      )}
-      {tab === 'personalizar' && showTabs && !char && (
-        <div className="text-center py-8 text-muted-foreground text-xs font-display">
-          Crea un personaje primero para personalizar tu avatar
+      {tab === 'personalizar' && showTabs && (
+        <div className="flex flex-col items-center gap-3 py-8">
+          <span className="text-4xl">🚧</span>
+          <h2 className="font-display text-xl text-primary tracking-wider uppercase">Coming Soon</h2>
+          <p className="text-xs text-muted-foreground text-center">
+            La personalización de avatar estará disponible próximamente.
+          </p>
         </div>
       )}
 
