@@ -4,6 +4,7 @@ import VictorianFrame from '@/components/VictorianFrame';
 import { useMonarch } from '@/hooks/useMonarch';
 import { useGameState } from '@/hooks/useGameState';
 import { useAuth } from '@/hooks/useAuth';
+import { sfxClick, sfxHover } from '@/lib/audioEngine';
 
 const MonarchMode = () => {
   const navigate = useNavigate();
