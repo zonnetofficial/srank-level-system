@@ -851,18 +851,17 @@ const THEMES: Record<MusicTheme, ThemeConfig> = {
   home: {
     bpm: 75,
     genre: 'darktrap',
-    // Deep Cm minor — nocturnal, cold, elegant
-    // Cm(add9) → Ab → Fm7 → Gsus4 → Cm → Eb → Abmaj7 → Gm
+    // "A 120" style: Am → F → C → G (Natural Minor, melancholic)
     chords: [
-      [36, 48, 51, 55, 62], [44, 48, 51, 55], [41, 44, 48, 51], [43, 50, 55, 58],
-      [36, 48, 51, 55], [39, 46, 51, 55], [44, 48, 51, 56], [43, 46, 50, 55],
+      [57, 60, 64], [53, 57, 60], [60, 64, 67], [55, 59, 62],
+      [57, 60, 64], [53, 57, 60], [60, 64, 67], [55, 59, 62],
     ],
     // No separate bass — the 808 kick IS the bass
     bassPattern: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    // Very sparse dark key touches
-    keyPattern:  [0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    // Ethereal plucks with space
-    arpPattern:  [0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0, 0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0],
+    // Simple melancholic piano hits (like Gera MX style)
+    keyPattern:  [1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0, 0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
+    // Atmospheric string pads (slow, sustained)
+    arpPattern:  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0],
     padBrightness: 500,
     padGain: 0.05,
     bassOctave: -1,
