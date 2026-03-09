@@ -13,6 +13,7 @@ import {
   getNextClassTitle,
 } from '@/lib/gameData';
 import { getClassChallenge } from '@/lib/classChallenges';
+import { sfxClick, sfxHover, sfxSuccess } from '@/lib/audioEngine';
 
 const statKeys: StatKey[] = ['int', 'str', 'agi', 'vit', 'end'];
 
@@ -34,6 +35,7 @@ const Titles = () => {
   const handleCompleteTask = (stat: StatKey) => {
     if (challengeClass) {
       completeClassChallengeTask(challengeClass, stat);
+      sfxSuccess();
     }
   };
 
@@ -86,7 +88,8 @@ const Titles = () => {
               return (
                 <button
                   key={t.name}
-                  onClick={() => setChallengeClass(t.name)}
+                  onClick={() => { setChallengeClass(t.name); sfxClick(); }}
+                  onMouseEnter={() => sfxHover()}
                   className="w-full text-left p-3 rounded-lg border border-accent/40 bg-accent/5 hover:bg-accent/10 transition-all animate-scale-up"
                   style={{ animationDelay: `${500 + i * 100}ms` }}
                 >

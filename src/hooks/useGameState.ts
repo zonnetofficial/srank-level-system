@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   GameState,
   StatKey,
@@ -244,6 +244,8 @@ export function useGameState() {
     });
   }, [today]);
 
+  const levelRef = useRef(state.level);
+
   const completeQuest = useCallback(() => {
     setState(prev => {
       const quest = prev.questLog.find(q => q.date === today);
@@ -314,6 +316,14 @@ export function useGameState() {
       };
     });
   }, [today]);
+
+  // Detect level-up and play SFX
+  useEffect(() => {
+    if (state.level > levelRef.current) {
+      import('@/lib/audioEngine').then(m => m.sfxLevelUp());
+    }
+    levelRef.current = state.level;
+  }, [state.level]);
 
   const startQuest = useCallback(() => {
     setState(prev => {

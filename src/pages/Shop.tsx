@@ -4,6 +4,7 @@ import { useShop, ShopItem, getMarketPrice } from '@/hooks/useShop';
 import SlotNumber from '@/components/SlotNumber';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
+import { sfxClick, sfxHover, sfxPurchase } from '@/lib/audioEngine';
 import ShopTab from '@/components/shop/ShopTab';
 import PackagesTab from '@/components/shop/PackagesTab';
 import InventoryTab from '@/components/shop/InventoryTab';
@@ -29,14 +30,16 @@ const Shop = () => {
 
   const handleBuyDP = async (item: ShopItem) => {
     setBuying(true);
-    await shop.buyItemWithDP(item);
+    const result = await shop.buyItemWithDP(item);
+    if (result) sfxPurchase();
     setSelectedItem(null);
     setBuying(false);
   };
 
   const handleBuyTP = async (item: ShopItem) => {
     setBuying(true);
-    await shop.buyItemWithTP(item);
+    const result = await shop.buyItemWithTP(item);
+    if (result) sfxPurchase();
     setSelectedItem(null);
     setBuying(false);
   };
@@ -84,7 +87,8 @@ const Shop = () => {
         {tabs.map(t => (
           <button
             key={t.key}
-            onClick={() => setTab(t.key)}
+            onClick={() => { setTab(t.key); sfxClick(); }}
+            onMouseEnter={() => sfxHover()}
             className={`flex-1 py-2 text-[9px] font-display uppercase tracking-[0.12em] border transition-all duration-200 ${
               tab === t.key
                 ? 'border-primary/50 bg-primary/10 text-primary'

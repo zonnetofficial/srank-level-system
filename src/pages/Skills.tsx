@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { sfxClick, sfxHover, sfxSuccess, sfxError } from '@/lib/audioEngine';
 
 const statKeys: StatKey[] = ['int', 'str', 'agi', 'vit', 'end'];
 
@@ -126,6 +127,7 @@ const Skills = () => {
     if (!taskDialogStat) return;
     const pts = success ? (skillPoints[taskDialogStat]?.success || 0) : (skillPoints[taskDialogStat]?.fail || 0);
     completeSkillTask(taskDialogStat, pts);
+    if (success) sfxSuccess(); else sfxError();
     setTaskDialogStat(null);
     setTaskDialogTask(null);
   };
@@ -256,7 +258,7 @@ const Skills = () => {
               {testQuestions[currentQ].options.map((opt, i) => (
                 <button
                   key={i}
-                  onClick={() => handleAnswer(i)}
+                  onClick={() => { handleAnswer(i); sfxClick(); }}
                   className="w-full text-left py-3 px-4 rounded-lg bg-secondary text-secondary-foreground font-body text-sm hover:bg-primary/20 hover:border-primary/40 border border-border transition-colors animate-slide-up"
                   style={{ animationDelay: `${i * 80}ms` }}
                 >
@@ -328,7 +330,8 @@ const Skills = () => {
               </div>
 
               <button
-                onClick={() => handleStartSkill(key)}
+                onClick={() => { handleStartSkill(key); sfxClick(); }}
+                onMouseEnter={() => sfxHover()}
                 className="w-full py-2 rounded font-display text-xs uppercase tracking-wider transition-colors bg-secondary text-secondary-foreground hover:bg-secondary/80"
               >
                 {key === 'int' ? 'Iniciar Test' : 'Iniciar Tarea'}

@@ -1,6 +1,7 @@
 import { ShopItem, getMarketPrice } from '@/hooks/useShop';
 import { RARITY_COLORS, RARITY_GLOW, RARITY_LABELS, CATEGORY_LABELS } from './shopConstants';
 import ItemIcon from '@/components/ItemIcon';
+import { sfxHover } from '@/lib/audioEngine';
 
 interface Props {
   item: ShopItem;
@@ -47,6 +48,7 @@ export default function ItemDetailModal({ item, dpBalance, tpBalance, buying, on
           </button>
           <button
             onClick={onBuyDP}
+            onMouseEnter={() => sfxHover()}
             disabled={buying || dpBalance < item.price}
             className="flex-1 py-2 text-[10px] font-display uppercase tracking-[0.15em] text-accent border border-accent/30 hover:border-accent/60 hover:bg-accent/10 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             style={{ clipPath: btnClip }}
@@ -55,6 +57,7 @@ export default function ItemDetailModal({ item, dpBalance, tpBalance, buying, on
           </button>
           <button
             onClick={onBuyTP}
+            onMouseEnter={() => sfxHover()}
             disabled={buying || tpBalance < tpPrice}
             className="flex-1 py-2 text-[10px] font-display uppercase tracking-[0.15em] text-primary border border-primary/30 hover:border-primary/60 hover:bg-primary/10 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             style={{ clipPath: btnClip }}
