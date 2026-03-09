@@ -938,11 +938,9 @@ const THEMES: Record<MusicTheme, ThemeConfig> = {
   },
 };
 
-// Drum patterns: 32 steps [kick, snare/clap, closedHat, openHat]
-type DrumStep = [number, number, number, number];
-
 // Drum patterns: [kick, snare, closedHat, openHat (0=none, 1=double roll, 2=triple roll)]
 type DrumStep = [number, number, number, number];
+
 
 const DRUM_PATTERNS: Record<'trap' | 'house' | 'ambient' | 'darktrap', DrumStep[]> = {
   darktrap: [
