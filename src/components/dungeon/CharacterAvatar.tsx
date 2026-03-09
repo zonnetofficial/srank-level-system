@@ -76,35 +76,35 @@ export default function CharacterAvatar({ sprite, characterName, characterClass,
           <span className="text-5xl relative" style={{ zIndex: 1 }}>{sprite || '👤'}</span>
         )}
 
-        {/* Armor overlay — same full body position */}
+        {/* Armor overlay — blended on top */}
         {armorImg && (
           <img
             src={armorImg}
             alt="Armor"
             className="absolute inset-0 w-full h-full object-contain pointer-events-none"
-            style={{ zIndex: 2 }}
+            style={{ zIndex: 2, mixBlendMode: 'lighten' }}
             draggable={false}
           />
         )}
 
-        {/* Weapon overlay — same full body position */}
+        {/* Weapon overlay — blended on top */}
         {weaponImg && (
           <img
             src={weaponImg}
             alt="Weapon"
             className="absolute inset-0 w-full h-full object-contain pointer-events-none"
-            style={{ zIndex: 3 }}
+            style={{ zIndex: 3, mixBlendMode: 'lighten' }}
             draggable={false}
           />
         )}
 
-        {/* Accessory overlay — same full body position */}
+        {/* Accessory overlay — blended on top */}
         {accessoryImg && (
           <img
             src={accessoryImg}
             alt="Accessory"
             className="absolute inset-0 w-full h-full object-contain pointer-events-none"
-            style={{ zIndex: 4 }}
+            style={{ zIndex: 4, mixBlendMode: 'lighten' }}
             draggable={false}
           />
         )}
