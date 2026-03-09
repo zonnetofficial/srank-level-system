@@ -61,6 +61,7 @@ export default function Dungeons() {
   const [rewardChoice, setRewardChoice] = useState<'heal' | 'luckbox' | null>(null);
   const [luckBoxResult, setLuckBoxResult] = useState<LuckBoxReward | null>(null);
   const [xpToApply, setXpToApply] = useState(0);
+  const [profileTarget, setProfileTarget] = useState<LeaderboardEntry | null>(null);
 
   // Leaderboard
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
