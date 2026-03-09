@@ -30,7 +30,7 @@ const ranks: DungeonRank[] = ['E', 'D', 'C', 'B', 'A', 'S'];
 const RANK_ORDER: Record<string, number> = { E: 1, D: 2, C: 3, B: 4, A: 5, S: 6 };
 
 type View = 'lobby' | 'create' | 'dungeon' | 'reward' | 'result';
-type Tab = 'dungeons' | 'equipo' | 'ranking';
+type Tab = 'dungeons' | 'equipo' | 'personalizar' | 'ranking';
 
 interface LeaderboardEntry {
   id: string;
