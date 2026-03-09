@@ -257,7 +257,7 @@ const Skills = () => {
               {testQuestions[currentQ].options.map((opt, i) => (
                 <button
                   key={i}
-                  onClick={() => handleAnswer(i)}
+                  onClick={() => { handleAnswer(i); sfxClick(); }}
                   className="w-full text-left py-3 px-4 rounded-lg bg-secondary text-secondary-foreground font-body text-sm hover:bg-primary/20 hover:border-primary/40 border border-border transition-colors animate-slide-up"
                   style={{ animationDelay: `${i * 80}ms` }}
                 >
