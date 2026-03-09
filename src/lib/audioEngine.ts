@@ -804,56 +804,53 @@ function darkTrapHat(ctx: AudioContext, time: number, vel: number, open: boolean
 
 // DEEP 808 SUB BASS for dark trap — clean, sustained, massive sub
 function scheduleDeep808(ctx: AudioContext, time: number, midi: number, duration: number, dest: GainNode) {
+  cut808(ctx, time); // Kill previous 808
   const freq = NOTE(midi);
   
-  // 808 limpio y grave — sine puro con pitch drop sutil
   const osc = ctx.createOscillator();
   const g = ctx.createGain();
   osc.type = 'sine';
   
-  // Pitch drop más sutil y desde más arriba para evitar pop
-  osc.frequency.setValueAtTime(freq * 1.1, time); // Inicio más cerca de la nota final
-  osc.frequency.exponentialRampToValueAtTime(freq, time + 0.12); // Drop más lento
+  osc.frequency.setValueAtTime(freq * 1.1, time);
+  osc.frequency.exponentialRampToValueAtTime(freq, time + 0.12);
   
-  // Saturación MUY suave — solo para calidez, no distorsión
   const shaper = ctx.createWaveShaper();
   const curve = new Float32Array(256);
   for (let i = 0; i < 256; i++) {
     const x = (i / 128) - 1;
-    curve[i] = Math.tanh(x * 0.8); // Saturación muy suave
+    curve[i] = Math.tanh(x * 0.8);
   }
   shaper.curve = curve;
-  shaper.oversample = '4x'; // Máxima calidad
+  shaper.oversample = '4x';
   
-  // Lowpass para mantenerlo sub-heavy y limpio
   const lp = ctx.createBiquadFilter();
   lp.type = 'lowpass';
   lp.frequency.setValueAtTime(freq * 2.5, time);
   lp.frequency.exponentialRampToValueAtTime(freq * 1.3, time + duration * 0.5);
   lp.Q.setValueAtTime(0.7, time);
   
-  // Envelope LIMPIO — ataque gradual sin pop
   g.gain.setValueAtTime(0.001, time);
-  g.gain.linearRampToValueAtTime(0.32, time + 0.06); // Ataque más lento y suave
-  g.gain.setValueAtTime(0.28, time + duration * 0.7); // Sustain largo
+  g.gain.linearRampToValueAtTime(0.32, time + 0.06);
+  g.gain.setValueAtTime(0.28, time + duration * 0.7);
   g.gain.exponentialRampToValueAtTime(0.001, time + duration);
   
   osc.connect(shaper); shaper.connect(lp); lp.connect(g); g.connect(dest);
   osc.start(time); osc.stop(time + duration + 0.05);
   
-  // Sub harmonic más fuerte para más peso grave
   const sub = ctx.createOscillator();
   const sg = ctx.createGain();
   sub.type = 'sine';
-  sub.frequency.setValueAtTime(freq / 2, time); // Octava abajo
+  sub.frequency.setValueAtTime(freq / 2, time);
   
   sg.gain.setValueAtTime(0.001, time);
-  sg.gain.linearRampToValueAtTime(0.18, time + 0.08); // Sub más fuerte y gradual
+  sg.gain.linearRampToValueAtTime(0.18, time + 0.08);
   sg.gain.setValueAtTime(0.15, time + duration * 0.6);
   sg.gain.exponentialRampToValueAtTime(0.001, time + duration);
   
   sub.connect(sg); sg.connect(dest);
   sub.start(time); sub.stop(time + duration + 0.05);
+  
+  prev808Nodes = { gains: [g, sg], oscs: [osc, sub], cutTime: time };
 }
 
 // AMBIENT KIT: soft textural hits
