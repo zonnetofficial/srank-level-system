@@ -238,7 +238,7 @@ export function sfxPunishment() {
 // ─── ADVANCED MUSIC ENGINE ───────────────────────────────
 // Rich synthesis: FM keys, layered pads w/ LFO, genre-specific drum kits
 
-type MusicTheme = 'home' | 'quest' | 'dungeon' | 'shop' | 'battle' | 'menu' | 'skills' | 'titles' | 'history';
+type MusicTheme = 'home' | 'quest' | 'dungeon' | 'shop' | 'battle' | 'menu' | 'skills' | 'titles' | 'history' | 'monarch';
 const NOTE = (midi: number) => 440 * Math.pow(2, (midi - 69) / 12);
 
 // ─── INSTRUMENT: Warm Pad (layered, optimized) ───
@@ -853,7 +853,129 @@ function scheduleDeep808(ctx: AudioContext, time: number, midi: number, duration
   prev808Nodes = { gains: [g, sg], oscs: [osc, sub], cutTime: time };
 }
 
-// ─── INSTRUMENT: Lo-Fi Rhodes (for Skills) ───
+// ─── INSTRUMENT: Dark Organ (for Monarch) ───
+function scheduleDarkOrgan(ctx: AudioContext, time: number, midi: number, duration: number, velocity: number, dest: GainNode) {
+  const freq = NOTE(midi);
+  // Organ: multiple sine harmonics (drawbar style)
+  const harmonics = [1, 2, 3, 4, 6, 8];
+  const hGains = [0.12, 0.08, 0.05, 0.03, 0.02, 0.01];
+  harmonics.forEach((h, i) => {
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq * h, time);
+    const attack = 0.15;
+    g.gain.setValueAtTime(0.001, time);
+    g.gain.linearRampToValueAtTime(hGains[i] * velocity, time + attack);
+    g.gain.setValueAtTime(hGains[i] * velocity * 0.8, time + duration * 0.7);
+    g.gain.exponentialRampToValueAtTime(0.001, time + duration);
+    osc.connect(g); g.connect(dest);
+    osc.start(time); osc.stop(time + duration + 0.1);
+  });
+  // Distortion warmth
+  const distOsc = ctx.createOscillator();
+  const dg = ctx.createGain();
+  const shaper = ctx.createWaveShaper();
+  const curve = new Float32Array(256);
+  for (let ci = 0; ci < 256; ci++) { const x = (ci/128)-1; curve[ci] = Math.tanh(x * 2); }
+  shaper.curve = curve;
+  distOsc.type = 'sawtooth';
+  distOsc.frequency.setValueAtTime(freq, time);
+  dg.gain.setValueAtTime(0.001, time);
+  dg.gain.linearRampToValueAtTime(0.02 * velocity, time + 0.2);
+  dg.gain.exponentialRampToValueAtTime(0.001, time + duration * 0.8);
+  distOsc.connect(shaper); shaper.connect(dg); dg.connect(dest);
+  distOsc.start(time); distOsc.stop(time + duration + 0.1);
+}
+
+// ─── INSTRUMENT: Industrial Texture (for Monarch) ───
+function scheduleIndustrialHit(ctx: AudioContext, time: number, duration: number, dest: GainNode) {
+  // Metallic clang + distorted noise
+  const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * duration), ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const bp = ctx.createBiquadFilter();
+  bp.type = 'bandpass'; bp.frequency.setValueAtTime(800, time); bp.Q.setValueAtTime(5, time);
+  bp.frequency.exponentialRampToValueAtTime(200, time + duration);
+  const shaper = ctx.createWaveShaper();
+  const curve = new Float32Array(256);
+  for (let ci = 0; ci < 256; ci++) { const x = (ci/128)-1; curve[ci] = Math.tanh(x * 6); }
+  shaper.curve = curve;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.06, time);
+  g.gain.exponentialRampToValueAtTime(0.001, time + duration);
+  src.connect(shaper); shaper.connect(bp); bp.connect(g); g.connect(dest);
+  src.start(time);
+}
+
+// ─── MONARCH KIT: industrial kick, heavy snare, metallic perc ───
+function monarchKick(ctx: AudioContext, time: number, vel: number, dest: GainNode) {
+  // Massive distorted kick
+  const body = ctx.createOscillator();
+  const bg = ctx.createGain();
+  body.type = 'sine';
+  body.frequency.setValueAtTime(100, time);
+  body.frequency.exponentialRampToValueAtTime(28, time + 0.15);
+  const shaper = ctx.createWaveShaper();
+  const curve = new Float32Array(256);
+  for (let ci = 0; ci < 256; ci++) { const x = (ci/128)-1; curve[ci] = Math.tanh(x * 3); }
+  shaper.curve = curve;
+  bg.gain.setValueAtTime(0.35 * vel, time);
+  bg.gain.exponentialRampToValueAtTime(0.001, time + 0.7);
+  body.connect(shaper); shaper.connect(bg); bg.connect(dest);
+  body.start(time); body.stop(time + 0.75);
+}
+
+function monarchSnare(ctx: AudioContext, time: number, vel: number, dest: GainNode) {
+  // Heavy industrial snare
+  const dur = 0.3;
+  const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur), ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const bp = ctx.createBiquadFilter();
+  bp.type = 'bandpass'; bp.frequency.setValueAtTime(2000, time); bp.Q.setValueAtTime(1.2, time);
+  const shaper = ctx.createWaveShaper();
+  const curve = new Float32Array(256);
+  for (let ci = 0; ci < 256; ci++) { const x = (ci/128)-1; curve[ci] = Math.tanh(x * 4); }
+  shaper.curve = curve;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.18 * vel, time);
+  g.gain.exponentialRampToValueAtTime(0.001, time + dur);
+  src.connect(shaper); shaper.connect(bp); bp.connect(g); g.connect(dest);
+  src.start(time);
+  // Tonal thud
+  const tone = ctx.createOscillator();
+  const tg = ctx.createGain();
+  tone.type = 'square';
+  tone.frequency.setValueAtTime(150, time);
+  tone.frequency.exponentialRampToValueAtTime(80, time + 0.05);
+  tg.gain.setValueAtTime(0.15 * vel, time);
+  tg.gain.exponentialRampToValueAtTime(0.001, time + 0.08);
+  tone.connect(tg); tg.connect(dest);
+  tone.start(time); tone.stop(time + 0.1);
+}
+
+function monarchHat(ctx: AudioContext, time: number, vel: number, open: boolean, dest: GainNode) {
+  // Metallic industrial clang
+  const dur = open ? 0.3 : 0.06;
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.type = 'square';
+  osc.frequency.setValueAtTime(open ? 3000 : 5000, time);
+  osc.detune.setValueAtTime(1200, time); // Very detuned for metallic quality
+  g.gain.setValueAtTime(0.04 * vel, time);
+  g.gain.exponentialRampToValueAtTime(0.001, time + dur);
+  const hp = ctx.createBiquadFilter();
+  hp.type = 'highpass'; hp.frequency.setValueAtTime(4000, time);
+  osc.connect(hp); hp.connect(g); g.connect(dest);
+  osc.start(time); osc.stop(time + dur + 0.05);
+}
+
+
 function scheduleLofiKeys(ctx: AudioContext, time: number, midi: number, duration: number, brightness: number, velocity: number, dest: GainNode) {
   const freq = NOTE(midi);
   // Electric piano: sine + square harmonic
@@ -1163,7 +1285,7 @@ function ghostPerc(ctx: AudioContext, time: number, vel: number, dest: GainNode)
 
 interface ThemeConfig {
   bpm: number;
-  genre: 'trap' | 'house' | 'ambient' | 'darktrap' | 'lofi' | 'epic' | 'ghostly';
+  genre: 'trap' | 'house' | 'ambient' | 'darktrap' | 'lofi' | 'epic' | 'ghostly' | 'monarch';
   chords: number[][];
   bassPattern: number[];
   keyPattern: number[]; // which 16th notes play keys (per bar)
@@ -1330,13 +1452,35 @@ const THEMES: Record<MusicTheme, ThemeConfig> = {
     padGain: 0.04,
     bassOctave: -2,
   },
+  // ─── MONARCH: Ominous industrial dark ambient ───
+  monarch: {
+    bpm: 62,
+    genre: 'monarch',
+    // Dm — Bbm — Fm — Ebm (oppressive, regal darkness)
+    chords: [
+      [50,53,57],[46,49,53],[41,44,48],[39,42,46],
+      [50,53,57],[46,49,53],[41,44,48],[39,42,46],
+    ],
+    // Heavy, deliberate hits
+    bassPattern: [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                  0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    // Dark organ/bell melody
+    keyPattern:  [0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                  0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0],
+    // Industrial texture hits
+    arpPattern:  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    padBrightness: 350,
+    padGain: 0.05,
+    bassOctave: -2,
+  },
 };
 
 // Drum patterns: [kick, snare, closedHat, openHat (0=none, 1=double roll, 2=triple roll)]
 type DrumStep = [number, number, number, number];
 
 
-const DRUM_PATTERNS: Record<'trap' | 'house' | 'ambient' | 'darktrap' | 'lofi' | 'epic' | 'ghostly', DrumStep[]> = {
+const DRUM_PATTERNS: Record<'trap' | 'house' | 'ambient' | 'darktrap' | 'lofi' | 'epic' | 'ghostly' | 'monarch', DrumStep[]> = {
   darktrap: [
     // K-T-TT-T-S-T-K-T (compás 1)
     [1, 0, 0, 0], [0, 0, .9, 0], [0, 0, 0, 1], [0, 0, .9, 0],
@@ -1430,6 +1574,17 @@ const DRUM_PATTERNS: Record<'trap' | 'house' | 'ambient' | 'darktrap' | 'lofi' |
     [0,  0, 0, 0],  [0,0,0,0],[0,0,0,0],[0,0,0,0],
     [0,  0, 0, 0],  [0,0,0,0],[0,0,0,0],[0,.1,0,0],
   ],
+  // Monarch: heavy industrial
+  monarch: [
+    [.9, 0, 0, 0],  [0,0,0,0],[0,0,0,0],[0,0,0,0],
+    [0,  0, 0, 0],  [0,0,0,0],[0,0,0,.4],[0,0,0,0],
+    [0, .7, 0, 0],  [0,0,0,0],[0,0,0,0],[0,0,0,0],
+    [0,  0, 0, 0],  [0,0,0,0],[0,0,0,0],[.4,0,0,0],
+    [.8, 0, 0, 0],  [0,0,0,0],[0,0,0,0],[0,0,0,0],
+    [0,  0, 0, 0],  [0,0,0,.3],[0,0,0,0],[0,0,0,0],
+    [0, .8, 0, 0],  [0,0,0,0],[0,0,0,0],[0,0,0,0],
+    [0,  0, 0, 0],  [0,0,0,0],[.3,0,0,0],[0,.5,0,0],
+  ],
 };
 
 // Genre-specific drum dispatchers
@@ -1439,7 +1594,7 @@ type DrumKit = {
   hat: (ctx: AudioContext, t: number, v: number, open: boolean, d: GainNode) => void;
 };
 
-const DRUM_KITS: Record<'trap' | 'house' | 'ambient' | 'darktrap' | 'lofi' | 'epic' | 'ghostly', DrumKit> = {
+const DRUM_KITS: Record<'trap' | 'house' | 'ambient' | 'darktrap' | 'lofi' | 'epic' | 'ghostly' | 'monarch', DrumKit> = {
   darktrap: { kick: darkTrapKick, snare: darkTrapSnare, hat: darkTrapHat },
   trap: { kick: trapKick, snare: trapSnare, hat: trapHat },
   house: { kick: houseKick, snare: houseClap, hat: houseHat },
@@ -1447,10 +1602,11 @@ const DRUM_KITS: Record<'trap' | 'house' | 'ambient' | 'darktrap' | 'lofi' | 'ep
   lofi: { kick: lofiKick, snare: lofiSnare, hat: lofiHat },
   epic: { kick: epicKick, snare: epicSnare, hat: epicHat },
   ghostly: { kick: ghostKick, snare: ghostPerc, hat: (ctx, t, v, _o, d) => ghostPerc(ctx, t, v * 0.3, d) },
+  monarch: { kick: monarchKick, snare: monarchSnare, hat: monarchHat },
 };
 
 // Genre-specific bass dispatchers
-const BASS_FN: Record<'trap' | 'house' | 'ambient' | 'darktrap' | 'lofi' | 'epic' | 'ghostly', (ctx: AudioContext, t: number, m: number, dur: number, d: GainNode) => void> = {
+const BASS_FN: Record<'trap' | 'house' | 'ambient' | 'darktrap' | 'lofi' | 'epic' | 'ghostly' | 'monarch', (ctx: AudioContext, t: number, m: number, dur: number, d: GainNode) => void> = {
   darktrap: scheduleDeep808,
   trap: schedule808Sub,
   house: scheduleHouseBass,
@@ -1458,6 +1614,7 @@ const BASS_FN: Record<'trap' | 'house' | 'ambient' | 'darktrap' | 'lofi' | 'epic
   lofi: scheduleHouseBass,  // Filtered saw bass for lofi
   epic: scheduleDrone,       // Deep drone for epic
   ghostly: scheduleDrone,    // Ghostly drone
+  monarch: scheduleDrone,    // Deep ominous drone for monarch
 };
 
 // ─── MAIN SEQUENCER WITH CROSSFADE (OPTIMIZED) ───
@@ -1498,6 +1655,7 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
   const reverbWet = config.genre === 'darktrap' ? 0.4
     : config.genre === 'ghostly' ? 0.55
     : config.genre === 'epic' ? 0.45
+    : config.genre === 'monarch' ? 0.5
     : config.genre === 'lofi' ? 0.3
     : 0.15;
   delayFb.gain.setValueAtTime(reverbWet, ctx.currentTime);
@@ -1533,12 +1691,16 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
       } else if (config.genre === 'ghostly') {
         // Ghostly: haunting strings
         scheduleHauntingStrings(ctx, barStart, chord.slice(0, 3), barDur, config.padGain, outputGain);
+      } else if (config.genre === 'monarch') {
+        // Monarch: haunting strings + industrial textures
+        scheduleHauntingStrings(ctx, barStart, chord.slice(0, 3), barDur, config.padGain * 0.7, outputGain);
+        if (bar % 4 === 0) scheduleIndustrialHit(ctx, barStart + barDur * 0.5, barDur * 2, outputGain);
       } else if (config.genre !== 'darktrap') {
         scheduleWarmPad(ctx, barStart, chord, barDur, config.padGain, config.padBrightness, outputGain);
       }
 
       // ── Drone layer ──
-      if ((config.genre === 'ambient' || config.genre === 'ghostly') && bar % 4 === 0) {
+      if ((config.genre === 'ambient' || config.genre === 'ghostly' || config.genre === 'monarch') && bar % 4 === 0) {
         scheduleDrone(ctx, barStart, rootMidi - 12, barDur * 4, outputGain);
       }
 
@@ -1571,7 +1733,7 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
             bassFn(ctx, stepTime, bassMidi, barDur * 1.5, outputGain);
           } else {
             const bassMidi = rootMidi + config.bassOctave * 12;
-            const bassDur = (config.genre === 'ambient' || config.genre === 'ghostly' || config.genre === 'epic') ? barDur
+            const bassDur = (config.genre === 'ambient' || config.genre === 'ghostly' || config.genre === 'epic' || config.genre === 'monarch') ? barDur
               : config.genre === 'trap' ? sixteenthDur * 6
               : config.genre === 'lofi' ? sixteenthDur * 4
               : sixteenthDur * 3;
@@ -1626,6 +1788,16 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
             }
             const note = ghostMelody[keyHitCount % ghostMelody.length];
             scheduleFMKeys(ctx, stepTime, note, sixteenthDur * 6, 0.3, 0.5, outputGain);
+          } else if (config.genre === 'monarch') {
+            // Dark organ — ominous regal melody
+            const monarchMelody = [62,65,58,53,57,62,58,53];
+            let keyHitCount = 0;
+            const totalStep = (bar % 4) * 16 + step;
+            for (let s = 0; s < totalStep; s++) {
+              if (config.keyPattern[s % config.keyPattern.length]) keyHitCount++;
+            }
+            const note = monarchMelody[keyHitCount % monarchMelody.length];
+            scheduleDarkOrgan(ctx, stepTime, note, sixteenthDur * 8, 0.7, outputGain);
           } else {
             const brightness = config.genre === 'house' ? 1.5 : config.genre === 'trap' ? 0.8 : 0.4;
             const bellNote = chord[chord.length - 1] + 12;
@@ -1646,15 +1818,15 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
             const arpNote = counterMelody[arpHitCount % counterMelody.length];
             schedulePluck(ctx, stepTime, arpNote, sixteenthDur * 5, outputGain);
           } else if (config.genre === 'lofi') {
-            // Lo-fi pluck — mellow chord tones
             const arpNote = chord[step % chord.length] + 12;
             schedulePluck(ctx, stepTime, arpNote, sixteenthDur * 6, outputGain);
           } else if (config.genre === 'epic') {
-            // Choir swells on arp hits
             scheduleChoirPad(ctx, stepTime, chord.slice(0, 3), barDur * 2, config.padGain * 0.8, outputGain);
           } else if (config.genre === 'ghostly') {
-            // Haunting string swell
             scheduleHauntingStrings(ctx, stepTime, [chord[0], chord[1]], barDur, config.padGain * 0.6, outputGain);
+          } else if (config.genre === 'monarch') {
+            // Industrial texture hit
+            scheduleIndustrialHit(ctx, stepTime, barDur * 0.8, outputGain);
           } else {
             const arpNote = chord[step % chord.length] + 12;
             schedulePluck(ctx, stepTime, arpNote, sixteenthDur * 3, outputGain);

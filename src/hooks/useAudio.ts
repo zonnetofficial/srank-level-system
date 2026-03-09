@@ -13,7 +13,7 @@ import {
   sfxNavigate,
 } from '@/lib/audioEngine';
 
-type MusicTheme = 'home' | 'quest' | 'dungeon' | 'shop' | 'battle' | 'menu' | 'skills' | 'titles' | 'history';
+type MusicTheme = 'home' | 'quest' | 'dungeon' | 'shop' | 'battle' | 'menu' | 'skills' | 'titles' | 'history' | 'monarch';
 
 const ROUTE_THEMES: Record<string, MusicTheme> = {
   '/': 'home',
@@ -23,7 +23,7 @@ const ROUTE_THEMES: Record<string, MusicTheme> = {
   '/skills': 'skills',
   '/titles': 'titles',
   '/history': 'history',
-  '/monarch': 'home',
+  '/monarch': 'monarch',
   '/mission': 'battle',
 };
 
