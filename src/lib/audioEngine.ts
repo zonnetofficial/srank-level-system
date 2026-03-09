@@ -300,11 +300,11 @@ function scheduleWarmPad(ctx: AudioContext, time: number, midiNotes: number[], d
   }
 }
 
-// ─── INSTRUMENT: Trap Bells ───
+// ─── INSTRUMENT: Trap Bells (menos agudas) ───
 function scheduleFMKeys(ctx: AudioContext, time: number, midi: number, duration: number, brightness: number, velocity: number, dest: GainNode) {
   const freq = NOTE(midi);
   
-  // Trap bells — bright, metallic, icy sound
+  // Trap bells — bright pero menos agudas, más cálidas
   // Main bell tone — square wave for hardness + triangle for body
   const osc1 = ctx.createOscillator();
   const osc2 = ctx.createOscillator();
@@ -313,8 +313,8 @@ function scheduleFMKeys(ctx: AudioContext, time: number, midi: number, duration:
   
   osc1.type = 'square';
   osc2.type = 'triangle';
-  osc1.frequency.setValueAtTime(freq * 2, time); // octave up for brightness
-  osc2.frequency.setValueAtTime(freq * 2, time);
+  osc1.frequency.setValueAtTime(freq, time); // Misma octava en vez de *2
+  osc2.frequency.setValueAtTime(freq, time);
   osc2.detune.setValueAtTime(7, time); // slight detune for shimmer
   
   // Fast attack, medium-fast decay (bell characteristic)
@@ -322,24 +322,24 @@ function scheduleFMKeys(ctx: AudioContext, time: number, midi: number, duration:
   const decay = duration * 0.6;
   
   g1.gain.setValueAtTime(0.001, time);
-  g1.gain.linearRampToValueAtTime(0.12 * velocity * brightness, time + attack);
+  g1.gain.linearRampToValueAtTime(0.15 * velocity * brightness, time + attack);
   g1.gain.exponentialRampToValueAtTime(0.001, time + decay);
   
   g2.gain.setValueAtTime(0.001, time);
-  g2.gain.linearRampToValueAtTime(0.08 * velocity * brightness, time + attack);
+  g2.gain.linearRampToValueAtTime(0.1 * velocity * brightness, time + attack);
   g2.gain.exponentialRampToValueAtTime(0.001, time + decay);
   
-  // High-pass filter for crispy, icy character
+  // High-pass filter más suave para menos agudeza
   const hp = ctx.createBiquadFilter();
   hp.type = 'highpass';
-  hp.frequency.setValueAtTime(800, time);
-  hp.Q.setValueAtTime(0.7, time);
+  hp.frequency.setValueAtTime(400, time); // Bajado de 800 a 400
+  hp.Q.setValueAtTime(0.5, time);
   
-  // Peaking filter for metallic shimmer
+  // Peaking filter para brillo pero en frecuencias más bajas
   const peak = ctx.createBiquadFilter();
   peak.type = 'peaking';
-  peak.frequency.setValueAtTime(3500, time);
-  peak.gain.setValueAtTime(8, time);
+  peak.frequency.setValueAtTime(2000, time); // Bajado de 3500 a 2000
+  peak.gain.setValueAtTime(6, time); // Reducido de 8 a 6
   peak.Q.setValueAtTime(2, time);
   
   osc1.connect(g1); g1.connect(hp);
@@ -349,16 +349,16 @@ function scheduleFMKeys(ctx: AudioContext, time: number, midi: number, duration:
   osc1.start(time); osc1.stop(time + decay + 0.05);
   osc2.start(time); osc2.stop(time + decay + 0.05);
   
-  // Layer 2: High harmonic for extra sparkle
-  const h3 = ctx.createOscillator();
-  const h3g = ctx.createGain();
-  h3.type = 'sine';
-  h3.frequency.setValueAtTime(freq * 4, time); // two octaves up
-  h3g.gain.setValueAtTime(0.001, time);
-  h3g.gain.linearRampToValueAtTime(0.04 * velocity * brightness, time + attack);
-  h3g.gain.exponentialRampToValueAtTime(0.001, time + decay * 0.5);
-  h3.connect(h3g); h3g.connect(peak);
-  h3.start(time); h3.stop(time + decay * 0.5 + 0.05);
+  // Layer 2: Harmonic más bajo para menos agudeza
+  const h2 = ctx.createOscillator();
+  const h2g = ctx.createGain();
+  h2.type = 'sine';
+  h2.frequency.setValueAtTime(freq * 2, time); // Una octava en vez de dos
+  h2g.gain.setValueAtTime(0.001, time);
+  h2g.gain.linearRampToValueAtTime(0.05 * velocity * brightness, time + attack);
+  h2g.gain.exponentialRampToValueAtTime(0.001, time + decay * 0.5);
+  h2.connect(h2g); h2g.connect(peak);
+  h2.start(time); h2.stop(time + decay * 0.5 + 0.05);
 }
 
 // ─── INSTRUMENT: Atmospheric Strings (inspired by "A 120" Gera MX) ───
@@ -770,35 +770,60 @@ function darkTrapSnare(ctx: AudioContext, time: number, vel: number, dest: GainN
 }
 
 function darkTrapHat(ctx: AudioContext, time: number, vel: number, open: boolean | number, dest: GainNode) {
-  const dur = 0.03; // Keep it crisp and short for both single hits and rolls
+  const dur = 0.04; // Slightly longer for more punch
   
   const playHit = (t: number, v: number) => {
+    // More aggressive noise buffer
     const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur * 2), ctx.sampleRate);
     const d = buf.getChannelData(0);
     for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
     const src = ctx.createBufferSource();
     src.buffer = buf;
+    
+    // Distorsión para hacerlo más "tronado"
+    const shaper = ctx.createWaveShaper();
+    const curve = new Float32Array(256);
+    for (let i = 0; i < 256; i++) {
+      const x = (i / 128) - 1;
+      curve[i] = Math.tanh(x * 3.5); // Hard distortion
+    }
+    shaper.curve = curve;
+    
+    // Aggressive high-pass
     const hp = ctx.createBiquadFilter();
-    hp.type = 'highpass'; hp.frequency.setValueAtTime(8000, t);
+    hp.type = 'highpass'; hp.frequency.setValueAtTime(9000, t);
+    
+    // Multiple peaks for metallic crunch
     const peak1 = ctx.createBiquadFilter();
-    peak1.type = 'peaking'; peak1.frequency.setValueAtTime(11000, t); peak1.gain.setValueAtTime(10, t); peak1.Q.setValueAtTime(3, t);
+    peak1.type = 'peaking'; peak1.frequency.setValueAtTime(11000, t); 
+    peak1.gain.setValueAtTime(14, t); peak1.Q.setValueAtTime(4, t);
+    
     const peak2 = ctx.createBiquadFilter();
-    peak2.type = 'peaking'; peak2.frequency.setValueAtTime(14000, t); peak2.gain.setValueAtTime(6, t); peak2.Q.setValueAtTime(2, t);
+    peak2.type = 'peaking'; peak2.frequency.setValueAtTime(14500, t); 
+    peak2.gain.setValueAtTime(10, t); peak2.Q.setValueAtTime(3, t);
+    
+    const peak3 = ctx.createBiquadFilter();
+    peak3.type = 'peaking'; peak3.frequency.setValueAtTime(18000, t); 
+    peak3.gain.setValueAtTime(8, t); peak3.Q.setValueAtTime(2, t);
+    
     const g = ctx.createGain();
-    g.gain.setValueAtTime(0.1 * v, t); 
+    g.gain.setValueAtTime(0.18 * v, t); // Más fuerte
     g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    src.connect(hp); hp.connect(peak1); peak1.connect(peak2); peak2.connect(g); g.connect(dest);
+    
+    src.connect(shaper); shaper.connect(hp); 
+    hp.connect(peak1); peak1.connect(peak2); 
+    peak2.connect(peak3); peak3.connect(g); g.connect(dest);
     src.start(t);
   };
 
   playHit(time, vel);
   if (open === 1 || open === true) {
     // Double roll (TT) - two 32nd notes
-    playHit(time + 0.05, vel * 0.8);
+    playHit(time + 0.05, vel * 0.85);
   } else if (open === 2) {
     // Triple roll (TTT) - three 32nd notes
-    playHit(time + 0.033, vel * 0.85);
-    playHit(time + 0.066, vel * 0.7);
+    playHit(time + 0.033, vel * 0.9);
+    playHit(time + 0.066, vel * 0.75);
   }
 }
 
