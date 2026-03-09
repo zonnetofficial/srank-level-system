@@ -349,12 +349,12 @@ function scheduleFMKeys(ctx: AudioContext, time: number, midi: number, duration:
   h2.start(time); h2.stop(time + decay * 0.5 + 0.05);
 }
 
-// ─── INSTRUMENT: Atmospheric Strings (inspired by "A 120" Gera MX) ───
+// ─── INSTRUMENT: Atmospheric Strings (optimized) ───
 function schedulePluck(ctx: AudioContext, time: number, midi: number, duration: number, dest: GainNode) {
   const freq = NOTE(midi);
   
-  // String pad: detuned sawtooth waves with slow attack
-  const detunes = [-10, -3, 3, 10];
+  // Reducido de 4 a 2 voces
+  const detunes = [-8, 8];
   detunes.forEach(det => {
     const osc = ctx.createOscillator();
     const g = ctx.createGain();
@@ -362,32 +362,21 @@ function schedulePluck(ctx: AudioContext, time: number, midi: number, duration: 
     osc.frequency.setValueAtTime(freq, time);
     osc.detune.setValueAtTime(det, time);
     
-    // Slow attack for string-like swell
     const attack = Math.min(0.8, duration * 0.3);
     const release = Math.min(1.2, duration * 0.4);
     g.gain.setValueAtTime(0.001, time);
-    g.gain.linearRampToValueAtTime(0.03, time + attack);
-    g.gain.setValueAtTime(0.03, time + duration - release);
+    g.gain.linearRampToValueAtTime(0.04, time + attack);
+    g.gain.setValueAtTime(0.04, time + duration - release);
     g.gain.linearRampToValueAtTime(0.001, time + duration);
     
-    // Dark filter
     const filt = ctx.createBiquadFilter();
     filt.type = 'lowpass';
     filt.frequency.setValueAtTime(freq * 3, time);
     filt.frequency.linearRampToValueAtTime(freq * 2, time + duration * 0.5);
     filt.Q.setValueAtTime(0.5, time);
     
-    // Subtle vibrato
-    const lfo = ctx.createOscillator();
-    const lfoG = ctx.createGain();
-    lfo.type = 'sine';
-    lfo.frequency.setValueAtTime(4.5 + Math.random() * 0.5, time);
-    lfoG.gain.setValueAtTime(3, time);
-    lfo.connect(lfoG); lfoG.connect(osc.detune);
-    
     osc.connect(filt); filt.connect(g); g.connect(dest);
     osc.start(time); osc.stop(time + duration + 0.1);
-    lfo.start(time); lfo.stop(time + duration + 0.1);
   });
 }
 
