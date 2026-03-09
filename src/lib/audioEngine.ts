@@ -288,11 +288,11 @@ function scheduleWarmPad(ctx: AudioContext, time: number, midiNotes: number[], d
   }
 }
 
-// ─── INSTRUMENT: Dark Trap Bells (hard, fast attack) ───
+// ─── INSTRUMENT: Dark Trap Bells (slow attack, smooth entry) ───
 function scheduleFMKeys(ctx: AudioContext, time: number, midi: number, duration: number, brightness: number, velocity: number, dest: GainNode) {
   const freq = NOTE(midi);
   
-  // Hard keys — square + saw para sonido más duro
+  // Soft keys — square + saw para sonido más duro pero con entrada suave
   const osc1 = ctx.createOscillator();
   const osc2 = ctx.createOscillator();
   const g1 = ctx.createGain();
@@ -304,9 +304,9 @@ function scheduleFMKeys(ctx: AudioContext, time: number, midi: number, duration:
   osc2.frequency.setValueAtTime(freq, time);
   osc2.detune.setValueAtTime(12, time);
   
-  // Almost instant attack para melodías rápidas y hard
-  const attack = 0.001; // Casi instantáneo
-  const decay = duration * 0.6; // Más corto para melodías rápidas
+  // SLOW attack para entrada suave — no de golpe
+  const attack = 0.15; // Entrada gradual suave
+  const decay = duration * 0.7;
   
   g1.gain.setValueAtTime(0.001, time);
   g1.gain.linearRampToValueAtTime(0.18 * velocity * brightness, time + attack);
@@ -895,8 +895,8 @@ const THEMES: Record<MusicTheme, ThemeConfig> = {
     ],
     // No separate bass — the 808 kick IS the bass
     bassPattern: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    // Melodía hard rápida — pattern agresivo con más hits
-    keyPattern:  [1,0,0,1,0,0,1,0,1,0,0,0,1,0,1,0, 0,0,1,0,0,1,0,0,1,0,0,1,0,0,0,1],
+    // Melodía suave en inicios de nota/tiempo — pattern en beats fuertes
+    keyPattern:  [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0, 1,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0],
     // Arpegios oscuros — pattern más atmosférico y espaciado
     arpPattern:  [1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0, 0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1],
     padBrightness: 400, // Más oscuro
