@@ -4,6 +4,7 @@ import { useShop, ShopItem, getMarketPrice } from '@/hooks/useShop';
 import SlotNumber from '@/components/SlotNumber';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
+import { sfxClick, sfxHover, sfxPurchase } from '@/lib/audioEngine';
 import ShopTab from '@/components/shop/ShopTab';
 import PackagesTab from '@/components/shop/PackagesTab';
 import InventoryTab from '@/components/shop/InventoryTab';
