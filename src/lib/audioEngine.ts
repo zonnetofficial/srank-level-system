@@ -348,31 +348,31 @@ function scheduleFMKeys(ctx: AudioContext, time: number, midi: number, duration:
   h2.start(time); h2.stop(time + decay * 0.6 + 0.05);
 }
 
-// ─── INSTRUMENT: Atmospheric Strings (optimized) ───
+// ─── INSTRUMENT: Dark Atmospheric Pad (triangle + reverb) ───
 function schedulePluck(ctx: AudioContext, time: number, midi: number, duration: number, dest: GainNode) {
   const freq = NOTE(midi);
   
-  // Reducido de 4 a 2 voces
-  const detunes = [-8, 8];
+  // Triangle waves para pad más suave y oscuro
+  const detunes = [-10, 0, 10];
   detunes.forEach(det => {
     const osc = ctx.createOscillator();
     const g = ctx.createGain();
-    osc.type = 'sawtooth';
+    osc.type = 'triangle'; // Triangle para sonido más suave
     osc.frequency.setValueAtTime(freq, time);
     osc.detune.setValueAtTime(det, time);
     
-    const attack = Math.min(0.8, duration * 0.3);
-    const release = Math.min(1.2, duration * 0.4);
+    const attack = Math.min(1.2, duration * 0.4);
+    const release = Math.min(1.8, duration * 0.5);
     g.gain.setValueAtTime(0.001, time);
-    g.gain.linearRampToValueAtTime(0.04, time + attack);
-    g.gain.setValueAtTime(0.04, time + duration - release);
+    g.gain.linearRampToValueAtTime(0.025, time + attack); // Más suave
+    g.gain.setValueAtTime(0.025, time + duration - release);
     g.gain.linearRampToValueAtTime(0.001, time + duration);
     
     const filt = ctx.createBiquadFilter();
     filt.type = 'lowpass';
-    filt.frequency.setValueAtTime(freq * 3, time);
-    filt.frequency.linearRampToValueAtTime(freq * 2, time + duration * 0.5);
-    filt.Q.setValueAtTime(0.5, time);
+    filt.frequency.setValueAtTime(freq * 2.5, time);
+    filt.frequency.linearRampToValueAtTime(freq * 1.8, time + duration * 0.5);
+    filt.Q.setValueAtTime(0.7, time);
     
     osc.connect(filt); filt.connect(g); g.connect(dest);
     osc.start(time); osc.stop(time + duration + 0.1);
