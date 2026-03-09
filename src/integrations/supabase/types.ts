@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      character_equipment: {
+        Row: {
+          equipped_at: string
+          id: string
+          item_id: string | null
+          slot: string
+          title_key: string | null
+          user_id: string
+        }
+        Insert: {
+          equipped_at?: string
+          id?: string
+          item_id?: string | null
+          slot: string
+          title_key?: string | null
+          user_id: string
+        }
+        Update: {
+          equipped_at?: string
+          id?: string
+          item_id?: string | null
+          slot?: string
+          title_key?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "character_equipment_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "shop_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dark_points: {
         Row: {
           balance: number
