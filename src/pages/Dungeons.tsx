@@ -157,14 +157,14 @@ export default function Dungeons() {
 
   const handleStartDungeon = (rank: DungeonRank) => {
     startDungeon(rank);
+    setRoomDone(false);
     setView('dungeon');
   };
 
-  const handleRoomComplete = (success: boolean) => {
-    completeRoom(success);
-  };
 
-  // Watch for death or room completion
+  const [roomDone, setRoomDone] = useState(false);
+
+  // Watch for death
   useEffect(() => {
     if (!run) return;
     if (view !== 'dungeon') return;
@@ -173,24 +173,25 @@ export default function Dungeons() {
       syncProfile(0, run.rank, run.xpEarned, true);
       removeLoadoutFromInventory();
       setView('result');
-      return;
     }
+  }, [run?.status, view]);
 
-    const currentRoom = run.rooms[run.currentRoom];
-    if (currentRoom?.completed) {
-      const timer = setTimeout(() => {
-        if (run.currentRoom + 1 >= run.rooms.length) {
-          advanceRoom();
-          setXpToApply(run.xpEarned);
-          setView('reward');
-        } else {
-          advanceRoom();
-          setView('dungeon');
-        }
-      }, 1800);
-      return () => clearTimeout(timer);
+  const handleRoomComplete = (success: boolean) => {
+    completeRoom(success);
+    setTimeout(() => setRoomDone(true), 1600);
+  };
+
+  const handleNextRoom = () => {
+    if (!run) return;
+    setRoomDone(false);
+    if (run.currentRoom + 1 >= run.rooms.length) {
+      advanceRoom();
+      setXpToApply(run.xpEarned);
+      setView('reward');
+    } else {
+      advanceRoom();
     }
-  }, [run?.status, run?.rooms, run?.currentRoom, view]);
+  };
 
   const handleRewardChoice = async (choice: 'heal' | 'luckbox') => {
     setRewardChoice(choice);
@@ -642,6 +643,7 @@ export default function Dungeons() {
               </div>
 
               <DungeonRoom
+                key={run.currentRoom}
                 room={run.rooms[run.currentRoom]}
                 roomNumber={run.currentRoom + 1}
                 totalRooms={run.rooms.length}
@@ -651,13 +653,25 @@ export default function Dungeons() {
                 onComplete={handleRoomComplete}
               />
 
-              <button
-                onClick={handleEscape}
-                disabled={char.currentStamina < getEscapeCost(char)}
-                className="w-full py-2 text-[10px] font-display uppercase tracking-[0.15em] border border-destructive/30 text-destructive/70 hover:bg-destructive/10 transition-all disabled:opacity-30"
-              >
-                🏃 Escapar ({getEscapeCost(char)} stamina)
-              </button>
+              {roomDone && char.currentHp > 0 && (
+                <button
+                  onClick={handleNextRoom}
+                  className="w-full py-3 font-display text-xs uppercase tracking-[0.2em] border border-accent/40 text-accent hover:bg-accent/10 transition-all animate-slide-up"
+                  style={{ clipPath: 'polygon(0 4px, 4px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px))' }}
+                >
+                  {run.currentRoom + 1 >= run.rooms.length ? '🏆 Reclamar Recompensa' : '➡️ Siguiente Sala'}
+                </button>
+              )}
+
+              {!roomDone && (
+                <button
+                  onClick={handleEscape}
+                  disabled={char.currentStamina < getEscapeCost(char)}
+                  className="w-full py-2 text-[10px] font-display uppercase tracking-[0.15em] border border-destructive/30 text-destructive/70 hover:bg-destructive/10 transition-all disabled:opacity-30"
+                >
+                  🏃 Escapar ({getEscapeCost(char)} stamina)
+                </button>
+              )}
             </div>
           )}
 
