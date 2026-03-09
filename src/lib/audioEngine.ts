@@ -703,7 +703,7 @@ function darkTrapSnare(ctx: AudioContext, time: number, vel: number, dest: GainN
   crack.start(time);
 }
 
-function darkTrapHat(ctx: AudioContext, time: number, vel: number, open: boolean, dest: GainNode) {
+function darkTrapHat(ctx: AudioContext, time: number, vel: number, open: boolean | number, dest: GainNode) {
   const dur = 0.03; // Keep it crisp and short for both single hits and rolls
   
   const playHit = (t: number, v: number) => {
@@ -726,9 +726,13 @@ function darkTrapHat(ctx: AudioContext, time: number, vel: number, open: boolean
   };
 
   playHit(time, vel);
-  if (open) {
-    // 'open' flag triggers a 32nd note roll (double subdivision)
-    playHit(time + 0.1, vel * 0.8);
+  if (open === 1 || open === true) {
+    // Double roll (TT) - two 32nd notes
+    playHit(time + 0.05, vel * 0.8);
+  } else if (open === 2) {
+    // Triple roll (TTT) - three 32nd notes
+    playHit(time + 0.033, vel * 0.85);
+    playHit(time + 0.066, vel * 0.7);
   }
 }
 
