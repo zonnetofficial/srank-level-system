@@ -770,35 +770,60 @@ function darkTrapSnare(ctx: AudioContext, time: number, vel: number, dest: GainN
 }
 
 function darkTrapHat(ctx: AudioContext, time: number, vel: number, open: boolean | number, dest: GainNode) {
-  const dur = 0.03; // Keep it crisp and short for both single hits and rolls
+  const dur = 0.04; // Slightly longer for more punch
   
   const playHit = (t: number, v: number) => {
+    // More aggressive noise buffer
     const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur * 2), ctx.sampleRate);
     const d = buf.getChannelData(0);
     for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
     const src = ctx.createBufferSource();
     src.buffer = buf;
+    
+    // Distorsión para hacerlo más "tronado"
+    const shaper = ctx.createWaveShaper();
+    const curve = new Float32Array(256);
+    for (let i = 0; i < 256; i++) {
+      const x = (i / 128) - 1;
+      curve[i] = Math.tanh(x * 3.5); // Hard distortion
+    }
+    shaper.curve = curve;
+    
+    // Aggressive high-pass
     const hp = ctx.createBiquadFilter();
-    hp.type = 'highpass'; hp.frequency.setValueAtTime(8000, t);
+    hp.type = 'highpass'; hp.frequency.setValueAtTime(9000, t);
+    
+    // Multiple peaks for metallic crunch
     const peak1 = ctx.createBiquadFilter();
-    peak1.type = 'peaking'; peak1.frequency.setValueAtTime(11000, t); peak1.gain.setValueAtTime(10, t); peak1.Q.setValueAtTime(3, t);
+    peak1.type = 'peaking'; peak1.frequency.setValueAtTime(11000, t); 
+    peak1.gain.setValueAtTime(14, t); peak1.Q.setValueAtTime(4, t);
+    
     const peak2 = ctx.createBiquadFilter();
-    peak2.type = 'peaking'; peak2.frequency.setValueAtTime(14000, t); peak2.gain.setValueAtTime(6, t); peak2.Q.setValueAtTime(2, t);
+    peak2.type = 'peaking'; peak2.frequency.setValueAtTime(14500, t); 
+    peak2.gain.setValueAtTime(10, t); peak2.Q.setValueAtTime(3, t);
+    
+    const peak3 = ctx.createBiquadFilter();
+    peak3.type = 'peaking'; peak3.frequency.setValueAtTime(18000, t); 
+    peak3.gain.setValueAtTime(8, t); peak3.Q.setValueAtTime(2, t);
+    
     const g = ctx.createGain();
-    g.gain.setValueAtTime(0.1 * v, t); 
+    g.gain.setValueAtTime(0.18 * v, t); // Más fuerte
     g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    src.connect(hp); hp.connect(peak1); peak1.connect(peak2); peak2.connect(g); g.connect(dest);
+    
+    src.connect(shaper); shaper.connect(hp); 
+    hp.connect(peak1); peak1.connect(peak2); 
+    peak2.connect(peak3); peak3.connect(g); g.connect(dest);
     src.start(t);
   };
 
   playHit(time, vel);
   if (open === 1 || open === true) {
     // Double roll (TT) - two 32nd notes
-    playHit(time + 0.05, vel * 0.8);
+    playHit(time + 0.05, vel * 0.85);
   } else if (open === 2) {
     // Triple roll (TTT) - three 32nd notes
-    playHit(time + 0.033, vel * 0.85);
-    playHit(time + 0.066, vel * 0.7);
+    playHit(time + 0.033, vel * 0.9);
+    playHit(time + 0.066, vel * 0.75);
   }
 }
 
