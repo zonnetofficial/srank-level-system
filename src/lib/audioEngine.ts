@@ -1163,7 +1163,7 @@ function ghostPerc(ctx: AudioContext, time: number, vel: number, dest: GainNode)
 
 interface ThemeConfig {
   bpm: number;
-  genre: 'trap' | 'house' | 'ambient' | 'darktrap';
+  genre: 'trap' | 'house' | 'ambient' | 'darktrap' | 'lofi' | 'epic' | 'ghostly';
   chords: number[][];
   bassPattern: number[];
   keyPattern: number[]; // which 16th notes play keys (per bar)
