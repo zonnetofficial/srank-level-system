@@ -1733,7 +1733,7 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
             bassFn(ctx, stepTime, bassMidi, barDur * 1.5, outputGain);
           } else {
             const bassMidi = rootMidi + config.bassOctave * 12;
-            const bassDur = (config.genre === 'ambient' || config.genre === 'ghostly' || config.genre === 'epic') ? barDur
+            const bassDur = (config.genre === 'ambient' || config.genre === 'ghostly' || config.genre === 'epic' || config.genre === 'monarch') ? barDur
               : config.genre === 'trap' ? sixteenthDur * 6
               : config.genre === 'lofi' ? sixteenthDur * 4
               : sixteenthDur * 3;
