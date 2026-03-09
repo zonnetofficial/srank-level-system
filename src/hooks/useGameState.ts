@@ -244,6 +244,8 @@ export function useGameState() {
     });
   }, [today]);
 
+  const levelRef = useRef(state.level);
+
   const completeQuest = useCallback(() => {
     setState(prev => {
       const quest = prev.questLog.find(q => q.date === today);
