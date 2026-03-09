@@ -157,6 +157,7 @@ export default function Dungeons() {
 
   const handleStartDungeon = (rank: DungeonRank) => {
     startDungeon(rank);
+    setRoomDone(false);
     setView('dungeon');
   };
 
