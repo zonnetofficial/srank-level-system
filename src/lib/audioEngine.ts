@@ -1574,6 +1574,17 @@ const DRUM_PATTERNS: Record<'trap' | 'house' | 'ambient' | 'darktrap' | 'lofi' |
     [0,  0, 0, 0],  [0,0,0,0],[0,0,0,0],[0,0,0,0],
     [0,  0, 0, 0],  [0,0,0,0],[0,0,0,0],[0,.1,0,0],
   ],
+  // Monarch: heavy industrial
+  monarch: [
+    [.9, 0, 0, 0],  [0,0,0,0],[0,0,0,0],[0,0,0,0],
+    [0,  0, 0, 0],  [0,0,0,0],[0,0,0,.4],[0,0,0,0],
+    [0, .7, 0, 0],  [0,0,0,0],[0,0,0,0],[0,0,0,0],
+    [0,  0, 0, 0],  [0,0,0,0],[0,0,0,0],[.4,0,0,0],
+    [.8, 0, 0, 0],  [0,0,0,0],[0,0,0,0],[0,0,0,0],
+    [0,  0, 0, 0],  [0,0,0,.3],[0,0,0,0],[0,0,0,0],
+    [0, .8, 0, 0],  [0,0,0,0],[0,0,0,0],[0,0,0,0],
+    [0,  0, 0, 0],  [0,0,0,0],[.3,0,0,0],[0,.5,0,0],
+  ],
 };
 
 // Genre-specific drum dispatchers
@@ -1583,7 +1594,7 @@ type DrumKit = {
   hat: (ctx: AudioContext, t: number, v: number, open: boolean, d: GainNode) => void;
 };
 
-const DRUM_KITS: Record<'trap' | 'house' | 'ambient' | 'darktrap' | 'lofi' | 'epic' | 'ghostly', DrumKit> = {
+const DRUM_KITS: Record<'trap' | 'house' | 'ambient' | 'darktrap' | 'lofi' | 'epic' | 'ghostly' | 'monarch', DrumKit> = {
   darktrap: { kick: darkTrapKick, snare: darkTrapSnare, hat: darkTrapHat },
   trap: { kick: trapKick, snare: trapSnare, hat: trapHat },
   house: { kick: houseKick, snare: houseClap, hat: houseHat },
@@ -1591,10 +1602,11 @@ const DRUM_KITS: Record<'trap' | 'house' | 'ambient' | 'darktrap' | 'lofi' | 'ep
   lofi: { kick: lofiKick, snare: lofiSnare, hat: lofiHat },
   epic: { kick: epicKick, snare: epicSnare, hat: epicHat },
   ghostly: { kick: ghostKick, snare: ghostPerc, hat: (ctx, t, v, _o, d) => ghostPerc(ctx, t, v * 0.3, d) },
+  monarch: { kick: monarchKick, snare: monarchSnare, hat: monarchHat },
 };
 
 // Genre-specific bass dispatchers
-const BASS_FN: Record<'trap' | 'house' | 'ambient' | 'darktrap' | 'lofi' | 'epic' | 'ghostly', (ctx: AudioContext, t: number, m: number, dur: number, d: GainNode) => void> = {
+const BASS_FN: Record<'trap' | 'house' | 'ambient' | 'darktrap' | 'lofi' | 'epic' | 'ghostly' | 'monarch', (ctx: AudioContext, t: number, m: number, dur: number, d: GainNode) => void> = {
   darktrap: scheduleDeep808,
   trap: schedule808Sub,
   house: scheduleHouseBass,
