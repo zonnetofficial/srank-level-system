@@ -300,44 +300,57 @@ function scheduleWarmPad(ctx: AudioContext, time: number, midiNotes: number[], d
   }
 }
 
-// ─── INSTRUMENT: FM Electric Piano / Keys ───
+// ─── INSTRUMENT: Dark Piano (inspired by "A 120" Gera MX) ───
 function scheduleFMKeys(ctx: AudioContext, time: number, midi: number, duration: number, brightness: number, velocity: number, dest: GainNode) {
   const freq = NOTE(midi);
-  // FM synthesis: carrier + modulator
-  const mod = ctx.createOscillator();
-  const modGain = ctx.createGain();
-  mod.type = 'sine';
-  mod.frequency.setValueAtTime(freq * 2, time); // 2:1 ratio (classic EP)
-  modGain.gain.setValueAtTime(freq * brightness * velocity, time);
-  modGain.gain.exponentialRampToValueAtTime(freq * 0.1, time + duration * 0.8);
-  mod.connect(modGain);
-
-  const carrier = ctx.createOscillator();
-  const carrierGain = ctx.createGain();
-  carrier.type = 'sine';
-  carrier.frequency.setValueAtTime(freq, time);
-  modGain.connect(carrier.frequency); // FM connection
-
-  // Sharp attack, natural decay
-  carrierGain.gain.setValueAtTime(0.001, time);
-  carrierGain.gain.linearRampToValueAtTime(0.12 * velocity, time + 0.005);
-  carrierGain.gain.exponentialRampToValueAtTime(0.05 * velocity, time + duration * 0.3);
-  carrierGain.gain.exponentialRampToValueAtTime(0.001, time + duration);
-
-  carrier.connect(carrierGain); carrierGain.connect(dest);
-  mod.start(time); carrier.start(time);
-  mod.stop(time + duration + 0.05); carrier.stop(time + duration + 0.05);
-
-  // Add a second harmonic for body
+  
+  // Layer 1: Main piano body (triangle + sine for mellow tone)
+  const osc1 = ctx.createOscillator();
+  const osc2 = ctx.createOscillator();
+  const g1 = ctx.createGain();
+  const g2 = ctx.createGain();
+  
+  osc1.type = 'triangle';
+  osc2.type = 'sine';
+  osc1.frequency.setValueAtTime(freq, time);
+  osc2.frequency.setValueAtTime(freq, time);
+  osc2.detune.setValueAtTime(-7, time); // slight detune for richness
+  
+  // Piano-like envelope: quick attack, sustained decay
+  g1.gain.setValueAtTime(0.001, time);
+  g1.gain.linearRampToValueAtTime(0.08 * velocity * brightness, time + 0.01);
+  g1.gain.exponentialRampToValueAtTime(0.03 * velocity * brightness, time + duration * 0.4);
+  g1.gain.exponentialRampToValueAtTime(0.001, time + duration);
+  
+  g2.gain.setValueAtTime(0.001, time);
+  g2.gain.linearRampToValueAtTime(0.05 * velocity * brightness, time + 0.01);
+  g2.gain.exponentialRampToValueAtTime(0.02 * velocity * brightness, time + duration * 0.4);
+  g2.gain.exponentialRampToValueAtTime(0.001, time + duration);
+  
+  // Low-pass filter for dark, mellow tone
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.setValueAtTime(1200, time);
+  filter.frequency.exponentialRampToValueAtTime(800, time + duration * 0.6);
+  filter.Q.setValueAtTime(0.7, time);
+  
+  osc1.connect(g1); g1.connect(filter);
+  osc2.connect(g2); g2.connect(filter);
+  filter.connect(dest);
+  
+  osc1.start(time); osc1.stop(time + duration + 0.05);
+  osc2.start(time); osc2.stop(time + duration + 0.05);
+  
+  // Layer 2: Subtle harmonic for depth
   const h2 = ctx.createOscillator();
   const h2g = ctx.createGain();
   h2.type = 'sine';
   h2.frequency.setValueAtTime(freq * 2, time);
   h2g.gain.setValueAtTime(0.001, time);
-  h2g.gain.linearRampToValueAtTime(0.03 * velocity, time + 0.005);
-  h2g.gain.exponentialRampToValueAtTime(0.001, time + duration * 0.5);
-  h2.connect(h2g); h2g.connect(dest);
-  h2.start(time); h2.stop(time + duration * 0.5 + 0.05);
+  h2g.gain.linearRampToValueAtTime(0.015 * velocity * brightness, time + 0.005);
+  h2g.gain.exponentialRampToValueAtTime(0.001, time + duration * 0.3);
+  h2.connect(h2g); h2g.connect(filter);
+  h2.start(time); h2.stop(time + duration * 0.3 + 0.05);
 }
 
 // ─── INSTRUMENT: Pluck/Bell (for arpeggios) ───
