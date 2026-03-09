@@ -1121,11 +1121,13 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
       const chord = config.chords[bar];
       const rootMidi = chord[0];
 
-      // ── Warm Pad ──
-      scheduleWarmPad(ctx, barStart, chord, barDur, config.padGain, config.padBrightness, outputGain);
+      // ── Warm Pad (disabled for darktrap/home — removes ambient bass tension) ──
+      if (config.genre !== 'darktrap') {
+        scheduleWarmPad(ctx, barStart, chord, barDur, config.padGain, config.padBrightness, outputGain);
+      }
 
-      // ── Drone layer (solo cada 4 barras para reducir nodos) ──
-      if ((config.genre === 'ambient' || config.genre === 'darktrap') && bar % 4 === 0) {
+      // ── Drone layer (solo ambient, disabled for darktrap) ──
+      if (config.genre === 'ambient' && bar % 4 === 0) {
         scheduleDrone(ctx, barStart, rootMidi - 12, barDur * 4, outputGain);
       }
 
