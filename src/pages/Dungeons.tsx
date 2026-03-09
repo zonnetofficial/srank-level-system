@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import VictorianFrame from '@/components/VictorianFrame';
 import CharacterCreation from '@/components/dungeon/CharacterCreation';
 import DungeonRoom from '@/components/dungeon/DungeonRoom';
+import EquipmentPanel from '@/components/dungeon/EquipmentPanel';
+import PublicProfileModal from '@/components/dungeon/PublicProfileModal';
 import { useGameState } from '@/hooks/useGameState';
 import { useDungeon } from '@/hooks/useDungeon';
 import { useShop } from '@/hooks/useShop';
@@ -28,7 +30,7 @@ const ranks: DungeonRank[] = ['E', 'D', 'C', 'B', 'A', 'S'];
 const RANK_ORDER: Record<string, number> = { E: 1, D: 2, C: 3, B: 4, A: 5, S: 6 };
 
 type View = 'lobby' | 'create' | 'dungeon' | 'reward' | 'result';
-type Tab = 'dungeons' | 'equipo' | 'ranking';
+type Tab = 'dungeons' | 'equipo' | 'personalizar' | 'ranking';
 
 interface LeaderboardEntry {
   id: string;
@@ -59,6 +61,7 @@ export default function Dungeons() {
   const [rewardChoice, setRewardChoice] = useState<'heal' | 'luckbox' | null>(null);
   const [luckBoxResult, setLuckBoxResult] = useState<LuckBoxReward | null>(null);
   const [xpToApply, setXpToApply] = useState(0);
+  const [profileTarget, setProfileTarget] = useState<LeaderboardEntry | null>(null);
 
   // Leaderboard
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
@@ -295,6 +298,7 @@ export default function Dungeons() {
           {([
             { key: 'dungeons' as Tab, label: '🏰 Mazmorras', color: 'primary' },
             { key: 'equipo' as Tab, label: '🎒 Equipo', color: 'accent' },
+            { key: 'personalizar' as Tab, label: '👤 Avatar', color: 'primary' },
             { key: 'ranking' as Tab, label: '🏆 Ranking', color: 'accent' },
           ]).map(t => (
             <button
@@ -412,7 +416,8 @@ export default function Dungeons() {
               return (
                 <div
                   key={entry.id}
-                  className={`rpg-panel p-3 flex items-center gap-3 ${isMe ? 'border-primary/40' : ''}`}
+                  onClick={() => setProfileTarget(entry)}
+                  className={`rpg-panel p-3 flex items-center gap-3 cursor-pointer hover:border-primary/40 transition-all ${isMe ? 'border-primary/40' : ''}`}
                 >
                   <div className={`w-8 h-8 flex items-center justify-center rounded-full font-display text-sm ${
                     i === 0 ? 'bg-accent/20 text-accent' : i === 1 ? 'bg-muted text-foreground' : i === 2 ? 'bg-stat-end/20 text-stat-end' : 'bg-secondary text-muted-foreground'
@@ -450,7 +455,35 @@ export default function Dungeons() {
         </div>
       )}
 
-      {/* EQUIPO TAB */}
+      {/* PERSONALIZAR TAB */}
+      {tab === 'personalizar' && showTabs && char && (
+        <EquipmentPanel
+          sprite={char.sprite}
+          characterName={char.name}
+          characterClass={char.className}
+        />
+      )}
+      {tab === 'personalizar' && showTabs && !char && (
+        <div className="text-center py-8 text-muted-foreground text-xs font-display">
+          Crea un personaje primero para personalizar tu avatar
+        </div>
+      )}
+
+      {/* Public Profile Modal */}
+      {profileTarget && (
+        <PublicProfileModal
+          userId={profileTarget.user_id}
+          displayName={profileTarget.display_name}
+          characterName={profileTarget.character_name}
+          characterClass={profileTarget.character_class}
+          characterSprite={profileTarget.character_sprite}
+          dungeonsCleared={profileTarget.dungeons_cleared}
+          highestRank={profileTarget.highest_rank}
+          totalXpEarned={profileTarget.total_xp_earned}
+          deaths={profileTarget.deaths}
+          onClose={() => setProfileTarget(null)}
+        />
+      )}
       {tab === 'equipo' && showTabs && (
         <div className="space-y-4 animate-slide-up">
           {/* Current loadout */}
