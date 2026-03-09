@@ -18,6 +18,8 @@ export function BottomNav() {
           <RouterNavLink
             key={item.to}
             to={item.to}
+            onClick={() => sfxClick()}
+            onMouseEnter={() => sfxHover()}
             className={({ isActive }) =>
               `flex flex-col items-center gap-0.5 px-3 py-1 transition-all duration-200 ${
                 isActive

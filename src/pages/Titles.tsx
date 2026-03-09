@@ -35,6 +35,7 @@ const Titles = () => {
   const handleCompleteTask = (stat: StatKey) => {
     if (challengeClass) {
       completeClassChallengeTask(challengeClass, stat);
+      sfxSuccess();
     }
   };
 

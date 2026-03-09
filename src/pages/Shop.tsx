@@ -87,7 +87,8 @@ const Shop = () => {
         {tabs.map(t => (
           <button
             key={t.key}
-            onClick={() => setTab(t.key)}
+            onClick={() => { setTab(t.key); sfxClick(); }}
+            onMouseEnter={() => sfxHover()}
             className={`flex-1 py-2 text-[9px] font-display uppercase tracking-[0.12em] border transition-all duration-200 ${
               tab === t.key
                 ? 'border-primary/50 bg-primary/10 text-primary'

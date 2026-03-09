@@ -107,7 +107,8 @@ const MonarchMode = () => {
 
           {!showConfirm ? (
             <button
-              onClick={handleActivate}
+              onClick={() => { handleActivate(); sfxClick(); }}
+              onMouseEnter={() => sfxHover()}
               disabled={!canEnter || loading}
               className="w-full py-3 bg-accent text-accent-foreground font-display text-sm uppercase tracking-wider rounded hover:brightness-110 transition disabled:opacity-40"
             >

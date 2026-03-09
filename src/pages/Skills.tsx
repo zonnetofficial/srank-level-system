@@ -127,6 +127,7 @@ const Skills = () => {
     if (!taskDialogStat) return;
     const pts = success ? (skillPoints[taskDialogStat]?.success || 0) : (skillPoints[taskDialogStat]?.fail || 0);
     completeSkillTask(taskDialogStat, pts);
+    if (success) sfxSuccess(); else sfxError();
     setTaskDialogStat(null);
     setTaskDialogTask(null);
   };

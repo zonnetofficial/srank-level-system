@@ -206,7 +206,8 @@ const Index = () => {
           </button>
         ))}
         <button
-          onClick={() => navigate('/monarch')}
+          onClick={() => { navigate('/monarch'); sfxClick(); }}
+          onMouseEnter={() => sfxHover()}
           className="hud-nav-btn py-4 col-span-2 animate-scale-up delay-800"
           style={{ borderColor: 'hsl(45 100% 60% / 0.3)' }}
         >
