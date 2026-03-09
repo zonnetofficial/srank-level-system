@@ -329,7 +329,8 @@ const Skills = () => {
               </div>
 
               <button
-                onClick={() => handleStartSkill(key)}
+                onClick={() => { handleStartSkill(key); sfxClick(); }}
+                onMouseEnter={() => sfxHover()}
                 className="w-full py-2 rounded font-display text-xs uppercase tracking-wider transition-colors bg-secondary text-secondary-foreground hover:bg-secondary/80"
               >
                 {key === 'int' ? 'Iniciar Test' : 'Iniciar Tarea'}
