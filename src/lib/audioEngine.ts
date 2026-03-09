@@ -300,11 +300,11 @@ function scheduleWarmPad(ctx: AudioContext, time: number, midiNotes: number[], d
   }
 }
 
-// ─── INSTRUMENT: Trap Bells ───
+// ─── INSTRUMENT: Trap Bells (menos agudas) ───
 function scheduleFMKeys(ctx: AudioContext, time: number, midi: number, duration: number, brightness: number, velocity: number, dest: GainNode) {
   const freq = NOTE(midi);
   
-  // Trap bells — bright, metallic, icy sound
+  // Trap bells — bright pero menos agudas, más cálidas
   // Main bell tone — square wave for hardness + triangle for body
   const osc1 = ctx.createOscillator();
   const osc2 = ctx.createOscillator();
@@ -313,8 +313,8 @@ function scheduleFMKeys(ctx: AudioContext, time: number, midi: number, duration:
   
   osc1.type = 'square';
   osc2.type = 'triangle';
-  osc1.frequency.setValueAtTime(freq * 2, time); // octave up for brightness
-  osc2.frequency.setValueAtTime(freq * 2, time);
+  osc1.frequency.setValueAtTime(freq, time); // Misma octava en vez de *2
+  osc2.frequency.setValueAtTime(freq, time);
   osc2.detune.setValueAtTime(7, time); // slight detune for shimmer
   
   // Fast attack, medium-fast decay (bell characteristic)
@@ -322,24 +322,24 @@ function scheduleFMKeys(ctx: AudioContext, time: number, midi: number, duration:
   const decay = duration * 0.6;
   
   g1.gain.setValueAtTime(0.001, time);
-  g1.gain.linearRampToValueAtTime(0.12 * velocity * brightness, time + attack);
+  g1.gain.linearRampToValueAtTime(0.15 * velocity * brightness, time + attack);
   g1.gain.exponentialRampToValueAtTime(0.001, time + decay);
   
   g2.gain.setValueAtTime(0.001, time);
-  g2.gain.linearRampToValueAtTime(0.08 * velocity * brightness, time + attack);
+  g2.gain.linearRampToValueAtTime(0.1 * velocity * brightness, time + attack);
   g2.gain.exponentialRampToValueAtTime(0.001, time + decay);
   
-  // High-pass filter for crispy, icy character
+  // High-pass filter más suave para menos agudeza
   const hp = ctx.createBiquadFilter();
   hp.type = 'highpass';
-  hp.frequency.setValueAtTime(800, time);
-  hp.Q.setValueAtTime(0.7, time);
+  hp.frequency.setValueAtTime(400, time); // Bajado de 800 a 400
+  hp.Q.setValueAtTime(0.5, time);
   
-  // Peaking filter for metallic shimmer
+  // Peaking filter para brillo pero en frecuencias más bajas
   const peak = ctx.createBiquadFilter();
   peak.type = 'peaking';
-  peak.frequency.setValueAtTime(3500, time);
-  peak.gain.setValueAtTime(8, time);
+  peak.frequency.setValueAtTime(2000, time); // Bajado de 3500 a 2000
+  peak.gain.setValueAtTime(6, time); // Reducido de 8 a 6
   peak.Q.setValueAtTime(2, time);
   
   osc1.connect(g1); g1.connect(hp);
@@ -349,16 +349,16 @@ function scheduleFMKeys(ctx: AudioContext, time: number, midi: number, duration:
   osc1.start(time); osc1.stop(time + decay + 0.05);
   osc2.start(time); osc2.stop(time + decay + 0.05);
   
-  // Layer 2: High harmonic for extra sparkle
-  const h3 = ctx.createOscillator();
-  const h3g = ctx.createGain();
-  h3.type = 'sine';
-  h3.frequency.setValueAtTime(freq * 4, time); // two octaves up
-  h3g.gain.setValueAtTime(0.001, time);
-  h3g.gain.linearRampToValueAtTime(0.04 * velocity * brightness, time + attack);
-  h3g.gain.exponentialRampToValueAtTime(0.001, time + decay * 0.5);
-  h3.connect(h3g); h3g.connect(peak);
-  h3.start(time); h3.stop(time + decay * 0.5 + 0.05);
+  // Layer 2: Harmonic más bajo para menos agudeza
+  const h2 = ctx.createOscillator();
+  const h2g = ctx.createGain();
+  h2.type = 'sine';
+  h2.frequency.setValueAtTime(freq * 2, time); // Una octava en vez de dos
+  h2g.gain.setValueAtTime(0.001, time);
+  h2g.gain.linearRampToValueAtTime(0.05 * velocity * brightness, time + attack);
+  h2g.gain.exponentialRampToValueAtTime(0.001, time + decay * 0.5);
+  h2.connect(h2g); h2g.connect(peak);
+  h2.start(time); h2.stop(time + decay * 0.5 + 0.05);
 }
 
 // ─── INSTRUMENT: Atmospheric Strings (inspired by "A 120" Gera MX) ───
