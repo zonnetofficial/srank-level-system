@@ -17,6 +17,7 @@ import {
 import { getActiveMission } from '@/lib/mandatoryMissions';
 import { useNavigate } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
+import { sfxClick, sfxHover, sfxSuccess } from '@/lib/audioEngine';
 
 const statKeys: StatKey[] = ['int', 'str', 'agi', 'vit', 'end'];
 
