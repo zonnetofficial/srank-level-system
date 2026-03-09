@@ -1691,12 +1691,16 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
       } else if (config.genre === 'ghostly') {
         // Ghostly: haunting strings
         scheduleHauntingStrings(ctx, barStart, chord.slice(0, 3), barDur, config.padGain, outputGain);
+      } else if (config.genre === 'monarch') {
+        // Monarch: haunting strings + industrial textures
+        scheduleHauntingStrings(ctx, barStart, chord.slice(0, 3), barDur, config.padGain * 0.7, outputGain);
+        if (bar % 4 === 0) scheduleIndustrialHit(ctx, barStart + barDur * 0.5, barDur * 2, outputGain);
       } else if (config.genre !== 'darktrap') {
         scheduleWarmPad(ctx, barStart, chord, barDur, config.padGain, config.padBrightness, outputGain);
       }
 
       // ── Drone layer ──
-      if ((config.genre === 'ambient' || config.genre === 'ghostly') && bar % 4 === 0) {
+      if ((config.genre === 'ambient' || config.genre === 'ghostly' || config.genre === 'monarch') && bar % 4 === 0) {
         scheduleDrone(ctx, barStart, rootMidi - 12, barDur * 4, outputGain);
       }
 
