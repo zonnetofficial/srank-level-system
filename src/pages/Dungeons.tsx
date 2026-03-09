@@ -319,7 +319,11 @@ export default function Dungeons() {
       {char && view !== 'create' && tab !== 'ranking' && (
         <div className="rpg-panel mb-4 animate-slide-up">
           <div className="flex items-center gap-3">
-            <span className="text-3xl">{char.sprite}</span>
+            {CHARACTER_BASE_SPRITES[char.className] ? (
+              <img src={CHARACTER_BASE_SPRITES[char.className]} alt={char.name} className="w-12 h-14 object-contain" draggable={false} />
+            ) : (
+              <span className="text-3xl">{char.sprite}</span>
+            )}
             <div className="flex-1 space-y-1">
               <div className="flex items-center justify-between">
                 <span className="font-display text-sm text-foreground">{char.name}</span>
