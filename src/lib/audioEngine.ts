@@ -1491,13 +1491,18 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
   outputGain.gain.setValueAtTime(0.001, ctx.currentTime);
   outputGain.connect(musicGain!);
 
-  // Reverb/Delay más pronunciado para darktrap
+  // Reverb/Delay — genre-specific wetness
   const delaySend = ctx.createDelay(2);
   delaySend.delayTime.setValueAtTime(sixteenthDur * 3, ctx.currentTime);
   const delayFb = ctx.createGain();
-  delayFb.gain.setValueAtTime(config.genre === 'darktrap' ? 0.4 : 0.15, ctx.currentTime); // Más feedback
+  const reverbWet = config.genre === 'darktrap' ? 0.4
+    : config.genre === 'ghostly' ? 0.55
+    : config.genre === 'epic' ? 0.45
+    : config.genre === 'lofi' ? 0.3
+    : 0.15;
+  delayFb.gain.setValueAtTime(reverbWet, ctx.currentTime);
   const delayOut = ctx.createGain();
-  delayOut.gain.setValueAtTime(config.genre === 'darktrap' ? 0.35 : 0.15, ctx.currentTime); // Más wet
+  delayOut.gain.setValueAtTime(reverbWet * 0.9, ctx.currentTime);
   const delaySendGain = ctx.createGain();
   delaySendGain.gain.setValueAtTime(1, ctx.currentTime);
   delaySendGain.connect(delaySend);
