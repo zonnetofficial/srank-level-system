@@ -1397,6 +1397,39 @@ const DRUM_PATTERNS: Record<'trap' | 'house' | 'ambient' | 'darktrap' | 'lofi' |
     [.25, 0, 0, 0], [0,0,0,0],[0,0,0,0],[0,0,0,0],
     [0,  0, 0, 0],  [0,0,0,0],[0,0,.08,0],[0,0,0,0],
   ],
+  // Lo-fi: lazy boom-bap
+  lofi: [
+    [.6, 0, 0, 0],  [0,0,.3,0],[0,0,0,0],[0,0,.3,0],
+    [0, .5, 0, 0],  [0,0,.3,0],[0,0,0,0],[0,0,.2,0],
+    [0,  0, 0, 0],  [0,0,.3,0],[.5,0,0,0],[0,0,.3,0],
+    [0, .5, 0, 0],  [0,0,.2,0],[0,0,0,.3],[0,0,.2,0],
+    [.6, 0, 0, 0],  [0,0,.3,0],[0,0,0,0],[0,0,.3,0],
+    [0, .5, 0, 0],  [0,0,.3,0],[0,0,0,0],[0,0,.2,0],
+    [.4, 0, 0, 0],  [0,0,.3,0],[0,0,0,0],[0,0,.3,0],
+    [0, .5, 0, 0],  [0,0,.2,0],[0,0,0,0],[0,0,.2,0],
+  ],
+  // Epic: sparse cinematic hits
+  epic: [
+    [.8, 0, 0, 0],  [0,0,0,0],[0,0,0,0],[0,0,0,0],
+    [0,  0, 0, 0],  [0,0,0,0],[0,0,0,0],[0,0,0,0],
+    [0,  0, 0, 0],  [0,0,0,0],[0,0,0,.3],[0,0,0,0],
+    [0, .6, 0, 0],  [0,0,0,0],[0,0,0,0],[0,0,0,0],
+    [0,  0, 0, 0],  [0,0,0,0],[0,0,0,0],[0,0,0,0],
+    [.5, 0, 0, 0],  [0,0,0,0],[0,0,0,0],[0,0,0,0],
+    [0,  0, 0, 0],  [0,0,0,0],[0,0,0,.2],[0,0,0,0],
+    [0, .7, 0, 0],  [0,0,0,0],[0,0,0,0],[.3,0,0,0],
+  ],
+  // Ghostly: barely there
+  ghostly: [
+    [.2, 0, 0, 0],  [0,0,0,0],[0,0,0,0],[0,0,0,0],
+    [0,  0, 0, 0],  [0,0,0,0],[0,0,0,0],[0,0,0,0],
+    [0,  0, 0, 0],  [0,0,0,0],[0,0,0,0],[0,0,0,0],
+    [0,  0, 0, 0],  [0,0,0,0],[0,.15,0,0],[0,0,0,0],
+    [0,  0, 0, 0],  [0,0,0,0],[0,0,0,0],[0,0,0,0],
+    [.15, 0, 0, 0], [0,0,0,0],[0,0,0,0],[0,0,0,0],
+    [0,  0, 0, 0],  [0,0,0,0],[0,0,0,0],[0,0,0,0],
+    [0,  0, 0, 0],  [0,0,0,0],[0,0,0,0],[0,.1,0,0],
+  ],
 };
 
 // Genre-specific drum dispatchers
@@ -1406,19 +1439,25 @@ type DrumKit = {
   hat: (ctx: AudioContext, t: number, v: number, open: boolean, d: GainNode) => void;
 };
 
-const DRUM_KITS: Record<'trap' | 'house' | 'ambient' | 'darktrap', DrumKit> = {
+const DRUM_KITS: Record<'trap' | 'house' | 'ambient' | 'darktrap' | 'lofi' | 'epic' | 'ghostly', DrumKit> = {
   darktrap: { kick: darkTrapKick, snare: darkTrapSnare, hat: darkTrapHat },
   trap: { kick: trapKick, snare: trapSnare, hat: trapHat },
   house: { kick: houseKick, snare: houseClap, hat: houseHat },
   ambient: { kick: ambientKick, snare: ambientPerc, hat: (ctx, t, v, _o, d) => ambientPerc(ctx, t, v * 0.5, d) },
+  lofi: { kick: lofiKick, snare: lofiSnare, hat: lofiHat },
+  epic: { kick: epicKick, snare: epicSnare, hat: epicHat },
+  ghostly: { kick: ghostKick, snare: ghostPerc, hat: (ctx, t, v, _o, d) => ghostPerc(ctx, t, v * 0.3, d) },
 };
 
 // Genre-specific bass dispatchers
-const BASS_FN: Record<'trap' | 'house' | 'ambient' | 'darktrap', (ctx: AudioContext, t: number, m: number, dur: number, d: GainNode) => void> = {
+const BASS_FN: Record<'trap' | 'house' | 'ambient' | 'darktrap' | 'lofi' | 'epic' | 'ghostly', (ctx: AudioContext, t: number, m: number, dur: number, d: GainNode) => void> = {
   darktrap: scheduleDeep808,
   trap: schedule808Sub,
   house: scheduleHouseBass,
   ambient: scheduleDrone,
+  lofi: scheduleHouseBass,  // Filtered saw bass for lofi
+  epic: scheduleDrone,       // Deep drone for epic
+  ghostly: scheduleDrone,    // Ghostly drone
 };
 
 // ─── MAIN SEQUENCER WITH CROSSFADE (OPTIMIZED) ───
