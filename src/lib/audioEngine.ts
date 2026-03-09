@@ -370,26 +370,41 @@ function schedulePluck(ctx: AudioContext, time: number, midi: number, duration: 
     osc.start(time); osc.stop(time + duration + 0.1);
   });
 }
+// ─── 808 CUT-ITSELF: store previous nodes to kill on retrigger ───
+let prev808Nodes: { gains: GainNode[], oscs: OscillatorNode[], cutTime: number } | null = null;
+
+function cut808(ctx: AudioContext, time: number) {
+  if (prev808Nodes) {
+    const fadeOut = 0.015; // 15ms fast fade to avoid click
+    prev808Nodes.gains.forEach(g => {
+      g.gain.cancelScheduledValues(time);
+      g.gain.setValueAtTime(g.gain.value, time);
+      g.gain.linearRampToValueAtTime(0.001, time + fadeOut);
+    });
+    prev808Nodes.oscs.forEach(o => {
+      try { o.stop(time + fadeOut + 0.01); } catch(_) {}
+    });
+    prev808Nodes = null;
+  }
+}
 
 // ─── INSTRUMENT: Deep 808 Sub Bass ───
 function schedule808Sub(ctx: AudioContext, time: number, midi: number, duration: number, dest: GainNode) {
+  cut808(ctx, time); // Kill previous 808
   const freq = NOTE(midi);
-  // Main sine body with pitch drop — longer sustain for dark trap
   const osc = ctx.createOscillator();
   const g = ctx.createGain();
   osc.type = 'sine';
   osc.frequency.setValueAtTime(freq * 2, time);
   osc.frequency.exponentialRampToValueAtTime(freq, time + 0.06);
-  // Soft-clip distortion for warmth & grit
   const shaper = ctx.createWaveShaper();
   const curve = new Float32Array(256);
   for (let i = 0; i < 256; i++) {
     const x = (i / 128) - 1;
-    curve[i] = (Math.PI + 3) * x / (Math.PI + 3 * Math.abs(x)); // heavier saturation
+    curve[i] = (Math.PI + 3) * x / (Math.PI + 3 * Math.abs(x));
   }
   shaper.curve = curve;
   shaper.oversample = '2x';
-  // Low-pass to keep it sub-heavy
   const lp = ctx.createBiquadFilter();
   lp.type = 'lowpass';
   lp.frequency.setValueAtTime(freq * 4, time);
@@ -400,7 +415,6 @@ function schedule808Sub(ctx: AudioContext, time: number, midi: number, duration:
   g.gain.exponentialRampToValueAtTime(0.001, time + duration);
   osc.connect(shaper); shaper.connect(lp); lp.connect(g); g.connect(dest);
   osc.start(time); osc.stop(time + duration + 0.05);
-  // Sub harmonic layer
   const sub = ctx.createOscillator();
   const sg = ctx.createGain();
   sub.type = 'sine';
@@ -411,6 +425,7 @@ function schedule808Sub(ctx: AudioContext, time: number, midi: number, duration:
   sg.gain.exponentialRampToValueAtTime(0.001, time + duration);
   sub.connect(sg); sg.connect(dest);
   sub.start(time); sub.stop(time + duration + 0.05);
+  prev808Nodes = { gains: [g, sg], oscs: [osc, sub], cutTime: time };
 }
 
 // ─── INSTRUMENT: House Bass (filtered saw + sub) ───
