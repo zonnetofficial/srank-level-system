@@ -1146,41 +1146,86 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
         if (hat > 0) kit.hat(ctx, stepTime, hat, false, outputGain);
         if (openHat > 0) kit.hat(ctx, stepTime, openHat, true, outputGain);
 
-        // Bass
+        // Bass — darktrap uses specific 808 note sequence in Am
         const bassPatIdx = ((bar * 16) + step) % config.bassPattern.length;
         if (config.bassPattern[bassPatIdx]) {
-          const bassMidi = rootMidi + config.bassOctave * 12;
-          const bassDur = config.genre === 'darktrap' ? barDur * 1.5
-            : config.genre === 'ambient' ? barDur
-            : config.genre === 'trap' ? sixteenthDur * 6
-            : sixteenthDur * 3;
-          bassFn(ctx, stepTime, bassMidi, bassDur, outputGain);
+          if (config.genre === 'darktrap') {
+            // 808 bass: A2-A2---G2--- | A2---F2---E2 | A2-A2---G2--- | F2---E2---A2
+            const bass808Notes = [
+              45,45,43, // Bar 1: A2, A2, G2
+              45,41,40, // Bar 2: A2, F2, E2
+              45,45,43, // Bar 3: A2, A2, G2
+              41,40,45, // Bar 4: F2, E2, A2
+            ];
+            // Count which bass hit this is across all bars
+            let bassHitCount = 0;
+            const totalStep = (bar % 4) * 16 + step;
+            for (let s = 0; s < totalStep; s++) {
+              if (config.bassPattern[s % config.bassPattern.length]) bassHitCount++;
+            }
+            const bassMidi = bass808Notes[bassHitCount % bass808Notes.length];
+            const bassDur = barDur * 1.5;
+            bassFn(ctx, stepTime, bassMidi, bassDur, outputGain);
+          } else {
+            const bassMidi = rootMidi + config.bassOctave * 12;
+            const bassDur = config.genre === 'ambient' ? barDur
+              : config.genre === 'trap' ? sixteenthDur * 6
+              : sixteenthDur * 3;
+            bassFn(ctx, stepTime, bassMidi, bassDur, outputGain);
+          }
         }
 
-        // Dark Melody Keys — melodía oscura independiente del pad (E phrygian)
+        // Lead melody — darktrap uses Am dark melody sequence
         const keyPatIdx = ((bar * 16) + step) % config.keyPattern.length;
         if (config.keyPattern[keyPatIdx]) {
           const brightness = config.genre === 'darktrap' ? 0.6
             : config.genre === 'house' ? 1.5
             : config.genre === 'trap' ? 0.8 : 0.4;
           const vel = config.genre === 'darktrap' ? 0.7 : 0.7;
-          // Dark melody: E phrygian scale notes — oscura, tensa, independiente
-          const darkMelody = [
-            64, 63, 60, 59, 64, 63, 67, 64, // E5 Eb5 C5 B4 E5 Eb5 G5 E5
-            63, 60, 59, 55, 63, 60, 64, 59, // Eb5 C5 B4 G4 Eb5 C5 E5 B4
-            67, 64, 63, 60, 67, 63, 64, 60, // G5 E5 Eb5 C5 G5 Eb5 E5 C5
-            59, 55, 60, 59, 55, 52, 59, 55, // B4 G4 C5 B4 G4 E4 B4 G4
-          ];
-          const melodyIdx = ((bar * 16) + step) % darkMelody.length;
-          const bellNote = darkMelody[melodyIdx];
-          scheduleFMKeys(ctx, stepTime, bellNote, sixteenthDur * 4, brightness, vel, outputGain);
+          if (config.genre === 'darktrap') {
+            // Lead: A4-E5-G5-E5-A4-E5-C5-E5 | A4-E5-G5-E5-A4-E5-D5-C5 | ...
+            const darkLead = [
+              69,76,79,76,69,76,72,76, // Bar 1: A4-E5-G5-E5-A4-E5-C5-E5
+              69,76,79,76,69,76,74,72, // Bar 2: A4-E5-G5-E5-A4-E5-D5-C5
+              69,79,76,72,69,72,74,76, // Bar 3: A4-G5-E5-C5-A4-C5-D5-E5
+              79,76,74,72,69,72,76,69, // Bar 4: G5-E5-D5-C5-A4-C5-E5-A4
+            ];
+            // Each bar has 8 key hits (every 2 sixteenths)
+            let keyHitCount = 0;
+            const totalStep = (bar % 4) * 16 + step;
+            for (let s = 0; s < totalStep; s++) {
+              if (config.keyPattern[s % config.keyPattern.length]) keyHitCount++;
+            }
+            const bellNote = darkLead[keyHitCount % darkLead.length];
+            scheduleFMKeys(ctx, stepTime, bellNote, sixteenthDur * 2, brightness, vel, outputGain);
+          } else {
+            const bellNote = chord[chord.length - 1] + 12;
+            scheduleFMKeys(ctx, stepTime, bellNote, sixteenthDur * 4, brightness, vel, outputGain);
+          }
         }
 
-        // Pluck arpeggios (sin delay extra para reducir nodos)
+        // Counter melody / arp — darktrap uses slow dark pad notes
         const arpPatIdx = ((bar * 16) + step) % config.arpPattern.length;
         if (config.arpPattern[arpPatIdx]) {
-          const arpNote = chord[step % chord.length] + 12;
-          schedulePluck(ctx, stepTime, arpNote, sixteenthDur * 3, outputGain);
+          if (config.genre === 'darktrap') {
+            // Contra melodía: A3---C4---E4--- | G3---A3---E4--- | F3---A3---C4--- | G3---E4---A3---
+            const counterMelody = [
+              57,60,64, // Bar 1: A3, C4, E4
+              55,57,64, // Bar 2: G3, A3, E4
+              53,57,60, // Bar 3: F3, A3, C4
+              55,64,57, // Bar 4: G3, E4, A3
+            ];
+            let arpHitCount = 0;
+            const totalStep = (bar % 4) * 16 + step;
+            for (let s = 0; s < totalStep; s++) {
+              if (config.arpPattern[s % config.arpPattern.length]) arpHitCount++;
+            }
+            const arpNote = counterMelody[arpHitCount % counterMelody.length];
+            schedulePluck(ctx, stepTime, arpNote, sixteenthDur * 5, outputGain);
+          } else {
+            const arpNote = chord[step % chord.length] + 12;
+            schedulePluck(ctx, stepTime, arpNote, sixteenthDur * 3, outputGain);
+          }
         }
       }
     }
