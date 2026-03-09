@@ -300,57 +300,65 @@ function scheduleWarmPad(ctx: AudioContext, time: number, midiNotes: number[], d
   }
 }
 
-// ─── INSTRUMENT: Dark Piano (inspired by "A 120" Gera MX) ───
+// ─── INSTRUMENT: Trap Bells ───
 function scheduleFMKeys(ctx: AudioContext, time: number, midi: number, duration: number, brightness: number, velocity: number, dest: GainNode) {
   const freq = NOTE(midi);
   
-  // Layer 1: Main piano body (triangle + sine for mellow tone)
+  // Trap bells — bright, metallic, icy sound
+  // Main bell tone — square wave for hardness + triangle for body
   const osc1 = ctx.createOscillator();
   const osc2 = ctx.createOscillator();
   const g1 = ctx.createGain();
   const g2 = ctx.createGain();
   
-  osc1.type = 'triangle';
-  osc2.type = 'sine';
-  osc1.frequency.setValueAtTime(freq, time);
-  osc2.frequency.setValueAtTime(freq, time);
-  osc2.detune.setValueAtTime(-7, time); // slight detune for richness
+  osc1.type = 'square';
+  osc2.type = 'triangle';
+  osc1.frequency.setValueAtTime(freq * 2, time); // octave up for brightness
+  osc2.frequency.setValueAtTime(freq * 2, time);
+  osc2.detune.setValueAtTime(7, time); // slight detune for shimmer
   
-  // Piano-like envelope: quick attack, sustained decay
+  // Fast attack, medium-fast decay (bell characteristic)
+  const attack = 0.005;
+  const decay = duration * 0.6;
+  
   g1.gain.setValueAtTime(0.001, time);
-  g1.gain.linearRampToValueAtTime(0.08 * velocity * brightness, time + 0.01);
-  g1.gain.exponentialRampToValueAtTime(0.03 * velocity * brightness, time + duration * 0.4);
-  g1.gain.exponentialRampToValueAtTime(0.001, time + duration);
+  g1.gain.linearRampToValueAtTime(0.12 * velocity * brightness, time + attack);
+  g1.gain.exponentialRampToValueAtTime(0.001, time + decay);
   
   g2.gain.setValueAtTime(0.001, time);
-  g2.gain.linearRampToValueAtTime(0.05 * velocity * brightness, time + 0.01);
-  g2.gain.exponentialRampToValueAtTime(0.02 * velocity * brightness, time + duration * 0.4);
-  g2.gain.exponentialRampToValueAtTime(0.001, time + duration);
+  g2.gain.linearRampToValueAtTime(0.08 * velocity * brightness, time + attack);
+  g2.gain.exponentialRampToValueAtTime(0.001, time + decay);
   
-  // Low-pass filter for dark, mellow tone
-  const filter = ctx.createBiquadFilter();
-  filter.type = 'lowpass';
-  filter.frequency.setValueAtTime(1200, time);
-  filter.frequency.exponentialRampToValueAtTime(800, time + duration * 0.6);
-  filter.Q.setValueAtTime(0.7, time);
+  // High-pass filter for crispy, icy character
+  const hp = ctx.createBiquadFilter();
+  hp.type = 'highpass';
+  hp.frequency.setValueAtTime(800, time);
+  hp.Q.setValueAtTime(0.7, time);
   
-  osc1.connect(g1); g1.connect(filter);
-  osc2.connect(g2); g2.connect(filter);
-  filter.connect(dest);
+  // Peaking filter for metallic shimmer
+  const peak = ctx.createBiquadFilter();
+  peak.type = 'peaking';
+  peak.frequency.setValueAtTime(3500, time);
+  peak.gain.setValueAtTime(8, time);
+  peak.Q.setValueAtTime(2, time);
   
-  osc1.start(time); osc1.stop(time + duration + 0.05);
-  osc2.start(time); osc2.stop(time + duration + 0.05);
+  osc1.connect(g1); g1.connect(hp);
+  osc2.connect(g2); g2.connect(hp);
+  hp.connect(peak); peak.connect(dest);
   
-  // Layer 2: Subtle harmonic for depth
-  const h2 = ctx.createOscillator();
-  const h2g = ctx.createGain();
-  h2.type = 'sine';
-  h2.frequency.setValueAtTime(freq * 2, time);
-  h2g.gain.setValueAtTime(0.001, time);
-  h2g.gain.linearRampToValueAtTime(0.015 * velocity * brightness, time + 0.005);
-  h2g.gain.exponentialRampToValueAtTime(0.001, time + duration * 0.3);
-  h2.connect(h2g); h2g.connect(filter);
-  h2.start(time); h2.stop(time + duration * 0.3 + 0.05);
+  osc1.start(time); osc1.stop(time + decay + 0.05);
+  osc2.start(time); osc2.stop(time + decay + 0.05);
+  
+  // Layer 2: High harmonic for extra sparkle
+  const h3 = ctx.createOscillator();
+  const h3g = ctx.createGain();
+  h3.type = 'sine';
+  h3.frequency.setValueAtTime(freq * 4, time); // two octaves up
+  h3g.gain.setValueAtTime(0.001, time);
+  h3g.gain.linearRampToValueAtTime(0.04 * velocity * brightness, time + attack);
+  h3g.gain.exponentialRampToValueAtTime(0.001, time + decay * 0.5);
+  h3.connect(h3g); h3g.connect(peak);
+  h3.start(time); h3.stop(time + decay * 0.5 + 0.05);
 }
 
 // ─── INSTRUMENT: Atmospheric Strings (inspired by "A 120" Gera MX) ───
@@ -677,51 +685,87 @@ function darkTrapKick(ctx: AudioContext, time: number, vel: number, dest: GainNo
 }
 
 function darkTrapSnare(ctx: AudioContext, time: number, vel: number, dest: GainNode) {
-  // Aggressive snare — loud, sharp, biting
-  // Layer 1: Harsh noise burst — wide band, aggressive
-  const dur = 0.25;
-  const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur), ctx.sampleRate);
-  const d = buf.getChannelData(0);
-  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-  const src = ctx.createBufferSource();
-  src.buffer = buf;
-  // Distortion on the noise for aggression
-  const shaper = ctx.createWaveShaper();
-  const curve = new Float32Array(256);
+  // Snare tronado — explosivo, con mucho snap y crack
+  
+  // Layer 1: Explosión inicial — noise burst muy fuerte y corto
+  const snapDur = 0.04;
+  const snapBuf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * snapDur), ctx.sampleRate);
+  const sd = snapBuf.getChannelData(0);
+  for (let i = 0; i < sd.length; i++) sd[i] = Math.random() * 2 - 1;
+  const snap = ctx.createBufferSource();
+  snap.buffer = snapBuf;
+  
+  // Distorsión agresiva
+  const snapShaper = ctx.createWaveShaper();
+  const snapCurve = new Float32Array(256);
   for (let i = 0; i < 256; i++) {
     const x = (i / 128) - 1;
-    curve[i] = Math.tanh(x * 3);
+    snapCurve[i] = Math.tanh(x * 4); // distorsión fuerte
   }
-  shaper.curve = curve;
-  const hp = ctx.createBiquadFilter();
-  hp.type = 'highpass'; hp.frequency.setValueAtTime(600, time);
-  const peak = ctx.createBiquadFilter();
-  peak.type = 'peaking'; peak.frequency.setValueAtTime(3000, time); peak.gain.setValueAtTime(6, time); peak.Q.setValueAtTime(1, time);
-  const g = ctx.createGain();
-  g.gain.setValueAtTime(0.28 * vel, time);
-  g.gain.exponentialRampToValueAtTime(0.001, time + dur);
-  src.connect(shaper); shaper.connect(hp); hp.connect(peak); peak.connect(g); g.connect(dest);
-  src.start(time);
-  // Layer 2: Tonal body — hard pitched thump
-  const t1 = ctx.createOscillator();
-  const t1g = ctx.createGain();
-  t1.type = 'square'; t1.frequency.setValueAtTime(220, time);
-  t1.frequency.exponentialRampToValueAtTime(120, time + 0.04);
-  t1g.gain.setValueAtTime(0.18 * vel, time);
-  t1g.gain.exponentialRampToValueAtTime(0.001, time + 0.06);
-  t1.connect(t1g); t1g.connect(dest);
-  t1.start(time); t1.stop(time + 0.07);
-  // Layer 3: High crack for bite
-  const crackBuf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.015), ctx.sampleRate);
-  const crd = crackBuf.getChannelData(0);
-  for (let i = 0; i < crd.length; i++) crd[i] = (Math.random() * 2 - 1);
+  snapShaper.curve = snapCurve;
+  
+  const snapHP = ctx.createBiquadFilter();
+  snapHP.type = 'highpass'; snapHP.frequency.setValueAtTime(2000, time);
+  const snapPeak = ctx.createBiquadFilter();
+  snapPeak.type = 'peaking'; snapPeak.frequency.setValueAtTime(5000, time); 
+  snapPeak.gain.setValueAtTime(12, time); snapPeak.Q.setValueAtTime(2, time);
+  
+  const snapG = ctx.createGain();
+  snapG.gain.setValueAtTime(0.4 * vel, time);
+  snapG.gain.exponentialRampToValueAtTime(0.001, time + snapDur);
+  
+  snap.connect(snapShaper); snapShaper.connect(snapHP); 
+  snapHP.connect(snapPeak); snapPeak.connect(snapG); snapG.connect(dest);
+  snap.start(time);
+  
+  // Layer 2: Cuerpo del snare — noise más largo
+  const bodyDur = 0.18;
+  const bodyBuf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * bodyDur), ctx.sampleRate);
+  const bd = bodyBuf.getChannelData(0);
+  for (let i = 0; i < bd.length; i++) bd[i] = Math.random() * 2 - 1;
+  const body = ctx.createBufferSource();
+  body.buffer = bodyBuf;
+  
+  const bodyBP = ctx.createBiquadFilter();
+  bodyBP.type = 'bandpass'; bodyBP.frequency.setValueAtTime(3000, time); bodyBP.Q.setValueAtTime(1.5, time);
+  const bodyG = ctx.createGain();
+  bodyG.gain.setValueAtTime(0.25 * vel, time);
+  bodyG.gain.exponentialRampToValueAtTime(0.001, time + bodyDur);
+  
+  body.connect(bodyBP); bodyBP.connect(bodyG); bodyG.connect(dest);
+  body.start(time);
+  
+  // Layer 3: Tono fundamental — pitched snap muy corto
+  const tone = ctx.createOscillator();
+  const toneG = ctx.createGain();
+  tone.type = 'square';
+  tone.frequency.setValueAtTime(280, time);
+  tone.frequency.exponentialRampToValueAtTime(140, time + 0.03);
+  toneG.gain.setValueAtTime(0.25 * vel, time);
+  toneG.gain.exponentialRampToValueAtTime(0.001, time + 0.05);
+  tone.connect(toneG); toneG.connect(dest);
+  tone.start(time); tone.stop(time + 0.06);
+  
+  // Layer 4: High crack — el "tronido" extra
+  const crackDur = 0.02;
+  const crackBuf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * crackDur), ctx.sampleRate);
+  const cd = crackBuf.getChannelData(0);
+  for (let i = 0; i < cd.length; i++) cd[i] = (Math.random() * 2 - 1);
   const crack = ctx.createBufferSource();
   crack.buffer = crackBuf;
+  
   const crackHP = ctx.createBiquadFilter();
-  crackHP.type = 'highpass'; crackHP.frequency.setValueAtTime(8000, time);
+  crackHP.type = 'highpass'; crackHP.frequency.setValueAtTime(10000, time);
+  const crackPeak = ctx.createBiquadFilter();
+  crackPeak.type = 'peaking'; crackPeak.frequency.setValueAtTime(13000, time); 
+  crackPeak.gain.setValueAtTime(10, time); crackPeak.Q.setValueAtTime(3, time);
+  
   const crackG = ctx.createGain();
-  crackG.gain.setValueAtTime(0.15 * vel, time);
-  crack.connect(crackHP); crackHP.connect(crackG); crackG.connect(dest);
+  crackG.gain.setValueAtTime(0.3 * vel, time);
+  crackG.gain.exponentialRampToValueAtTime(0.001, time + crackDur);
+  
+  crack.connect(crackHP); crackHP.connect(crackPeak); 
+  crackPeak.connect(crackG); crackG.connect(dest);
   crack.start(time);
 }
 
@@ -851,19 +895,19 @@ const THEMES: Record<MusicTheme, ThemeConfig> = {
   home: {
     bpm: 75,
     genre: 'darktrap',
-    // "A 120" style: Am → F → C → G (Natural Minor, melancholic)
+    // Am → F → C → G progression
     chords: [
       [57, 60, 64], [53, 57, 60], [60, 64, 67], [55, 59, 62],
       [57, 60, 64], [53, 57, 60], [60, 64, 67], [55, 59, 62],
     ],
     // No separate bass — the 808 kick IS the bass
     bassPattern: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    // Simple melancholic piano hits (like Gera MX style)
-    keyPattern:  [1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0, 0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
-    // Atmospheric string pads (slow, sustained)
+    // Trap bells — sparse, icy hits
+    keyPattern:  [1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0, 0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],
+    // Atmospheric string pads (sustained background)
     arpPattern:  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0],
     padBrightness: 500,
-    padGain: 0.05,
+    padGain: 0.04,
     bassOctave: -1,
   },
   quest: {
@@ -1112,16 +1156,18 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
           bassFn(ctx, stepTime, bassMidi, bassDur, outputGain);
         }
 
-        // FM Keys (stabs/chords) — darktrap uses very dark, soft keys
+        // Trap Bells (replaces FM Keys) — bright, metallic, icy
         const keyPatIdx = ((bar * 16) + step) % config.keyPattern.length;
         if (config.keyPattern[keyPatIdx]) {
-          const brightness = config.genre === 'darktrap' ? 0.3
+          const brightness = config.genre === 'darktrap' ? 1.2  // bright for bells
             : config.genre === 'house' ? 1.5
             : config.genre === 'trap' ? 0.8 : 0.4;
-          const vel = config.genre === 'darktrap' ? 0.5 : 0.7;
-          chord.forEach(m => scheduleFMKeys(ctx, stepTime, m + 12, sixteenthDur * 6, brightness, vel, outputGain));
-          // Heavy delay send for dark atmosphere
-          chord.forEach(m => scheduleFMKeys(ctx, stepTime, m + 12, sixteenthDur * 6, brightness * 0.4, vel * 0.4, delaySendGain));
+          const vel = config.genre === 'darktrap' ? 0.8 : 0.7;
+          // Play highest note of chord for bell melody
+          const bellNote = chord[chord.length - 1];
+          scheduleFMKeys(ctx, stepTime, bellNote + 12, sixteenthDur * 4, brightness, vel, outputGain);
+          // Delay send for spaciousness
+          scheduleFMKeys(ctx, stepTime, bellNote + 12, sixteenthDur * 4, brightness * 0.5, vel * 0.5, delaySendGain);
         }
 
         // Pluck arpeggios — darktrap sends more to delay for ethereal feel
