@@ -11,9 +11,9 @@ interface Props {
 }
 
 const sizeClasses = {
-  sm: { container: 'w-24 h-28', base: 'w-20 h-24' },
-  md: { container: 'w-36 h-44', base: 'w-32 h-40' },
-  lg: { container: 'w-48 h-56', base: 'w-44 h-52' },
+  sm: { container: 'w-28 h-36', base: 'w-24 h-32' },
+  md: { container: 'w-44 h-56', base: 'w-40 h-52' },
+  lg: { container: 'w-56 h-72', base: 'w-52 h-68' },
 };
 
 export default function CharacterAvatar({ sprite, characterName, characterClass, equipment, size = 'md', showTitle = true }: Props) {

@@ -64,13 +64,13 @@ export const EQUIPMENT_IMAGES: Record<string, string> = {
 // Slot-specific positioning/sizing for overlay layers
 export const LAYER_POSITIONS: Record<string, React.CSSProperties> = {
   // Aura: behind character, full size
-  aura: { position: 'absolute', inset: '-15%', zIndex: 0, opacity: 0.7 },
+  aura: { position: 'absolute', inset: '-20%', zIndex: 0, opacity: 0.5 },
   // Frame: around character
-  frame: { position: 'absolute', inset: '-10%', zIndex: 5, opacity: 0.85 },
-  // Armor: overlay on body
-  armor: { position: 'absolute', bottom: '15%', left: '50%', transform: 'translateX(-50%)', width: '55%', zIndex: 2 },
-  // Weapon: to the right side
-  weapon: { position: 'absolute', bottom: '10%', right: '-5%', width: '40%', zIndex: 3, transform: 'rotate(-15deg)' },
-  // Accessory: top-right corner
-  accessory: { position: 'absolute', top: '5%', right: '5%', width: '22%', zIndex: 4 },
+  frame: { position: 'absolute', inset: '-6%', zIndex: 5, opacity: 0.9 },
+  // Armor: overlay on body torso area
+  armor: { position: 'absolute', top: '15%', left: '50%', transform: 'translateX(-50%)', width: '70%', height: '50%', zIndex: 2 },
+  // Weapon: to the right side, angled
+  weapon: { position: 'absolute', bottom: '5%', right: '-15%', width: '45%', height: '70%', zIndex: 3, transform: 'rotate(-20deg)' },
+  // Accessory: near neck/chest area
+  accessory: { position: 'absolute', top: '8%', right: '8%', width: '25%', height: '25%', zIndex: 4 },
 };
