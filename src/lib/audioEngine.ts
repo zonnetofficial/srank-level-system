@@ -1655,6 +1655,7 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
   const reverbWet = config.genre === 'darktrap' ? 0.4
     : config.genre === 'ghostly' ? 0.55
     : config.genre === 'epic' ? 0.45
+    : config.genre === 'monarch' ? 0.5
     : config.genre === 'lofi' ? 0.3
     : 0.15;
   delayFb.gain.setValueAtTime(reverbWet, ctx.currentTime);
