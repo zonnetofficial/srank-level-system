@@ -1,6 +1,7 @@
 import { ShopItem, getMarketPrice } from '@/hooks/useShop';
 import { RARITY_COLORS, RARITY_GLOW, RARITY_LABELS, CATEGORY_LABELS } from './shopConstants';
 import ItemIcon from '@/components/ItemIcon';
+import { sfxHover } from '@/lib/audioEngine';
 
 interface Props {
   item: ShopItem;
