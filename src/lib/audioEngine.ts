@@ -853,7 +853,129 @@ function scheduleDeep808(ctx: AudioContext, time: number, midi: number, duration
   prev808Nodes = { gains: [g, sg], oscs: [osc, sub], cutTime: time };
 }
 
-// ─── INSTRUMENT: Lo-Fi Rhodes (for Skills) ───
+// ─── INSTRUMENT: Dark Organ (for Monarch) ───
+function scheduleDarkOrgan(ctx: AudioContext, time: number, midi: number, duration: number, velocity: number, dest: GainNode) {
+  const freq = NOTE(midi);
+  // Organ: multiple sine harmonics (drawbar style)
+  const harmonics = [1, 2, 3, 4, 6, 8];
+  const hGains = [0.12, 0.08, 0.05, 0.03, 0.02, 0.01];
+  harmonics.forEach((h, i) => {
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq * h, time);
+    const attack = 0.15;
+    g.gain.setValueAtTime(0.001, time);
+    g.gain.linearRampToValueAtTime(hGains[i] * velocity, time + attack);
+    g.gain.setValueAtTime(hGains[i] * velocity * 0.8, time + duration * 0.7);
+    g.gain.exponentialRampToValueAtTime(0.001, time + duration);
+    osc.connect(g); g.connect(dest);
+    osc.start(time); osc.stop(time + duration + 0.1);
+  });
+  // Distortion warmth
+  const distOsc = ctx.createOscillator();
+  const dg = ctx.createGain();
+  const shaper = ctx.createWaveShaper();
+  const curve = new Float32Array(256);
+  for (let ci = 0; ci < 256; ci++) { const x = (ci/128)-1; curve[ci] = Math.tanh(x * 2); }
+  shaper.curve = curve;
+  distOsc.type = 'sawtooth';
+  distOsc.frequency.setValueAtTime(freq, time);
+  dg.gain.setValueAtTime(0.001, time);
+  dg.gain.linearRampToValueAtTime(0.02 * velocity, time + 0.2);
+  dg.gain.exponentialRampToValueAtTime(0.001, time + duration * 0.8);
+  distOsc.connect(shaper); shaper.connect(dg); dg.connect(dest);
+  distOsc.start(time); distOsc.stop(time + duration + 0.1);
+}
+
+// ─── INSTRUMENT: Industrial Texture (for Monarch) ───
+function scheduleIndustrialHit(ctx: AudioContext, time: number, duration: number, dest: GainNode) {
+  // Metallic clang + distorted noise
+  const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * duration), ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const bp = ctx.createBiquadFilter();
+  bp.type = 'bandpass'; bp.frequency.setValueAtTime(800, time); bp.Q.setValueAtTime(5, time);
+  bp.frequency.exponentialRampToValueAtTime(200, time + duration);
+  const shaper = ctx.createWaveShaper();
+  const curve = new Float32Array(256);
+  for (let ci = 0; ci < 256; ci++) { const x = (ci/128)-1; curve[ci] = Math.tanh(x * 6); }
+  shaper.curve = curve;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.06, time);
+  g.gain.exponentialRampToValueAtTime(0.001, time + duration);
+  src.connect(shaper); shaper.connect(bp); bp.connect(g); g.connect(dest);
+  src.start(time);
+}
+
+// ─── MONARCH KIT: industrial kick, heavy snare, metallic perc ───
+function monarchKick(ctx: AudioContext, time: number, vel: number, dest: GainNode) {
+  // Massive distorted kick
+  const body = ctx.createOscillator();
+  const bg = ctx.createGain();
+  body.type = 'sine';
+  body.frequency.setValueAtTime(100, time);
+  body.frequency.exponentialRampToValueAtTime(28, time + 0.15);
+  const shaper = ctx.createWaveShaper();
+  const curve = new Float32Array(256);
+  for (let ci = 0; ci < 256; ci++) { const x = (ci/128)-1; curve[ci] = Math.tanh(x * 3); }
+  shaper.curve = curve;
+  bg.gain.setValueAtTime(0.35 * vel, time);
+  bg.gain.exponentialRampToValueAtTime(0.001, time + 0.7);
+  body.connect(shaper); shaper.connect(bg); bg.connect(dest);
+  body.start(time); body.stop(time + 0.75);
+}
+
+function monarchSnare(ctx: AudioContext, time: number, vel: number, dest: GainNode) {
+  // Heavy industrial snare
+  const dur = 0.3;
+  const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur), ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const bp = ctx.createBiquadFilter();
+  bp.type = 'bandpass'; bp.frequency.setValueAtTime(2000, time); bp.Q.setValueAtTime(1.2, time);
+  const shaper = ctx.createWaveShaper();
+  const curve = new Float32Array(256);
+  for (let ci = 0; ci < 256; ci++) { const x = (ci/128)-1; curve[ci] = Math.tanh(x * 4); }
+  shaper.curve = curve;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.18 * vel, time);
+  g.gain.exponentialRampToValueAtTime(0.001, time + dur);
+  src.connect(shaper); shaper.connect(bp); bp.connect(g); g.connect(dest);
+  src.start(time);
+  // Tonal thud
+  const tone = ctx.createOscillator();
+  const tg = ctx.createGain();
+  tone.type = 'square';
+  tone.frequency.setValueAtTime(150, time);
+  tone.frequency.exponentialRampToValueAtTime(80, time + 0.05);
+  tg.gain.setValueAtTime(0.15 * vel, time);
+  tg.gain.exponentialRampToValueAtTime(0.001, time + 0.08);
+  tone.connect(tg); tg.connect(dest);
+  tone.start(time); tone.stop(time + 0.1);
+}
+
+function monarchHat(ctx: AudioContext, time: number, vel: number, open: boolean, dest: GainNode) {
+  // Metallic industrial clang
+  const dur = open ? 0.3 : 0.06;
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.type = 'square';
+  osc.frequency.setValueAtTime(open ? 3000 : 5000, time);
+  osc.detune.setValueAtTime(1200, time); // Very detuned for metallic quality
+  g.gain.setValueAtTime(0.04 * vel, time);
+  g.gain.exponentialRampToValueAtTime(0.001, time + dur);
+  const hp = ctx.createBiquadFilter();
+  hp.type = 'highpass'; hp.frequency.setValueAtTime(4000, time);
+  osc.connect(hp); hp.connect(g); g.connect(dest);
+  osc.start(time); osc.stop(time + dur + 0.05);
+}
+
+
 function scheduleLofiKeys(ctx: AudioContext, time: number, midi: number, duration: number, brightness: number, velocity: number, dest: GainNode) {
   const freq = NOTE(midi);
   // Electric piano: sine + square harmonic
