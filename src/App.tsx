@@ -20,6 +20,7 @@ import AudioSettings from "./components/AudioSettings";
 import { useGameState } from "./hooks/useGameState";
 import { useAuth } from "./hooks/useAuth";
 import { useAudio } from "./hooks/useAudio";
+import { useMonarch } from "./hooks/useMonarch";
 
 const queryClient = new QueryClient();
 
