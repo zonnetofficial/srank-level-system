@@ -1789,7 +1789,7 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
             const note = ghostMelody[keyHitCount % ghostMelody.length];
             scheduleFMKeys(ctx, stepTime, note, sixteenthDur * 6, 0.3, 0.5, outputGain);
           } else if (config.genre === 'monarch') {
-            // Dark organ — ominous regal melody
+            // Haunting FM melody for monarch — dark, sparse
             const monarchMelody = [62,65,58,53,57,62,58,53];
             let keyHitCount = 0;
             const totalStep = (bar % 4) * 16 + step;
@@ -1797,7 +1797,7 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
               if (config.keyPattern[s % config.keyPattern.length]) keyHitCount++;
             }
             const note = monarchMelody[keyHitCount % monarchMelody.length];
-            scheduleDarkOrgan(ctx, stepTime, note, sixteenthDur * 8, 0.7, outputGain);
+            scheduleFMKeys(ctx, stepTime, note, sixteenthDur * 8, 0.3, 0.6, outputGain);
           } else {
             const brightness = config.genre === 'house' ? 1.5 : config.genre === 'trap' ? 0.8 : 0.4;
             const bellNote = chord[chord.length - 1] + 12;

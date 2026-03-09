@@ -21,9 +21,12 @@ export function useMonarch() {
         body: { action: 'check_status' },
       });
       if (error) throw error;
-      setMonarchStatus(data);
+      if (data && data.status) {
+        setMonarchStatus(data);
+      }
     } catch (e) {
       console.error('Error checking monarch status:', e);
+      // Don't crash — keep default inactive status
     }
   };
 
