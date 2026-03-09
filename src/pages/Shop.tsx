@@ -30,14 +30,16 @@ const Shop = () => {
 
   const handleBuyDP = async (item: ShopItem) => {
     setBuying(true);
-    await shop.buyItemWithDP(item);
+    const result = await shop.buyItemWithDP(item);
+    if (result) sfxPurchase();
     setSelectedItem(null);
     setBuying(false);
   };
 
   const handleBuyTP = async (item: ShopItem) => {
     setBuying(true);
-    await shop.buyItemWithTP(item);
+    const result = await shop.buyItemWithTP(item);
+    if (result) sfxPurchase();
     setSelectedItem(null);
     setBuying(false);
   };
