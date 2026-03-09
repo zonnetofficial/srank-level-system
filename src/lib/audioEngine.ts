@@ -895,8 +895,8 @@ const THEMES: Record<MusicTheme, ThemeConfig> = {
     ],
     // No separate bass — the 808 kick IS the bass
     bassPattern: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    // Trap bells — pattern más denso y oscuro, con más syncopation
-    keyPattern:  [1,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0, 0,0,0,1,0,0,0,0,1,0,0,0,0,1,0,0],
+    // Bells desactivadas
+    keyPattern:  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
     // Arpegios oscuros — pattern más atmosférico y espaciado
     arpPattern:  [1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0, 0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1],
     padBrightness: 400, // Más oscuro
