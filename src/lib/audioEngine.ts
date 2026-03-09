@@ -888,18 +888,21 @@ const THEMES: Record<MusicTheme, ThemeConfig> = {
   home: {
     bpm: 75,
     genre: 'darktrap',
-    // Progresión más oscura: Em → C → Am → B (dark minor progression)
+    // Am dark progression — Am, F, G, Em
     chords: [
-      [52, 55, 59], [48, 52, 55], [57, 60, 64], [59, 62, 66], // Em → C → Am → B
-      [52, 55, 59], [48, 52, 55], [57, 60, 64], [59, 62, 66], // repeat
+      [57, 60, 64], [53, 57, 60], [55, 59, 62], [52, 55, 59], // Am F G Em
+      [57, 60, 64], [53, 57, 60], [55, 59, 62], [52, 55, 59], // repeat
     ],
-    // No separate bass — the 808 kick IS the bass
-    bassPattern: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    // Melodía suave en inicios de nota/tiempo — pattern en beats fuertes
-    keyPattern:  [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0, 1,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0],
-    // Arpegios oscuros — pattern más atmosférico y espaciado
-    arpPattern:  [1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0, 0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1],
-    padBrightness: 400, // Más oscuro
+    // 808 bass pattern: A2-A2---G2--- | A2---F2---E2 | A2-A2---G2--- | F2---E2---A2
+    bassPattern: [1,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0, 1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,
+                  1,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0, 1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0],
+    // Lead melody: cada 2 sixteenths (8 notas por compás)
+    keyPattern:  [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0, 1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,
+                  1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0, 1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0],
+    // Contra melodía: 3 notas por compás, espaciada
+    arpPattern:  [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0, 1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,
+                  1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0, 1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0],
+    padBrightness: 400,
     padGain: 0.05,
     bassOctave: -1,
   },
