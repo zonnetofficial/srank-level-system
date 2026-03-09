@@ -11,9 +11,9 @@ interface Props {
 }
 
 const sizeClasses = {
-  sm: { container: 'w-28 h-36', base: 'w-24 h-32' },
-  md: { container: 'w-44 h-56', base: 'w-40 h-52' },
-  lg: { container: 'w-56 h-72', base: 'w-52 h-68' },
+  sm: { container: 'w-20 h-28', base: 'w-20 h-28' },
+  md: { container: 'w-32 h-44', base: 'w-32 h-44' },
+  lg: { container: 'w-44 h-60', base: 'w-44 h-60' },
 };
 
 export default function CharacterAvatar({ sprite, characterName, characterClass, equipment, size = 'md', showTitle = true }: Props) {
@@ -51,25 +51,14 @@ export default function CharacterAvatar({ sprite, characterName, characterClass,
       )}
 
       {/* Character container with layers */}
-      <div className={`${s.container} relative flex items-center justify-center overflow-visible`}>
-        {/* Aura layer (behind everything) */}
+      <div className={`${s.container} relative flex items-center justify-center`}>
+        {/* Aura layer (behind everything) — full body overlay */}
         {auraImg && (
           <img
             src={auraImg}
             alt="Aura"
-            className="absolute w-full h-full object-contain animate-pulse pointer-events-none"
-            style={{ zIndex: 0, opacity: 0.4, scale: '1.4' }}
-            draggable={false}
-          />
-        )}
-
-        {/* Frame layer */}
-        {frameImg && (
-          <img
-            src={frameImg}
-            alt="Frame"
-            className="absolute w-full h-full object-contain pointer-events-none"
-            style={{ zIndex: 5, opacity: 0.9, scale: '1.12' }}
+            className="absolute inset-0 w-full h-full object-contain animate-pulse pointer-events-none"
+            style={{ zIndex: 0, opacity: 0.5 }}
             draggable={false}
           />
         )}
@@ -87,35 +76,46 @@ export default function CharacterAvatar({ sprite, characterName, characterClass,
           <span className="text-5xl relative" style={{ zIndex: 1 }}>{sprite || '👤'}</span>
         )}
 
-        {/* Armor overlay — centered on torso */}
+        {/* Armor overlay — same full body position */}
         {armorImg && (
           <img
             src={armorImg}
             alt="Armor"
-            className="absolute pointer-events-none object-contain"
-            style={{ zIndex: 2, top: '10%', left: '10%', width: '80%', height: '65%' }}
+            className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+            style={{ zIndex: 2 }}
             draggable={false}
           />
         )}
 
-        {/* Weapon overlay — right side */}
+        {/* Weapon overlay — same full body position */}
         {weaponImg && (
           <img
             src={weaponImg}
             alt="Weapon"
-            className="absolute pointer-events-none object-contain"
-            style={{ zIndex: 3, bottom: '0%', right: '-20%', width: '50%', height: '75%', transform: 'rotate(-15deg)' }}
+            className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+            style={{ zIndex: 3 }}
             draggable={false}
           />
         )}
 
-        {/* Accessory overlay — top right */}
+        {/* Accessory overlay — same full body position */}
         {accessoryImg && (
           <img
             src={accessoryImg}
             alt="Accessory"
-            className="absolute pointer-events-none object-contain"
-            style={{ zIndex: 4, top: '2%', right: '2%', width: '28%', height: '28%' }}
+            className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+            style={{ zIndex: 4 }}
+            draggable={false}
+          />
+        )}
+
+        {/* Frame layer */}
+        {frameImg && (
+          <img
+            src={frameImg}
+            alt="Frame"
+            className="absolute inset-[-4%] w-[108%] h-[108%] object-contain pointer-events-none"
+            style={{ zIndex: 5, opacity: 0.9 }}
             draggable={false}
           />
         )}
