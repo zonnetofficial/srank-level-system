@@ -241,9 +241,8 @@ export function sfxPunishment() {
 type MusicTheme = 'home' | 'quest' | 'dungeon' | 'shop' | 'battle' | 'menu';
 const NOTE = (midi: number) => 440 * Math.pow(2, (midi - 69) / 12);
 
-// ─── INSTRUMENT: Warm Pad (layered, LFO-modulated, chorus-like) ───
+// ─── INSTRUMENT: Warm Pad (layered, optimized) ───
 function scheduleWarmPad(ctx: AudioContext, time: number, midiNotes: number[], duration: number, gain: number, brightness: number, dest: GainNode) {
-  // Master filter with slow sweep for movement
   const masterFilt = ctx.createBiquadFilter();
   masterFilt.type = 'lowpass';
   masterFilt.frequency.setValueAtTime(brightness * 0.6, time);
@@ -254,37 +253,26 @@ function scheduleWarmPad(ctx: AudioContext, time: number, midiNotes: number[], d
 
   midiNotes.forEach(midi => {
     const freq = NOTE(midi);
-    // 4 detuned voices per note for rich chorus
-    const detunes = [-12, -5, 5, 12];
-    const types: OscillatorType[] = ['sine', 'triangle', 'sine', 'triangle'];
-    detunes.forEach((det, j) => {
+    // Reducido de 4 a 2 voces para menos nodos
+    const detunes = [-8, 8];
+    detunes.forEach(det => {
       const osc = ctx.createOscillator();
       const g = ctx.createGain();
-      osc.type = types[j];
+      osc.type = 'sine';
       osc.frequency.setValueAtTime(freq, time);
       osc.detune.setValueAtTime(det, time);
-      // Slow LFO on detune for shimmer
-      const lfo = ctx.createOscillator();
-      const lfoGain = ctx.createGain();
-      lfo.type = 'sine';
-      lfo.frequency.setValueAtTime(0.3 + j * 0.15, time); // different rates
-      lfoGain.gain.setValueAtTime(3, time); // subtle pitch wobble
-      lfo.connect(lfoGain);
-      lfoGain.connect(osc.detune);
-      lfo.start(time); lfo.stop(time + duration + 0.2);
-      // Slow attack, sustained, slow release
       const attack = Math.min(1.2, duration * 0.2);
       const release = Math.min(1.5, duration * 0.25);
       g.gain.setValueAtTime(0.001, time);
-      g.gain.linearRampToValueAtTime(gain * 0.25, time + attack);
-      g.gain.setValueAtTime(gain * 0.25, time + duration - release);
+      g.gain.linearRampToValueAtTime(gain * 0.3, time + attack);
+      g.gain.setValueAtTime(gain * 0.3, time + duration - release);
       g.gain.linearRampToValueAtTime(0.001, time + duration);
       osc.connect(g); g.connect(masterFilt);
       osc.start(time); osc.stop(time + duration + 0.1);
     });
   });
 
-  // Sub layer (one octave down, just the root)
+  // Sub layer
   if (midiNotes.length > 0) {
     const subOsc = ctx.createOscillator();
     const subG = ctx.createGain();
@@ -295,7 +283,7 @@ function scheduleWarmPad(ctx: AudioContext, time: number, midiNotes: number[], d
     subG.gain.linearRampToValueAtTime(gain * 0.15, time + attack);
     subG.gain.setValueAtTime(gain * 0.15, time + duration - attack);
     subG.gain.linearRampToValueAtTime(0.001, time + duration);
-    subOsc.connect(subG); subG.connect(dest); // bypass filter for clean sub
+    subOsc.connect(subG); subG.connect(dest);
     subOsc.start(time); subOsc.stop(time + duration + 0.1);
   }
 }
@@ -361,12 +349,12 @@ function scheduleFMKeys(ctx: AudioContext, time: number, midi: number, duration:
   h2.start(time); h2.stop(time + decay * 0.5 + 0.05);
 }
 
-// ─── INSTRUMENT: Atmospheric Strings (inspired by "A 120" Gera MX) ───
+// ─── INSTRUMENT: Atmospheric Strings (optimized) ───
 function schedulePluck(ctx: AudioContext, time: number, midi: number, duration: number, dest: GainNode) {
   const freq = NOTE(midi);
   
-  // String pad: detuned sawtooth waves with slow attack
-  const detunes = [-10, -3, 3, 10];
+  // Reducido de 4 a 2 voces
+  const detunes = [-8, 8];
   detunes.forEach(det => {
     const osc = ctx.createOscillator();
     const g = ctx.createGain();
@@ -374,32 +362,21 @@ function schedulePluck(ctx: AudioContext, time: number, midi: number, duration: 
     osc.frequency.setValueAtTime(freq, time);
     osc.detune.setValueAtTime(det, time);
     
-    // Slow attack for string-like swell
     const attack = Math.min(0.8, duration * 0.3);
     const release = Math.min(1.2, duration * 0.4);
     g.gain.setValueAtTime(0.001, time);
-    g.gain.linearRampToValueAtTime(0.03, time + attack);
-    g.gain.setValueAtTime(0.03, time + duration - release);
+    g.gain.linearRampToValueAtTime(0.04, time + attack);
+    g.gain.setValueAtTime(0.04, time + duration - release);
     g.gain.linearRampToValueAtTime(0.001, time + duration);
     
-    // Dark filter
     const filt = ctx.createBiquadFilter();
     filt.type = 'lowpass';
     filt.frequency.setValueAtTime(freq * 3, time);
     filt.frequency.linearRampToValueAtTime(freq * 2, time + duration * 0.5);
     filt.Q.setValueAtTime(0.5, time);
     
-    // Subtle vibrato
-    const lfo = ctx.createOscillator();
-    const lfoG = ctx.createGain();
-    lfo.type = 'sine';
-    lfo.frequency.setValueAtTime(4.5 + Math.random() * 0.5, time);
-    lfoG.gain.setValueAtTime(3, time);
-    lfo.connect(lfoG); lfoG.connect(osc.detune);
-    
     osc.connect(filt); filt.connect(g); g.connect(dest);
     osc.start(time); osc.stop(time + duration + 0.1);
-    lfo.start(time); lfo.stop(time + duration + 0.1);
   });
 }
 
@@ -476,28 +453,20 @@ function scheduleHouseBass(ctx: AudioContext, time: number, midi: number, durati
   sub.start(time); sub.stop(time + duration + 0.05);
 }
 
-// ─── INSTRUMENT: Dark Drone (for dungeon/ambient) ───
+// ─── INSTRUMENT: Dark Drone (optimized) ───
 function scheduleDrone(ctx: AudioContext, time: number, midi: number, duration: number, dest: GainNode) {
   const freq = NOTE(midi);
-  // Multiple detuned saws through heavy filtering
-  [-7, 0, 7, 12].forEach(det => {
+  // Reducido de 4 a 2 voces sin LFO
+  [0, 7].forEach(det => {
     const osc = ctx.createOscillator();
     const g = ctx.createGain();
     osc.type = 'sawtooth';
     osc.frequency.setValueAtTime(freq, time);
     osc.detune.setValueAtTime(det, time);
-    // Slow LFO
-    const lfo = ctx.createOscillator();
-    const lfoG = ctx.createGain();
-    lfo.type = 'sine';
-    lfo.frequency.setValueAtTime(0.1 + Math.random() * 0.2, time);
-    lfoG.gain.setValueAtTime(5, time);
-    lfo.connect(lfoG); lfoG.connect(osc.detune);
-    lfo.start(time); lfo.stop(time + duration + 0.1);
 
     g.gain.setValueAtTime(0.001, time);
-    g.gain.linearRampToValueAtTime(0.02, time + duration * 0.3);
-    g.gain.setValueAtTime(0.02, time + duration * 0.7);
+    g.gain.linearRampToValueAtTime(0.03, time + duration * 0.3);
+    g.gain.setValueAtTime(0.03, time + duration * 0.7);
     g.gain.linearRampToValueAtTime(0.001, time + duration);
     osc.connect(g); g.connect(dest);
     osc.start(time); osc.stop(time + duration + 0.1);
@@ -1096,9 +1065,9 @@ const BASS_FN: Record<'trap' | 'house' | 'ambient' | 'darktrap', (ctx: AudioCont
   ambient: scheduleDrone,
 };
 
-// ─── MAIN SEQUENCER WITH CROSSFADE ───
+// ─── MAIN SEQUENCER WITH CROSSFADE (OPTIMIZED) ───
 
-const FADE_DURATION = 2.0;
+const FADE_DURATION = 1.5;
 
 interface MusicInstance {
   outputGain: GainNode;
@@ -1120,19 +1089,20 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
 
   const sixteenthDur = 60 / config.bpm / 4;
   const barDur = sixteenthDur * 16;
-  const loopDur = barDur * 8;
+  const chunkSize = 2; // Programar solo 2 barras a la vez (reducido de 8)
+  const chunkDur = barDur * chunkSize;
 
   const outputGain = ctx.createGain();
   outputGain.gain.setValueAtTime(0.001, ctx.currentTime);
   outputGain.connect(musicGain!);
 
-  // Delay send (tempo-synced) — darktrap gets more delay for atmosphere
+  // Delay send reducido
   const delaySend = ctx.createDelay(2);
   delaySend.delayTime.setValueAtTime(sixteenthDur * 3, ctx.currentTime);
   const delayFb = ctx.createGain();
-  delayFb.gain.setValueAtTime(config.genre === 'darktrap' ? 0.35 : 0.2, ctx.currentTime);
+  delayFb.gain.setValueAtTime(config.genre === 'darktrap' ? 0.25 : 0.15, ctx.currentTime);
   const delayOut = ctx.createGain();
-  delayOut.gain.setValueAtTime(config.genre === 'darktrap' ? 0.3 : 0.2, ctx.currentTime);
+  delayOut.gain.setValueAtTime(config.genre === 'darktrap' ? 0.2 : 0.15, ctx.currentTime);
   const delaySendGain = ctx.createGain();
   delaySendGain.gain.setValueAtTime(1, ctx.currentTime);
   delaySendGain.connect(delaySend);
@@ -1140,20 +1110,22 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
   delaySend.connect(delayOut); delayOut.connect(outputGain);
 
   let stopped = false;
-  let nextLoopTime = ctx.currentTime + 0.05;
+  let nextScheduleTime = ctx.currentTime + 0.05;
+  let currentBar = 0;
 
-  function scheduleLoop(startTime: number) {
+  function scheduleChunk(startTime: number, startBar: number) {
     if (stopped) return;
 
-    for (let bar = 0; bar < 8; bar++) {
-      const barStart = startTime + bar * barDur;
+    for (let i = 0; i < chunkSize; i++) {
+      const bar = (startBar + i) % 8;
+      const barStart = startTime + i * barDur;
       const chord = config.chords[bar];
       const rootMidi = chord[0];
 
       // ── Warm Pad ──
       scheduleWarmPad(ctx, barStart, chord, barDur, config.padGain, config.padBrightness, outputGain);
 
-      // ── Drone layer (dungeon/ambient & darktrap atmospheric) ──
+      // ── Drone layer (solo cada 4 barras para reducir nodos) ──
       if ((config.genre === 'ambient' || config.genre === 'darktrap') && bar % 4 === 0) {
         scheduleDrone(ctx, barStart, rootMidi - 12, barDur * 4, outputGain);
       }
@@ -1170,7 +1142,7 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
         if (hat > 0) kit.hat(ctx, stepTime, hat, false, outputGain);
         if (openHat > 0) kit.hat(ctx, stepTime, openHat, true, outputGain);
 
-        // Bass — darktrap gets very long sustained notes
+        // Bass
         const bassPatIdx = ((bar * 16) + step) % config.bassPattern.length;
         if (config.bassPattern[bassPatIdx]) {
           const bassMidi = rootMidi + config.bassOctave * 12;
@@ -1181,45 +1153,40 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
           bassFn(ctx, stepTime, bassMidi, bassDur, outputGain);
         }
 
-        // Trap Bells (replaces FM Keys) — bright, metallic, icy
+        // Trap Bells (reducido delay send)
         const keyPatIdx = ((bar * 16) + step) % config.keyPattern.length;
         if (config.keyPattern[keyPatIdx]) {
-          const brightness = config.genre === 'darktrap' ? 1.2  // bright for bells
+          const brightness = config.genre === 'darktrap' ? 1.2
             : config.genre === 'house' ? 1.5
             : config.genre === 'trap' ? 0.8 : 0.4;
           const vel = config.genre === 'darktrap' ? 0.8 : 0.7;
-          // Play highest note of chord for bell melody
           const bellNote = chord[chord.length - 1];
           scheduleFMKeys(ctx, stepTime, bellNote + 12, sixteenthDur * 4, brightness, vel, outputGain);
-          // Delay send for spaciousness
-          scheduleFMKeys(ctx, stepTime, bellNote + 12, sixteenthDur * 4, brightness * 0.5, vel * 0.5, delaySendGain);
         }
 
-        // Pluck arpeggios — darktrap sends more to delay for ethereal feel
+        // Pluck arpeggios (sin delay extra para reducir nodos)
         const arpPatIdx = ((bar * 16) + step) % config.arpPattern.length;
         if (config.arpPattern[arpPatIdx]) {
           const arpNote = chord[step % chord.length] + 12;
           schedulePluck(ctx, stepTime, arpNote, sixteenthDur * 3, outputGain);
-          schedulePluck(ctx, stepTime, arpNote, sixteenthDur * 3, delaySendGain);
-          if (config.genre === 'darktrap') {
-            // Extra delay send for spacious reverb-like effect
-            schedulePluck(ctx, stepTime, arpNote + 12, sixteenthDur * 4, delaySendGain);
-          }
         }
       }
     }
   }
 
-  scheduleLoop(nextLoopTime);
-  nextLoopTime += loopDur;
+  scheduleChunk(nextScheduleTime, currentBar);
+  nextScheduleTime += chunkDur;
+  currentBar = (currentBar + chunkSize) % 8;
 
+  // Scheduler más frecuente con lookahead reducido (1s en vez de 3s)
   const schedulerTimer = setInterval(() => {
     if (stopped) return;
-    if (ctx.currentTime > nextLoopTime - 3) {
-      scheduleLoop(nextLoopTime);
-      nextLoopTime += loopDur;
+    if (ctx.currentTime > nextScheduleTime - 1.0) {
+      scheduleChunk(nextScheduleTime, currentBar);
+      nextScheduleTime += chunkDur;
+      currentBar = (currentBar + chunkSize) % 8;
     }
-  }, 500);
+  }, 250); // Check cada 250ms
 
   outputGain.gain.linearRampToValueAtTime(1, ctx.currentTime + FADE_DURATION);
 
@@ -1233,15 +1200,31 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
       clearInterval(schedulerTimer);
       try {
         outputGain.disconnect();
-        delaySend.disconnect(); delayFb.disconnect(); delayOut.disconnect(); delaySendGain.disconnect();
+        delaySend.disconnect(); 
+        delayFb.disconnect(); 
+        delayOut.disconnect(); 
+        delaySendGain.disconnect();
       } catch {}
     },
     fadeOut: (duration: number) => {
+      instance.stopped = true;
+      stopped = true;
+      clearInterval(schedulerTimer);
       const ctx2 = getCtx();
-      outputGain.gain.cancelScheduledValues(ctx2.currentTime);
-      outputGain.gain.setValueAtTime(outputGain.gain.value, ctx2.currentTime);
-      outputGain.gain.linearRampToValueAtTime(0.001, ctx2.currentTime + duration);
-      setTimeout(() => instance.stop(), duration * 1000 + 100);
+      try {
+        outputGain.gain.cancelScheduledValues(ctx2.currentTime);
+        outputGain.gain.setValueAtTime(outputGain.gain.value, ctx2.currentTime);
+        outputGain.gain.linearRampToValueAtTime(0.001, ctx2.currentTime + duration);
+      } catch {}
+      setTimeout(() => {
+        try {
+          outputGain.disconnect();
+          delaySend.disconnect();
+          delayFb.disconnect();
+          delayOut.disconnect();
+          delaySendGain.disconnect();
+        } catch {}
+      }, duration * 1000 + 100);
     },
   };
 
