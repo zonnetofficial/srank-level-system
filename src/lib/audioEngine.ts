@@ -1156,16 +1156,18 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
           bassFn(ctx, stepTime, bassMidi, bassDur, outputGain);
         }
 
-        // FM Keys (stabs/chords) — darktrap uses very dark, soft keys
+        // Trap Bells (replaces FM Keys) — bright, metallic, icy
         const keyPatIdx = ((bar * 16) + step) % config.keyPattern.length;
         if (config.keyPattern[keyPatIdx]) {
-          const brightness = config.genre === 'darktrap' ? 0.3
+          const brightness = config.genre === 'darktrap' ? 1.2  // bright for bells
             : config.genre === 'house' ? 1.5
             : config.genre === 'trap' ? 0.8 : 0.4;
-          const vel = config.genre === 'darktrap' ? 0.5 : 0.7;
-          chord.forEach(m => scheduleFMKeys(ctx, stepTime, m + 12, sixteenthDur * 6, brightness, vel, outputGain));
-          // Heavy delay send for dark atmosphere
-          chord.forEach(m => scheduleFMKeys(ctx, stepTime, m + 12, sixteenthDur * 6, brightness * 0.4, vel * 0.4, delaySendGain));
+          const vel = config.genre === 'darktrap' ? 0.8 : 0.7;
+          // Play highest note of chord for bell melody
+          const bellNote = chord[chord.length - 1];
+          scheduleFMKeys(ctx, stepTime, bellNote + 12, sixteenthDur * 4, brightness, vel, outputGain);
+          // Delay send for spaciousness
+          scheduleFMKeys(ctx, stepTime, bellNote + 12, sixteenthDur * 4, brightness * 0.5, vel * 0.5, delaySendGain);
         }
 
         // Pluck arpeggios — darktrap sends more to delay for ethereal feel
