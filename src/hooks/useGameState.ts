@@ -317,6 +317,14 @@ export function useGameState() {
     });
   }, [today]);
 
+  // Detect level-up and play SFX
+  useEffect(() => {
+    if (state.level > levelRef.current) {
+      import('@/lib/audioEngine').then(m => m.sfxLevelUp());
+    }
+    levelRef.current = state.level;
+  }, [state.level]);
+
   const startQuest = useCallback(() => {
     setState(prev => {
       if (prev.questLog.find(q => q.date === today)) return prev;
