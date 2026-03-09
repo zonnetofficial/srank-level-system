@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import VictorianFrame from '@/components/VictorianFrame';
 import CharacterCreation from '@/components/dungeon/CharacterCreation';
 import DungeonRoom from '@/components/dungeon/DungeonRoom';
+import EquipmentPanel from '@/components/dungeon/EquipmentPanel';
+import PublicProfileModal from '@/components/dungeon/PublicProfileModal';
 import { useGameState } from '@/hooks/useGameState';
 import { useDungeon } from '@/hooks/useDungeon';
 import { useShop } from '@/hooks/useShop';
