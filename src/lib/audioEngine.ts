@@ -1154,15 +1154,23 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
           bassFn(ctx, stepTime, bassMidi, bassDur, outputGain);
         }
 
-        // Trap Bells (reducido delay send)
+        // Dark Melody Keys — melodía oscura independiente del pad (E phrygian)
         const keyPatIdx = ((bar * 16) + step) % config.keyPattern.length;
         if (config.keyPattern[keyPatIdx]) {
-          const brightness = config.genre === 'darktrap' ? 1.2
+          const brightness = config.genre === 'darktrap' ? 0.6
             : config.genre === 'house' ? 1.5
             : config.genre === 'trap' ? 0.8 : 0.4;
-          const vel = config.genre === 'darktrap' ? 0.8 : 0.7;
-          const bellNote = chord[chord.length - 1];
-          scheduleFMKeys(ctx, stepTime, bellNote + 12, sixteenthDur * 4, brightness, vel, outputGain);
+          const vel = config.genre === 'darktrap' ? 0.7 : 0.7;
+          // Dark melody: E phrygian scale notes — oscura, tensa, independiente
+          const darkMelody = [
+            64, 63, 60, 59, 64, 63, 67, 64, // E5 Eb5 C5 B4 E5 Eb5 G5 E5
+            63, 60, 59, 55, 63, 60, 64, 59, // Eb5 C5 B4 G4 Eb5 C5 E5 B4
+            67, 64, 63, 60, 67, 63, 64, 60, // G5 E5 Eb5 C5 G5 Eb5 E5 C5
+            59, 55, 60, 59, 55, 52, 59, 55, // B4 G4 C5 B4 G4 E4 B4 G4
+          ];
+          const melodyIdx = ((bar * 16) + step) % darkMelody.length;
+          const bellNote = darkMelody[melodyIdx];
+          scheduleFMKeys(ctx, stepTime, bellNote, sixteenthDur * 4, brightness, vel, outputGain);
         }
 
         // Pluck arpeggios (sin delay extra para reducir nodos)
