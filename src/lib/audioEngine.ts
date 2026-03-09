@@ -288,91 +288,83 @@ function scheduleWarmPad(ctx: AudioContext, time: number, midiNotes: number[], d
   }
 }
 
-// ─── INSTRUMENT: Dark Trap Bells (slow attack, smooth entry) ───
+// ─── INSTRUMENT: Dark Synth Lead (sine + pulse con reverb) ───
 function scheduleFMKeys(ctx: AudioContext, time: number, midi: number, duration: number, brightness: number, velocity: number, dest: GainNode) {
   const freq = NOTE(midi);
   
-  // Soft keys — square + saw para sonido más duro pero con entrada suave
+  // Synth lead oscuro: sine + pulse width modulation
   const osc1 = ctx.createOscillator();
   const osc2 = ctx.createOscillator();
   const g1 = ctx.createGain();
   const g2 = ctx.createGain();
   
-  osc1.type = 'square';
-  osc2.type = 'sawtooth';
+  osc1.type = 'sine'; // Sine para suavidad
+  osc2.type = 'triangle'; // Triangle para textura
   osc1.frequency.setValueAtTime(freq, time);
   osc2.frequency.setValueAtTime(freq, time);
-  osc2.detune.setValueAtTime(12, time);
+  osc2.detune.setValueAtTime(7, time); // Subtle detune
   
-  // SLOW attack para entrada suave — no de golpe
-  const attack = 0.15; // Entrada gradual suave
-  const decay = duration * 0.7;
+  const attack = 0.2; // Entrada más gradual
+  const decay = duration * 0.8;
   
   g1.gain.setValueAtTime(0.001, time);
-  g1.gain.linearRampToValueAtTime(0.18 * velocity * brightness, time + attack);
+  g1.gain.linearRampToValueAtTime(0.15 * velocity * brightness, time + attack);
   g1.gain.exponentialRampToValueAtTime(0.001, time + decay);
   
   g2.gain.setValueAtTime(0.001, time);
-  g2.gain.linearRampToValueAtTime(0.12 * velocity * brightness, time + attack);
+  g2.gain.linearRampToValueAtTime(0.1 * velocity * brightness, time + attack);
   g2.gain.exponentialRampToValueAtTime(0.001, time + decay);
   
-  // High-pass más bajo para más cuerpo oscuro
-  const hp = ctx.createBiquadFilter();
-  hp.type = 'highpass';
-  hp.frequency.setValueAtTime(300, time); // Más bajo
-  hp.Q.setValueAtTime(0.7, time);
+  // Lowpass para oscuridad
+  const lp = ctx.createBiquadFilter();
+  lp.type = 'lowpass';
+  lp.frequency.setValueAtTime(freq * 4, time);
+  lp.frequency.linearRampToValueAtTime(freq * 2, time + duration * 0.3);
+  lp.Q.setValueAtTime(1.5, time);
   
-  // Peaking filter en frecuencias más bajas para oscuridad
-  const peak = ctx.createBiquadFilter();
-  peak.type = 'peaking';
-  peak.frequency.setValueAtTime(1500, time); // Más bajo
-  peak.gain.setValueAtTime(8, time);
-  peak.Q.setValueAtTime(2.5, time);
+  // Reverb simulado con delay corto
+  const shortDelay = ctx.createDelay(0.5);
+  shortDelay.delayTime.setValueAtTime(0.08, time);
+  const delayG = ctx.createGain();
+  delayG.gain.setValueAtTime(0.35, time); // Más reverb
   
-  osc1.connect(g1); g1.connect(hp);
-  osc2.connect(g2); g2.connect(hp);
-  hp.connect(peak); peak.connect(dest);
+  osc1.connect(g1); g1.connect(lp);
+  osc2.connect(g2); g2.connect(lp);
+  
+  lp.connect(dest);
+  lp.connect(shortDelay);
+  shortDelay.connect(delayG);
+  delayG.connect(dest);
   
   osc1.start(time); osc1.stop(time + decay + 0.05);
   osc2.start(time); osc2.stop(time + decay + 0.05);
-  
-  // Layer 2: Sub harmonic para peso extra
-  const h2 = ctx.createOscillator();
-  const h2g = ctx.createGain();
-  h2.type = 'sine';
-  h2.frequency.setValueAtTime(freq / 2, time); // Sub octave para oscuridad
-  h2g.gain.setValueAtTime(0.001, time);
-  h2g.gain.linearRampToValueAtTime(0.08 * velocity * brightness, time + attack);
-  h2g.gain.exponentialRampToValueAtTime(0.001, time + decay * 0.6);
-  h2.connect(h2g); h2g.connect(dest); // Bypass filters para sub limpio
-  h2.start(time); h2.stop(time + decay * 0.6 + 0.05);
 }
 
-// ─── INSTRUMENT: Atmospheric Strings (optimized) ───
+// ─── INSTRUMENT: Dark Atmospheric Pad (triangle + reverb) ───
 function schedulePluck(ctx: AudioContext, time: number, midi: number, duration: number, dest: GainNode) {
   const freq = NOTE(midi);
   
-  // Reducido de 4 a 2 voces
-  const detunes = [-8, 8];
+  // Triangle waves para pad más suave y oscuro
+  const detunes = [-10, 0, 10];
   detunes.forEach(det => {
     const osc = ctx.createOscillator();
     const g = ctx.createGain();
-    osc.type = 'sawtooth';
+    osc.type = 'triangle'; // Triangle para sonido más suave
     osc.frequency.setValueAtTime(freq, time);
     osc.detune.setValueAtTime(det, time);
     
-    const attack = Math.min(0.8, duration * 0.3);
-    const release = Math.min(1.2, duration * 0.4);
+    const attack = Math.min(1.2, duration * 0.4);
+    const release = Math.min(1.8, duration * 0.5);
     g.gain.setValueAtTime(0.001, time);
-    g.gain.linearRampToValueAtTime(0.04, time + attack);
-    g.gain.setValueAtTime(0.04, time + duration - release);
+    g.gain.linearRampToValueAtTime(0.025, time + attack); // Más suave
+    g.gain.setValueAtTime(0.025, time + duration - release);
     g.gain.linearRampToValueAtTime(0.001, time + duration);
     
     const filt = ctx.createBiquadFilter();
     filt.type = 'lowpass';
-    filt.frequency.setValueAtTime(freq * 3, time);
-    filt.frequency.linearRampToValueAtTime(freq * 2, time + duration * 0.5);
-    filt.Q.setValueAtTime(0.5, time);
+    filt.frequency.setValueAtTime(freq * 2.5, time);
+    filt.frequency.linearRampToValueAtTime(freq * 1.8, time + duration * 0.5);
+    filt.Q.setValueAtTime(0.7, time);
     
     osc.connect(filt); filt.connect(g); g.connect(dest);
     osc.start(time); osc.stop(time + duration + 0.1);
@@ -1098,13 +1090,13 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
   outputGain.gain.setValueAtTime(0.001, ctx.currentTime);
   outputGain.connect(musicGain!);
 
-  // Delay send reducido
+  // Reverb/Delay más pronunciado para darktrap
   const delaySend = ctx.createDelay(2);
   delaySend.delayTime.setValueAtTime(sixteenthDur * 3, ctx.currentTime);
   const delayFb = ctx.createGain();
-  delayFb.gain.setValueAtTime(config.genre === 'darktrap' ? 0.25 : 0.15, ctx.currentTime);
+  delayFb.gain.setValueAtTime(config.genre === 'darktrap' ? 0.4 : 0.15, ctx.currentTime); // Más feedback
   const delayOut = ctx.createGain();
-  delayOut.gain.setValueAtTime(config.genre === 'darktrap' ? 0.2 : 0.15, ctx.currentTime);
+  delayOut.gain.setValueAtTime(config.genre === 'darktrap' ? 0.35 : 0.15, ctx.currentTime); // Más wet
   const delaySendGain = ctx.createGain();
   delaySendGain.gain.setValueAtTime(1, ctx.currentTime);
   delaySendGain.connect(delaySend);
@@ -1146,9 +1138,9 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
         if (hat > 0) kit.hat(ctx, stepTime, hat, false, outputGain);
         if (openHat > 0) kit.hat(ctx, stepTime, openHat, true, outputGain);
 
-        // Bass — darktrap uses specific 808 note sequence in Am
+        // Bass — darktrap uses specific 808 note sequence in Am (solo en kick)
         const bassPatIdx = ((bar * 16) + step) % config.bassPattern.length;
-        if (config.bassPattern[bassPatIdx]) {
+        if (config.bassPattern[bassPatIdx] && kick > 0) { // SOLO cuando hay kick
           if (config.genre === 'darktrap') {
             // 808 bass: A2-A2---G2--- | A2---F2---E2 | A2-A2---G2--- | F2---E2---A2
             const bass808Notes = [
