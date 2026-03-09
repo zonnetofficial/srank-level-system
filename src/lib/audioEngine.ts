@@ -677,51 +677,87 @@ function darkTrapKick(ctx: AudioContext, time: number, vel: number, dest: GainNo
 }
 
 function darkTrapSnare(ctx: AudioContext, time: number, vel: number, dest: GainNode) {
-  // Aggressive snare — loud, sharp, biting
-  // Layer 1: Harsh noise burst — wide band, aggressive
-  const dur = 0.25;
-  const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur), ctx.sampleRate);
-  const d = buf.getChannelData(0);
-  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-  const src = ctx.createBufferSource();
-  src.buffer = buf;
-  // Distortion on the noise for aggression
-  const shaper = ctx.createWaveShaper();
-  const curve = new Float32Array(256);
+  // Snare tronado — explosivo, con mucho snap y crack
+  
+  // Layer 1: Explosión inicial — noise burst muy fuerte y corto
+  const snapDur = 0.04;
+  const snapBuf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * snapDur), ctx.sampleRate);
+  const sd = snapBuf.getChannelData(0);
+  for (let i = 0; i < sd.length; i++) sd[i] = Math.random() * 2 - 1;
+  const snap = ctx.createBufferSource();
+  snap.buffer = snapBuf;
+  
+  // Distorsión agresiva
+  const snapShaper = ctx.createWaveShaper();
+  const snapCurve = new Float32Array(256);
   for (let i = 0; i < 256; i++) {
     const x = (i / 128) - 1;
-    curve[i] = Math.tanh(x * 3);
+    snapCurve[i] = Math.tanh(x * 4); // distorsión fuerte
   }
-  shaper.curve = curve;
-  const hp = ctx.createBiquadFilter();
-  hp.type = 'highpass'; hp.frequency.setValueAtTime(600, time);
-  const peak = ctx.createBiquadFilter();
-  peak.type = 'peaking'; peak.frequency.setValueAtTime(3000, time); peak.gain.setValueAtTime(6, time); peak.Q.setValueAtTime(1, time);
-  const g = ctx.createGain();
-  g.gain.setValueAtTime(0.28 * vel, time);
-  g.gain.exponentialRampToValueAtTime(0.001, time + dur);
-  src.connect(shaper); shaper.connect(hp); hp.connect(peak); peak.connect(g); g.connect(dest);
-  src.start(time);
-  // Layer 2: Tonal body — hard pitched thump
-  const t1 = ctx.createOscillator();
-  const t1g = ctx.createGain();
-  t1.type = 'square'; t1.frequency.setValueAtTime(220, time);
-  t1.frequency.exponentialRampToValueAtTime(120, time + 0.04);
-  t1g.gain.setValueAtTime(0.18 * vel, time);
-  t1g.gain.exponentialRampToValueAtTime(0.001, time + 0.06);
-  t1.connect(t1g); t1g.connect(dest);
-  t1.start(time); t1.stop(time + 0.07);
-  // Layer 3: High crack for bite
-  const crackBuf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.015), ctx.sampleRate);
-  const crd = crackBuf.getChannelData(0);
-  for (let i = 0; i < crd.length; i++) crd[i] = (Math.random() * 2 - 1);
+  snapShaper.curve = snapCurve;
+  
+  const snapHP = ctx.createBiquadFilter();
+  snapHP.type = 'highpass'; snapHP.frequency.setValueAtTime(2000, time);
+  const snapPeak = ctx.createBiquadFilter();
+  snapPeak.type = 'peaking'; snapPeak.frequency.setValueAtTime(5000, time); 
+  snapPeak.gain.setValueAtTime(12, time); snapPeak.Q.setValueAtTime(2, time);
+  
+  const snapG = ctx.createGain();
+  snapG.gain.setValueAtTime(0.4 * vel, time);
+  snapG.gain.exponentialRampToValueAtTime(0.001, time + snapDur);
+  
+  snap.connect(snapShaper); snapShaper.connect(snapHP); 
+  snapHP.connect(snapPeak); snapPeak.connect(snapG); snapG.connect(dest);
+  snap.start(time);
+  
+  // Layer 2: Cuerpo del snare — noise más largo
+  const bodyDur = 0.18;
+  const bodyBuf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * bodyDur), ctx.sampleRate);
+  const bd = bodyBuf.getChannelData(0);
+  for (let i = 0; i < bd.length; i++) bd[i] = Math.random() * 2 - 1;
+  const body = ctx.createBufferSource();
+  body.buffer = bodyBuf;
+  
+  const bodyBP = ctx.createBiquadFilter();
+  bodyBP.type = 'bandpass'; bodyBP.frequency.setValueAtTime(3000, time); bodyBP.Q.setValueAtTime(1.5, time);
+  const bodyG = ctx.createGain();
+  bodyG.gain.setValueAtTime(0.25 * vel, time);
+  bodyG.gain.exponentialRampToValueAtTime(0.001, time + bodyDur);
+  
+  body.connect(bodyBP); bodyBP.connect(bodyG); bodyG.connect(dest);
+  body.start(time);
+  
+  // Layer 3: Tono fundamental — pitched snap muy corto
+  const tone = ctx.createOscillator();
+  const toneG = ctx.createGain();
+  tone.type = 'square';
+  tone.frequency.setValueAtTime(280, time);
+  tone.frequency.exponentialRampToValueAtTime(140, time + 0.03);
+  toneG.gain.setValueAtTime(0.25 * vel, time);
+  toneG.gain.exponentialRampToValueAtTime(0.001, time + 0.05);
+  tone.connect(toneG); toneG.connect(dest);
+  tone.start(time); tone.stop(time + 0.06);
+  
+  // Layer 4: High crack — el "tronido" extra
+  const crackDur = 0.02;
+  const crackBuf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * crackDur), ctx.sampleRate);
+  const cd = crackBuf.getChannelData(0);
+  for (let i = 0; i < cd.length; i++) cd[i] = (Math.random() * 2 - 1);
   const crack = ctx.createBufferSource();
   crack.buffer = crackBuf;
+  
   const crackHP = ctx.createBiquadFilter();
-  crackHP.type = 'highpass'; crackHP.frequency.setValueAtTime(8000, time);
+  crackHP.type = 'highpass'; crackHP.frequency.setValueAtTime(10000, time);
+  const crackPeak = ctx.createBiquadFilter();
+  crackPeak.type = 'peaking'; crackPeak.frequency.setValueAtTime(13000, time); 
+  crackPeak.gain.setValueAtTime(10, time); crackPeak.Q.setValueAtTime(3, time);
+  
   const crackG = ctx.createGain();
-  crackG.gain.setValueAtTime(0.15 * vel, time);
-  crack.connect(crackHP); crackHP.connect(crackG); crackG.connect(dest);
+  crackG.gain.setValueAtTime(0.3 * vel, time);
+  crackG.gain.exponentialRampToValueAtTime(0.001, time + crackDur);
+  
+  crack.connect(crackHP); crackHP.connect(crackPeak); 
+  crackPeak.connect(crackG); crackG.connect(dest);
   crack.start(time);
 }
 
