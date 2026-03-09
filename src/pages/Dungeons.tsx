@@ -298,6 +298,7 @@ export default function Dungeons() {
           {([
             { key: 'dungeons' as Tab, label: '🏰 Mazmorras', color: 'primary' },
             { key: 'equipo' as Tab, label: '🎒 Equipo', color: 'accent' },
+            { key: 'personalizar' as Tab, label: '👤 Avatar', color: 'primary' },
             { key: 'ranking' as Tab, label: '🏆 Ranking', color: 'accent' },
           ]).map(t => (
             <button
