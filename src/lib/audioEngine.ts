@@ -1330,6 +1330,28 @@ const THEMES: Record<MusicTheme, ThemeConfig> = {
     padGain: 0.04,
     bassOctave: -2,
   },
+  // ─── MONARCH: Ominous industrial dark ambient ───
+  monarch: {
+    bpm: 62,
+    genre: 'monarch',
+    // Dm — Bbm — Fm — Ebm (oppressive, regal darkness)
+    chords: [
+      [50,53,57],[46,49,53],[41,44,48],[39,42,46],
+      [50,53,57],[46,49,53],[41,44,48],[39,42,46],
+    ],
+    // Heavy, deliberate hits
+    bassPattern: [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                  0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    // Dark organ/bell melody
+    keyPattern:  [0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                  0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0],
+    // Industrial texture hits
+    arpPattern:  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    padBrightness: 350,
+    padGain: 0.05,
+    bassOctave: -2,
+  },
 };
 
 // Drum patterns: [kick, snare, closedHat, openHat (0=none, 1=double roll, 2=triple roll)]
