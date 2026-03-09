@@ -1522,13 +1522,23 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
       const chord = config.chords[bar];
       const rootMidi = chord[0];
 
-      // ── Warm Pad (disabled for darktrap/home — removes ambient bass tension) ──
-      if (config.genre !== 'darktrap') {
+      // ── Pad layer — genre-specific ──
+      if (config.genre === 'lofi') {
+        // Lo-fi: warm pad + vinyl crackle
+        scheduleWarmPad(ctx, barStart, chord.slice(0, 3), barDur, config.padGain, config.padBrightness, outputGain);
+        if (bar % 2 === 0) scheduleVinylCrackle(ctx, barStart, barDur * 2, outputGain);
+      } else if (config.genre === 'epic') {
+        // Epic: choir pad
+        scheduleChoirPad(ctx, barStart, chord.slice(0, 3), barDur, config.padGain, outputGain);
+      } else if (config.genre === 'ghostly') {
+        // Ghostly: haunting strings
+        scheduleHauntingStrings(ctx, barStart, chord.slice(0, 3), barDur, config.padGain, outputGain);
+      } else if (config.genre !== 'darktrap') {
         scheduleWarmPad(ctx, barStart, chord, barDur, config.padGain, config.padBrightness, outputGain);
       }
 
-      // ── Drone layer (solo ambient, disabled for darktrap) ──
-      if (config.genre === 'ambient' && bar % 4 === 0) {
+      // ── Drone layer ──
+      if ((config.genre === 'ambient' || config.genre === 'ghostly') && bar % 4 === 0) {
         scheduleDrone(ctx, barStart, rootMidi - 12, barDur * 4, outputGain);
       }
 
@@ -1544,75 +1554,90 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
         if (hat > 0) kit.hat(ctx, stepTime, hat, false, outputGain);
         if (openHat > 0) kit.hat(ctx, stepTime, openHat, true, outputGain);
 
-        // Bass — darktrap uses specific 808 note sequence in Am (solo en kick)
+        // Bass
         const bassPatIdx = ((bar * 16) + step) % config.bassPattern.length;
-        if (config.bassPattern[bassPatIdx] && kick > 0) { // SOLO cuando hay kick
+        const bassPlays = config.genre === 'darktrap'
+          ? (config.bassPattern[bassPatIdx] && kick > 0)
+          : config.bassPattern[bassPatIdx];
+        if (bassPlays) {
           if (config.genre === 'darktrap') {
-            // 808 bass: A2-A2---G2--- | A2---F2---E2 | A2-A2---G2--- | F2---E2---A2
-            const bass808Notes = [
-              45,45,43, // Bar 1: A2, A2, G2
-              45,41,40, // Bar 2: A2, F2, E2
-              45,45,43, // Bar 3: A2, A2, G2
-              41,40,45, // Bar 4: F2, E2, A2
-            ];
-            // Count which bass hit this is across all bars
+            const bass808Notes = [45,45,43, 45,41,40, 45,45,43, 41,40,45];
             let bassHitCount = 0;
             const totalStep = (bar % 4) * 16 + step;
             for (let s = 0; s < totalStep; s++) {
               if (config.bassPattern[s % config.bassPattern.length]) bassHitCount++;
             }
             const bassMidi = bass808Notes[bassHitCount % bass808Notes.length];
-            const bassDur = barDur * 1.5;
-            bassFn(ctx, stepTime, bassMidi, bassDur, outputGain);
+            bassFn(ctx, stepTime, bassMidi, barDur * 1.5, outputGain);
           } else {
             const bassMidi = rootMidi + config.bassOctave * 12;
-            const bassDur = config.genre === 'ambient' ? barDur
+            const bassDur = (config.genre === 'ambient' || config.genre === 'ghostly' || config.genre === 'epic') ? barDur
               : config.genre === 'trap' ? sixteenthDur * 6
+              : config.genre === 'lofi' ? sixteenthDur * 4
               : sixteenthDur * 3;
             bassFn(ctx, stepTime, bassMidi, bassDur, outputGain);
           }
         }
 
-        // Lead melody — darktrap uses Am dark melody sequence
+        // Lead melody — genre-specific instruments
         const keyPatIdx = ((bar * 16) + step) % config.keyPattern.length;
         if (config.keyPattern[keyPatIdx]) {
-          const brightness = config.genre === 'darktrap' ? 0.6
-            : config.genre === 'house' ? 1.5
-            : config.genre === 'trap' ? 0.8 : 0.4;
-          const vel = config.genre === 'darktrap' ? 0.7 : 0.7;
           if (config.genre === 'darktrap') {
-            // Lead: A4-E5-G5-E5-A4-E5-C5-E5 | A4-E5-G5-E5-A4-E5-D5-C5 | ...
             const darkLead = [
-              69,76,79,76,69,76,72,76, // Bar 1: A4-E5-G5-E5-A4-E5-C5-E5
-              69,76,79,76,69,76,74,72, // Bar 2: A4-E5-G5-E5-A4-E5-D5-C5
-              69,79,76,72,69,72,74,76, // Bar 3: A4-G5-E5-C5-A4-C5-D5-E5
-              79,76,74,72,69,72,76,69, // Bar 4: G5-E5-D5-C5-A4-C5-E5-A4
+              69,76,79,76,69,76,72,76,
+              69,76,79,76,69,76,74,72,
+              69,79,76,72,69,72,74,76,
+              79,76,74,72,69,72,76,69,
             ];
-            // Each bar has 8 key hits (every 2 sixteenths)
             let keyHitCount = 0;
             const totalStep = (bar % 4) * 16 + step;
             for (let s = 0; s < totalStep; s++) {
               if (config.keyPattern[s % config.keyPattern.length]) keyHitCount++;
             }
             const bellNote = darkLead[keyHitCount % darkLead.length];
-            scheduleFMKeys(ctx, stepTime, bellNote, sixteenthDur * 2, brightness, vel, outputGain);
+            scheduleFMKeys(ctx, stepTime, bellNote, sixteenthDur * 2, 0.6, 0.7, outputGain);
+          } else if (config.genre === 'lofi') {
+            // Lo-fi Rhodes — jazzy chord tones
+            const lofiMelody = [65,69,72,67,64,69,67,72, 65,67,69,64,67,72,69,65];
+            let keyHitCount = 0;
+            const totalStep = (bar % 4) * 16 + step;
+            for (let s = 0; s < totalStep; s++) {
+              if (config.keyPattern[s % config.keyPattern.length]) keyHitCount++;
+            }
+            const note = lofiMelody[keyHitCount % lofiMelody.length];
+            scheduleLofiKeys(ctx, stepTime, note, sixteenthDur * 3, 0.7, 0.8, outputGain);
+          } else if (config.genre === 'epic') {
+            // Crystal bells — cinematic melody
+            const epicMelody = [74,77,72,69,74,72,77,74, 69,72,74,77,72,69,74,72];
+            let keyHitCount = 0;
+            const totalStep = (bar % 4) * 16 + step;
+            for (let s = 0; s < totalStep; s++) {
+              if (config.keyPattern[s % config.keyPattern.length]) keyHitCount++;
+            }
+            const note = epicMelody[keyHitCount % epicMelody.length];
+            scheduleCrystalBell(ctx, stepTime, note, sixteenthDur * 8, 0.8, outputGain);
+          } else if (config.genre === 'ghostly') {
+            // Haunting FM melody — very sparse, dark
+            const ghostMelody = [67,63,60,58,63,60,67,63];
+            let keyHitCount = 0;
+            const totalStep = (bar % 4) * 16 + step;
+            for (let s = 0; s < totalStep; s++) {
+              if (config.keyPattern[s % config.keyPattern.length]) keyHitCount++;
+            }
+            const note = ghostMelody[keyHitCount % ghostMelody.length];
+            scheduleFMKeys(ctx, stepTime, note, sixteenthDur * 6, 0.3, 0.5, outputGain);
           } else {
+            const brightness = config.genre === 'house' ? 1.5 : config.genre === 'trap' ? 0.8 : 0.4;
             const bellNote = chord[chord.length - 1] + 12;
-            scheduleFMKeys(ctx, stepTime, bellNote, sixteenthDur * 4, brightness, vel, outputGain);
+            scheduleFMKeys(ctx, stepTime, bellNote, sixteenthDur * 4, brightness, 0.7, outputGain);
           }
         }
 
-        // Counter melody / arp — darktrap uses slow dark pad notes
+        // Counter melody / arp
         const arpPatIdx = ((bar * 16) + step) % config.arpPattern.length;
         if (config.arpPattern[arpPatIdx]) {
           if (config.genre === 'darktrap') {
-            // Contra melodía: A3---C4---E4--- | G3---A3---E4--- | F3---A3---C4--- | G3---E4---A3---
-            const counterMelody = [
-              57,60,64, // Bar 1: A3, C4, E4
-              55,57,64, // Bar 2: G3, A3, E4
-              53,57,60, // Bar 3: F3, A3, C4
-              55,64,57, // Bar 4: G3, E4, A3
-            ];
+            const counterMelody = [57,60,64, 55,57,64, 53,57,60, 55,64,57];
             let arpHitCount = 0;
             const totalStep = (bar % 4) * 16 + step;
             for (let s = 0; s < totalStep; s++) {
@@ -1620,6 +1645,16 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
             }
             const arpNote = counterMelody[arpHitCount % counterMelody.length];
             schedulePluck(ctx, stepTime, arpNote, sixteenthDur * 5, outputGain);
+          } else if (config.genre === 'lofi') {
+            // Lo-fi pluck — mellow chord tones
+            const arpNote = chord[step % chord.length] + 12;
+            schedulePluck(ctx, stepTime, arpNote, sixteenthDur * 6, outputGain);
+          } else if (config.genre === 'epic') {
+            // Choir swells on arp hits
+            scheduleChoirPad(ctx, stepTime, chord.slice(0, 3), barDur * 2, config.padGain * 0.8, outputGain);
+          } else if (config.genre === 'ghostly') {
+            // Haunting string swell
+            scheduleHauntingStrings(ctx, stepTime, [chord[0], chord[1]], barDur, config.padGain * 0.6, outputGain);
           } else {
             const arpNote = chord[step % chord.length] + 12;
             schedulePluck(ctx, stepTime, arpNote, sixteenthDur * 3, outputGain);
