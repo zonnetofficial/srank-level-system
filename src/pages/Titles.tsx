@@ -13,6 +13,7 @@ import {
   getNextClassTitle,
 } from '@/lib/gameData';
 import { getClassChallenge } from '@/lib/classChallenges';
+import { sfxClick, sfxHover, sfxSuccess } from '@/lib/audioEngine';
 
 const statKeys: StatKey[] = ['int', 'str', 'agi', 'vit', 'end'];
 
