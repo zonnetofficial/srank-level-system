@@ -889,19 +889,19 @@ const THEMES: Record<MusicTheme, ThemeConfig> = {
   home: {
     bpm: 75,
     genre: 'darktrap',
-    // Am → F → C → G progression
+    // Progresión más oscura: Em → C → Am → B (dark minor progression)
     chords: [
-      [57, 60, 64], [53, 57, 60], [60, 64, 67], [55, 59, 62],
-      [57, 60, 64], [53, 57, 60], [60, 64, 67], [55, 59, 62],
+      [52, 55, 59], [48, 52, 55], [57, 60, 64], [59, 62, 66], // Em → C → Am → B
+      [52, 55, 59], [48, 52, 55], [57, 60, 64], [59, 62, 66], // repeat
     ],
     // No separate bass — the 808 kick IS the bass
     bassPattern: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    // Trap bells — sparse, icy hits
-    keyPattern:  [1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0, 0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],
-    // Atmospheric string pads (sustained background)
-    arpPattern:  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0],
-    padBrightness: 500,
-    padGain: 0.04,
+    // Trap bells — pattern más denso y oscuro, con más syncopation
+    keyPattern:  [1,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0, 0,0,0,1,0,0,0,0,1,0,0,0,0,1,0,0],
+    // Arpegios oscuros — pattern más atmosférico y espaciado
+    arpPattern:  [1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0, 0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1],
+    padBrightness: 400, // Más oscuro
+    padGain: 0.05,
     bassOctave: -1,
   },
   quest: {
