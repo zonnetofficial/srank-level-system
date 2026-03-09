@@ -1090,13 +1090,13 @@ function createMusicInstance(theme: MusicTheme): MusicInstance {
   outputGain.gain.setValueAtTime(0.001, ctx.currentTime);
   outputGain.connect(musicGain!);
 
-  // Delay send reducido
+  // Reverb/Delay más pronunciado para darktrap
   const delaySend = ctx.createDelay(2);
   delaySend.delayTime.setValueAtTime(sixteenthDur * 3, ctx.currentTime);
   const delayFb = ctx.createGain();
-  delayFb.gain.setValueAtTime(config.genre === 'darktrap' ? 0.25 : 0.15, ctx.currentTime);
+  delayFb.gain.setValueAtTime(config.genre === 'darktrap' ? 0.4 : 0.15, ctx.currentTime); // Más feedback
   const delayOut = ctx.createGain();
-  delayOut.gain.setValueAtTime(config.genre === 'darktrap' ? 0.2 : 0.15, ctx.currentTime);
+  delayOut.gain.setValueAtTime(config.genre === 'darktrap' ? 0.35 : 0.15, ctx.currentTime); // Más wet
   const delaySendGain = ctx.createGain();
   delaySendGain.gain.setValueAtTime(1, ctx.currentTime);
   delaySendGain.connect(delaySend);
