@@ -1,4 +1,5 @@
 import { NavLink as RouterNavLink } from 'react-router-dom';
+import { sfxClick, sfxHover } from '@/lib/audioEngine';
 
 const navItems = [
   { to: '/', icon: '🏠', label: 'Home' },
