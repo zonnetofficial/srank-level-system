@@ -52,13 +52,13 @@ export default function CharacterAvatar({ sprite, characterName, characterClass,
 
       {/* Character container with layers */}
       <div className={`${s.container} relative flex items-center justify-center`}>
-        {/* Aura layer (behind everything) — full body overlay */}
+        {/* Aura layer (behind everything) */}
         {auraImg && (
           <img
             src={auraImg}
             alt="Aura"
             className="absolute inset-0 w-full h-full object-contain animate-pulse pointer-events-none"
-            style={{ zIndex: 0, opacity: 0.5 }}
+            style={{ zIndex: 0, opacity: 0.45, mixBlendMode: 'screen' }}
             draggable={false}
           />
         )}
