@@ -238,7 +238,7 @@ export function sfxPunishment() {
 // ─── ADVANCED MUSIC ENGINE ───────────────────────────────
 // Rich synthesis: FM keys, layered pads w/ LFO, genre-specific drum kits
 
-type MusicTheme = 'home' | 'quest' | 'dungeon' | 'shop' | 'battle' | 'menu';
+type MusicTheme = 'home' | 'quest' | 'dungeon' | 'shop' | 'battle' | 'menu' | 'skills' | 'titles' | 'history';
 const NOTE = (midi: number) => 440 * Math.pow(2, (midi - 69) / 12);
 
 // ─── INSTRUMENT: Warm Pad (layered, optimized) ───

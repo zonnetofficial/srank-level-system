@@ -13,16 +13,16 @@ import {
   sfxNavigate,
 } from '@/lib/audioEngine';
 
-type MusicTheme = 'home' | 'quest' | 'dungeon' | 'shop' | 'battle' | 'menu';
+type MusicTheme = 'home' | 'quest' | 'dungeon' | 'shop' | 'battle' | 'menu' | 'skills' | 'titles' | 'history';
 
 const ROUTE_THEMES: Record<string, MusicTheme> = {
   '/': 'home',
   '/quest': 'quest',
   '/dungeons': 'dungeon',
   '/shop': 'shop',
-  '/skills': 'menu',
-  '/titles': 'menu',
-  '/history': 'menu',
+  '/skills': 'skills',
+  '/titles': 'titles',
+  '/history': 'history',
   '/monarch': 'home',
   '/mission': 'battle',
 };
