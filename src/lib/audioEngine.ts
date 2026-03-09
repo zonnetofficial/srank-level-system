@@ -1336,7 +1336,7 @@ const THEMES: Record<MusicTheme, ThemeConfig> = {
 type DrumStep = [number, number, number, number];
 
 
-const DRUM_PATTERNS: Record<'trap' | 'house' | 'ambient' | 'darktrap', DrumStep[]> = {
+const DRUM_PATTERNS: Record<'trap' | 'house' | 'ambient' | 'darktrap' | 'lofi' | 'epic' | 'ghostly', DrumStep[]> = {
   darktrap: [
     // K-T-TT-T-S-T-K-T (compás 1)
     [1, 0, 0, 0], [0, 0, .9, 0], [0, 0, 0, 1], [0, 0, .9, 0],
