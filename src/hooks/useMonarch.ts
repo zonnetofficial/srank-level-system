@@ -75,5 +75,5 @@ export function useMonarch() {
     }
   };
 
-  return { monarchStatus, loading, createSubscription, cancelSubscription, checkStatus, simulatePayment };
+  return { monarchStatus, loading, createSubscription, cancelSubscription, checkStatus };
 }
