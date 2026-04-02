@@ -58,23 +58,6 @@ export function useMonarch() {
     }
   };
 
-  const simulatePayment = async (penaltyAmount: number, payerEmail: string) => {
-    if (!session) return;
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('mercadopago', {
-        body: { action: 'simulate_payment', penalty_amount: penaltyAmount, payer_email: payerEmail },
-      });
-      if (error) throw error;
-      setMonarchStatus({ status: 'active', penalty_amount: penaltyAmount });
-      toast.success('¡Pago simulado! Modo Monarca activado');
-    } catch (e: any) {
-      toast.error(e.message || 'Error al simular pago');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const cancelSubscription = async () => {
     if (!session) return;
     setLoading(true);
@@ -92,5 +75,5 @@ export function useMonarch() {
     }
   };
 
-  return { monarchStatus, loading, createSubscription, cancelSubscription, checkStatus, simulatePayment };
+  return { monarchStatus, loading, createSubscription, cancelSubscription, checkStatus };
 }

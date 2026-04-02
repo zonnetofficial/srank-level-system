@@ -41,34 +41,20 @@ serve(async (req) => {
     if (action === 'buy_dark_points') {
       const { package_id, dark_points, amount, back_url } = params;
 
-      if (!amount || amount < 1) {
+      if (!amount || typeof amount !== 'number' || amount < 1 || amount > 100000) {
         return new Response(JSON.stringify({ error: 'Monto inválido' }), {
           status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
 
-      const mpResponse = await fetch(`${MP_API}/v1/payments`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${MP_ACCESS_TOKEN}`,
-          'X-Idempotency-Key': `dp_${userId}_${package_id}_${Date.now()}`,
-        },
-        body: JSON.stringify({
-          transaction_amount: amount,
-          description: `Dark Points - ${dark_points} DP`,
-          payment_method_id: 'account_money',
-          payer: { email: user.email },
-          external_reference: `dp_${userId}_${package_id}`,
-          back_urls: {
-            success: back_url || 'https://srank-level-system.lovable.app/shop',
-            failure: back_url || 'https://srank-level-system.lovable.app/shop',
-          },
-          auto_return: 'approved',
-        }),
-      });
+      if (!package_id || typeof package_id !== 'string') {
+        return new Response(JSON.stringify({ error: 'Package ID inválido' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
 
-      // For now use preference-based checkout
+      const sanitizedBackUrl = sanitizeBackUrl(back_url);
+
       const prefResponse = await fetch(`${MP_API}/checkout/preferences`, {
         method: 'POST',
         headers: {
@@ -77,7 +63,7 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           items: [{
-            title: `Dark Points - ${dark_points} DP`,
+            title: `Dark Points - ${Number(dark_points) || 0} DP`,
             quantity: 1,
             unit_price: amount,
             currency_id: 'MXN',
@@ -85,8 +71,8 @@ serve(async (req) => {
           payer: { email: user.email },
           external_reference: `dp_${userId}_${package_id}_${dark_points}`,
           back_urls: {
-            success: (back_url || 'https://srank-level-system.lovable.app/shop') + '?dp_success=true',
-            failure: (back_url || 'https://srank-level-system.lovable.app/shop') + '?dp_fail=true',
+            success: sanitizedBackUrl + '?dp_success=true',
+            failure: sanitizedBackUrl + '?dp_fail=true',
           },
           auto_return: 'approved',
         }),
@@ -95,7 +81,7 @@ serve(async (req) => {
       const prefData = await prefResponse.json();
       if (!prefResponse.ok) {
         console.error('MP preference error:', prefData);
-        throw new Error(`MercadoPago error [${prefResponse.status}]: ${JSON.stringify(prefData)}`);
+        throw new Error('Error al crear preferencia de pago');
       }
 
       return new Response(JSON.stringify({
@@ -110,11 +96,19 @@ serve(async (req) => {
     if (action === 'buy_t_points') {
       const { package_id, t_points, amount, back_url } = params;
 
-      if (!amount || amount < 1) {
+      if (!amount || typeof amount !== 'number' || amount < 1 || amount > 100000) {
         return new Response(JSON.stringify({ error: 'Monto inválido' }), {
           status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
+
+      if (!package_id || typeof package_id !== 'string') {
+        return new Response(JSON.stringify({ error: 'Package ID inválido' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const sanitizedBackUrl = sanitizeBackUrl(back_url);
 
       const prefResponse = await fetch(`${MP_API}/checkout/preferences`, {
         method: 'POST',
@@ -124,7 +118,7 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           items: [{
-            title: `T-Points - ${t_points} TP`,
+            title: `T-Points - ${Number(t_points) || 0} TP`,
             quantity: 1,
             unit_price: amount,
             currency_id: 'MXN',
@@ -132,8 +126,8 @@ serve(async (req) => {
           payer: { email: user.email },
           external_reference: `tp_${userId}_${package_id}_${t_points}`,
           back_urls: {
-            success: (back_url || 'https://srank-level-system.lovable.app/shop') + '?tp_success=true',
-            failure: (back_url || 'https://srank-level-system.lovable.app/shop') + '?tp_fail=true',
+            success: sanitizedBackUrl + '?tp_success=true',
+            failure: sanitizedBackUrl + '?tp_fail=true',
           },
           auto_return: 'approved',
         }),
@@ -142,7 +136,7 @@ serve(async (req) => {
       const prefData = await prefResponse.json();
       if (!prefResponse.ok) {
         console.error('MP TP preference error:', prefData);
-        throw new Error(`MercadoPago error [${prefResponse.status}]: ${JSON.stringify(prefData)}`);
+        throw new Error('Error al crear preferencia de pago');
       }
 
       return new Response(JSON.stringify({
@@ -153,121 +147,190 @@ serve(async (req) => {
       });
     }
 
-    // --- CONFIRM TP PURCHASE (webhook or manual) ---
-    if (action === 'confirm_tp_purchase') {
-      const { t_points: tpAmount } = params;
-      const adminSupabase = createClient(
-        Deno.env.get('SUPABASE_URL')!,
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-      );
+    // --- WEBHOOK: Verify payment with MercadoPago before crediting ---
+    if (action === 'webhook_payment') {
+      const { payment_id } = params;
 
-      const { data: existing } = await adminSupabase
-        .from('t_points')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-
-      if (existing) {
-        await adminSupabase.from('t_points').update({
-          balance: existing.balance + tpAmount,
-          total_earned: existing.total_earned + tpAmount,
-          updated_at: new Date().toISOString(),
-        }).eq('user_id', userId);
-      } else {
-        await adminSupabase.from('t_points').insert({
-          user_id: userId,
-          balance: tpAmount,
-          total_earned: tpAmount,
-          total_spent: 0,
+      if (!payment_id || typeof payment_id !== 'string') {
+        return new Response(JSON.stringify({ error: 'Payment ID requerido' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
 
-      await adminSupabase.from('tp_transactions').insert({
-        user_id: userId,
-        amount: tpAmount,
-        type: 'purchase',
-        description: `Compra de ${tpAmount} T-Points`,
+      // Verify payment with MercadoPago API
+      const mpResponse = await fetch(`${MP_API}/v1/payments/${encodeURIComponent(payment_id)}`, {
+        headers: { 'Authorization': `Bearer ${MP_ACCESS_TOKEN}` },
       });
 
-      return new Response(JSON.stringify({ success: true, new_balance: (existing?.balance || 0) + tpAmount }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // --- CONFIRM DP PURCHASE (webhook or manual) ---
-    if (action === 'confirm_dp_purchase') {
-      const { dark_points: dpAmount } = params;
-      const adminSupabase = createClient(
-        Deno.env.get('SUPABASE_URL')!,
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-      );
-
-      // Upsert dark_points balance
-      const { data: existing } = await adminSupabase
-        .from('dark_points')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-
-      if (existing) {
-        await adminSupabase.from('dark_points').update({
-          balance: existing.balance + dpAmount,
-          total_earned: existing.total_earned + dpAmount,
-          updated_at: new Date().toISOString(),
-        }).eq('user_id', userId);
-      } else {
-        await adminSupabase.from('dark_points').insert({
-          user_id: userId,
-          balance: dpAmount,
-          total_earned: dpAmount,
-          total_spent: 0,
+      if (!mpResponse.ok) {
+        return new Response(JSON.stringify({ error: 'No se pudo verificar el pago' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
 
-      // Log transaction
-      await adminSupabase.from('dp_transactions').insert({
-        user_id: userId,
-        amount: dpAmount,
-        type: 'purchase',
-        description: `Compra de ${dpAmount} Dark Points`,
-      });
+      const paymentData = await mpResponse.json();
 
-      return new Response(JSON.stringify({ success: true, new_balance: (existing?.balance || 0) + dpAmount }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+      if (paymentData.status !== 'approved') {
+        return new Response(JSON.stringify({ error: 'Pago no aprobado', status: paymentData.status }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
 
-    // --- SIMULATE PAYMENT (dev/test only) ---
-    if (action === 'simulate_payment') {
-      const { penalty_amount, payer_email } = params;
+      const externalRef = paymentData.external_reference as string;
+      if (!externalRef) {
+        return new Response(JSON.stringify({ error: 'Referencia externa no encontrada' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
       const adminSupabase = createClient(
         Deno.env.get('SUPABASE_URL')!,
         Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
       );
-      await adminSupabase.from('monarch_subscriptions').upsert({
-        user_id: userId,
-        status: 'active',
-        penalty_amount: penalty_amount || 10,
-        mp_preapproval_id: `sim_${Date.now()}`,
-        mp_payer_email: payer_email || user.email || 'test@test.com',
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'user_id' });
 
-      return new Response(JSON.stringify({ status: 'active', simulated: true }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      // Idempotency: check if this payment was already processed
+      const paymentIdStr = String(payment_id);
+
+      if (externalRef.startsWith('dp_')) {
+        // Parse: dp_{userId}_{packageId}_{darkPoints}
+        const parts = externalRef.split('_');
+        const refUserId = parts[1];
+        const dpAmount = parseInt(parts[3]) || 0;
+
+        if (refUserId !== userId) {
+          return new Response(JSON.stringify({ error: 'Usuario no coincide' }), {
+            status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+        // Check idempotency
+        const { data: existingTx } = await adminSupabase
+          .from('dp_transactions')
+          .select('id')
+          .eq('reference_id', paymentIdStr)
+          .single();
+
+        if (existingTx) {
+          return new Response(JSON.stringify({ success: true, already_processed: true }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+        // Credit dark points
+        const { data: existing } = await adminSupabase
+          .from('dark_points')
+          .select('*')
+          .eq('user_id', refUserId)
+          .single();
+
+        if (existing) {
+          await adminSupabase.from('dark_points').update({
+            balance: existing.balance + dpAmount,
+            total_earned: existing.total_earned + dpAmount,
+            updated_at: new Date().toISOString(),
+          }).eq('user_id', refUserId);
+        } else {
+          await adminSupabase.from('dark_points').insert({
+            user_id: refUserId,
+            balance: dpAmount,
+            total_earned: dpAmount,
+            total_spent: 0,
+          });
+        }
+
+        await adminSupabase.from('dp_transactions').insert({
+          user_id: refUserId,
+          amount: dpAmount,
+          type: 'purchase',
+          description: `Compra de ${dpAmount} Dark Points (pago ${paymentIdStr})`,
+          reference_id: paymentIdStr,
+        });
+
+        return new Response(JSON.stringify({ success: true }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+
+      } else if (externalRef.startsWith('tp_')) {
+        // Parse: tp_{userId}_{packageId}_{tPoints}
+        const parts = externalRef.split('_');
+        const refUserId = parts[1];
+        const tpAmount = parseInt(parts[3]) || 0;
+
+        if (refUserId !== userId) {
+          return new Response(JSON.stringify({ error: 'Usuario no coincide' }), {
+            status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+        // Check idempotency
+        const { data: existingTx } = await adminSupabase
+          .from('tp_transactions')
+          .select('id')
+          .eq('reference_id', paymentIdStr)
+          .single();
+
+        if (existingTx) {
+          return new Response(JSON.stringify({ success: true, already_processed: true }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+        const { data: existing } = await adminSupabase
+          .from('t_points')
+          .select('*')
+          .eq('user_id', refUserId)
+          .single();
+
+        if (existing) {
+          await adminSupabase.from('t_points').update({
+            balance: existing.balance + tpAmount,
+            total_earned: existing.total_earned + tpAmount,
+            updated_at: new Date().toISOString(),
+          }).eq('user_id', refUserId);
+        } else {
+          await adminSupabase.from('t_points').insert({
+            user_id: refUserId,
+            balance: tpAmount,
+            total_earned: tpAmount,
+            total_spent: 0,
+          });
+        }
+
+        await adminSupabase.from('tp_transactions').insert({
+          user_id: refUserId,
+          amount: tpAmount,
+          type: 'purchase',
+          description: `Compra de ${tpAmount} T-Points (pago ${paymentIdStr})`,
+          reference_id: paymentIdStr,
+        });
+
+        return new Response(JSON.stringify({ success: true }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      return new Response(JSON.stringify({ error: 'Referencia no reconocida' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
     if (action === 'create_subscription') {
       const { penalty_amount, payer_email, back_url } = params;
 
-      if (!penalty_amount || penalty_amount < 5 || penalty_amount > 100) {
+      if (!penalty_amount || typeof penalty_amount !== 'number' || penalty_amount < 5 || penalty_amount > 100) {
         return new Response(JSON.stringify({ error: 'Monto de penalización inválido (5-100 MXN)' }), {
           status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
 
-      // Create Mercado Pago preapproval (subscription without plan)
+      if (!payer_email || typeof payer_email !== 'string' || !payer_email.includes('@')) {
+        return new Response(JSON.stringify({ error: 'Email inválido' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const sanitizedBackUrl = sanitizeBackUrl(back_url);
+
       const mpResponse = await fetch(`${MP_API}/preapproval`, {
         method: 'POST',
         headers: {
@@ -284,7 +347,7 @@ serve(async (req) => {
             transaction_amount: penalty_amount,
             currency_id: 'MXN',
           },
-          back_url: back_url || 'https://srank-level-system.lovable.app/',
+          back_url: sanitizedBackUrl,
           status: 'pending',
         }),
       });
@@ -292,10 +355,9 @@ serve(async (req) => {
       const mpData = await mpResponse.json();
       if (!mpResponse.ok) {
         console.error('MP error:', mpData);
-        throw new Error(`Mercado Pago error [${mpResponse.status}]: ${JSON.stringify(mpData)}`);
+        throw new Error('Error al crear suscripción');
       }
 
-      // Save subscription to DB
       const { error: dbError } = await supabase.from('monarch_subscriptions').upsert({
         user_id: userId,
         status: 'pending',
@@ -318,7 +380,6 @@ serve(async (req) => {
     }
 
     if (action === 'check_status') {
-      // Check subscription status from Mercado Pago
       const { data: sub } = await supabase
         .from('monarch_subscriptions')
         .select('*')
@@ -331,7 +392,7 @@ serve(async (req) => {
         });
       }
 
-      const mpResponse = await fetch(`${MP_API}/preapproval/${sub.mp_preapproval_id}`, {
+      const mpResponse = await fetch(`${MP_API}/preapproval/${encodeURIComponent(sub.mp_preapproval_id)}`, {
         headers: { 'Authorization': `Bearer ${MP_ACCESS_TOKEN}` },
       });
 
@@ -365,7 +426,7 @@ serve(async (req) => {
         .single();
 
       if (sub?.mp_preapproval_id) {
-        await fetch(`${MP_API}/preapproval/${sub.mp_preapproval_id}`, {
+        await fetch(`${MP_API}/preapproval/${encodeURIComponent(sub.mp_preapproval_id)}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -390,9 +451,24 @@ serve(async (req) => {
 
   } catch (error: unknown) {
     console.error('Error:', error);
-    const msg = error instanceof Error ? error.message : 'Unknown error';
-    return new Response(JSON.stringify({ error: msg }), {
+    return new Response(JSON.stringify({ error: 'Error interno del servidor' }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 });
+
+// Sanitize back_url to only allow known domains
+function sanitizeBackUrl(url: string | undefined): string {
+  const defaultUrl = 'https://srank-level-system.lovable.app/shop';
+  if (!url || typeof url !== 'string') return defaultUrl;
+  try {
+    const parsed = new URL(url);
+    const allowedHosts = ['srank-level-system.lovable.app', 'localhost'];
+    if (allowedHosts.some(h => parsed.hostname === h || parsed.hostname.endsWith('.lovable.app'))) {
+      return parsed.origin + parsed.pathname;
+    }
+  } catch {
+    // invalid URL
+  }
+  return defaultUrl;
+}
