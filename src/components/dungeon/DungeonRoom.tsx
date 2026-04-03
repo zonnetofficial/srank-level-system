@@ -26,6 +26,8 @@ const ROOM_TYPE_LABELS: Record<DungeonRoomType['type'], { label: string; icon: s
   reaction: { label: 'Prueba de Reflejos', icon: '⚡' },
   pattern: { label: 'Secuencia de Patrones', icon: '🔮' },
   logic: { label: 'Acertijo Lógico', icon: '🧠' },
+  typing: { label: 'Transcripción Arcana', icon: '📜' },
+  truefalse: { label: 'Juicio del Oráculo', icon: '⚖️' },
 };
 
 export default function DungeonRoom({ room, roomNumber, totalRooms, charClass, extraTime = 0, damageReduction = 0, onComplete }: Props) {
