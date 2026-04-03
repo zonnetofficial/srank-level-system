@@ -21,7 +21,7 @@ export interface DungeonCharacter {
 
 export interface DungeonRoom {
   id: number;
-  type: 'math' | 'memory' | 'reaction' | 'pattern' | 'logic';
+  type: 'math' | 'memory' | 'reaction' | 'pattern' | 'logic' | 'typing' | 'truefalse';
   narrative: string;
   difficulty: number; // 1-3
   damage: number; // HP lost on fail
@@ -133,6 +133,18 @@ const ROOM_NARRATIVES: Record<DungeonRoom['type'], string[]> = {
     'Un enigma lógico protege el paso al siguiente nivel.',
     'El espíritu del sabio plantea un desafío de razonamiento.',
   ],
+  typing: [
+    'Inscripciones arcanas brillan en el muro — transcribe antes de que se desvanezcan.',
+    'Un pergamino antiguo se desintegra — copia las palabras de poder rápidamente.',
+    'El guardián te reta: recita los conjuros sagrados sin error.',
+    'Runas efímeras aparecen en el aire — escríbelas antes de que desaparezcan.',
+  ],
+  truefalse: [
+    'El oráculo te plantea verdades y mentiras — distingue sabiamente.',
+    'Cristales de verdad y falsedad giran ante ti — ¡decide rápido!',
+    'Un espejo mágico muestra afirmaciones — separa lo real de la ilusión.',
+    'El sabio oscuro te prueba con enigmas de verdad o mentira.',
+  ],
 };
 
 // ==================== HELPERS ====================
@@ -213,7 +225,7 @@ export function getCooldownRemaining(rank: DungeonRank, cooldowns: Partial<Recor
 
 export function generateDungeonRooms(rank: DungeonRank): DungeonRoom[] {
   const config = DUNGEON_RANKS[rank];
-  const types: DungeonRoom['type'][] = ['math', 'memory', 'reaction', 'pattern', 'logic'];
+  const types: DungeonRoom['type'][] = ['math', 'memory', 'reaction', 'pattern', 'logic', 'typing', 'truefalse'];
   const difficulty = getDungeonDifficulty(rank);
   const rooms: DungeonRoom[] = [];
 

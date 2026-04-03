@@ -21,7 +21,7 @@ function loadSettings(): AudioSettings {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) return JSON.parse(raw);
   } catch {}
-  return { masterVolume: 0.5, musicVolume: 0.4, sfxVolume: 0.7, muted: false };
+  return { masterVolume: 0.4, musicVolume: 0.3, sfxVolume: 0.6, muted: false };
 }
 
 function saveSettings(s: AudioSettings) {
@@ -36,9 +36,19 @@ function getCtx(): AudioContext {
     masterGain = audioCtx.createGain();
     musicGain = audioCtx.createGain();
     sfxGain = audioCtx.createGain();
+
+    // Limiter/compressor to prevent distortion on lower-end devices
+    const compressor = audioCtx.createDynamicsCompressor();
+    compressor.threshold.setValueAtTime(-8, audioCtx.currentTime);
+    compressor.knee.setValueAtTime(6, audioCtx.currentTime);
+    compressor.ratio.setValueAtTime(12, audioCtx.currentTime);
+    compressor.attack.setValueAtTime(0.003, audioCtx.currentTime);
+    compressor.release.setValueAtTime(0.15, audioCtx.currentTime);
+
     musicGain.connect(masterGain);
     sfxGain.connect(masterGain);
-    masterGain.connect(audioCtx.destination);
+    masterGain.connect(compressor);
+    compressor.connect(audioCtx.destination);
     applyVolumes();
   }
   if (audioCtx.state === 'suspended') audioCtx.resume();

@@ -473,6 +473,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_game_state: {
+        Row: {
+          dungeon_state: Json
+          game_state: Json
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          dungeon_state?: Json
+          game_state?: Json
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          dungeon_state?: Json
+          game_state?: Json
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_inventory: {
         Row: {
           acquired_at: string

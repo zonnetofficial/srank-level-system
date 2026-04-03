@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import VictorianFrame from '@/components/VictorianFrame';
 import { useShop, ShopItem, getMarketPrice } from '@/hooks/useShop';
 import SlotNumber from '@/components/SlotNumber';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { sfxClick, sfxHover, sfxPurchase } from '@/lib/audioEngine';
 import ShopTab from '@/components/shop/ShopTab';
@@ -10,6 +10,8 @@ import PackagesTab from '@/components/shop/PackagesTab';
 import InventoryTab from '@/components/shop/InventoryTab';
 import MarketTab from '@/components/shop/MarketTab';
 import ItemDetailModal from '@/components/shop/ItemDetailModal';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 type Tab = 'shop' | 'dp' | 'tp' | 'inventory' | 'market';
 
@@ -19,6 +21,35 @@ const Shop = () => {
   const [selectedItem, setSelectedItem] = useState<ShopItem | null>(null);
   const [buying, setBuying] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // Verify payment on return from MercadoPago
+  useEffect(() => {
+    const paymentId = searchParams.get('payment_id') || searchParams.get('collection_id');
+    const status = searchParams.get('collection_status') || searchParams.get('status');
+    const dpSuccess = searchParams.get('dp_success');
+    const tpSuccess = searchParams.get('tp_success');
+
+    if (paymentId && (status === 'approved' || dpSuccess === 'true' || tpSuccess === 'true')) {
+      supabase.functions.invoke('mercadopago', {
+        body: { action: 'webhook_payment', payment_id: paymentId },
+      }).then(({ data, error }) => {
+        if (!error && data?.success) {
+          if (data.already_processed) {
+            toast({ title: 'Pago ya procesado', description: 'Tus monedas ya fueron acreditadas.' });
+          } else {
+            toast({ title: '¡Pago verificado!', description: 'Tus monedas han sido acreditadas.' });
+            sfxPurchase();
+          }
+          shop.refreshShop();
+        } else if (error) {
+          toast({ title: 'Error al verificar pago', description: 'Intenta recargar la página.', variant: 'destructive' });
+        }
+      });
+      // Clean URL params
+      window.history.replaceState({}, '', '/shop');
+    }
+  }, []);
 
   const tabs: { key: Tab; label: string; icon: string }[] = [
     { key: 'shop', label: 'Tienda', icon: '🏪' },

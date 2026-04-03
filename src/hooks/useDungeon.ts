@@ -1,4 +1,6 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import {
   DungeonState,
   DungeonCharacter,
@@ -21,9 +23,75 @@ import {
 import type { PlayerStats } from '@/lib/gameData';
 
 export function useDungeon(stats: PlayerStats, playerLevel: number) {
+  const { user } = useAuth();
   const [dungeonState, setDungeonState] = useState<DungeonState>(() => loadDungeonState());
 
   useEffect(() => { saveDungeonState(dungeonState); }, [dungeonState]);
+
+  // ─── Cloud Sync ───
+  const cloudLoaded = useRef(false);
+  const cloudSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!user || cloudLoaded.current) return;
+    cloudLoaded.current = true;
+
+    supabase
+      .from('user_game_state' as any)
+      .select('dungeon_state')
+      .eq('user_id', user.id)
+      .single()
+      .then(({ data }: any) => {
+        if (data?.dungeon_state && typeof data.dungeon_state === 'object' &&
+            (data.dungeon_state.character || data.dungeon_state.totalCleared !== undefined)) {
+          let cloudState = data.dungeon_state as unknown as DungeonState;
+          if (cloudState.character) cloudState.character = applyHPRegen(cloudState.character);
+          if (!cloudState.loadout) cloudState.loadout = [];
+          setDungeonState(cloudState);
+          saveDungeonState(cloudState);
+        } else {
+          supabase.from('user_game_state' as any)
+            .select('id')
+            .eq('user_id', user.id)
+            .single()
+            .then(({ data: existing }: any) => {
+              if (existing) {
+                supabase.from('user_game_state' as any)
+                  .update({ dungeon_state: dungeonState as any, updated_at: new Date().toISOString() } as any)
+                  .eq('user_id', user.id);
+              } else {
+                supabase.from('user_game_state' as any)
+                  .insert({ user_id: user.id, dungeon_state: dungeonState as any } as any);
+              }
+            });
+        }
+      });
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!user) return;
+    if (cloudSaveTimer.current) clearTimeout(cloudSaveTimer.current);
+    cloudSaveTimer.current = setTimeout(() => {
+      supabase
+        .from('user_game_state' as any)
+        .select('id')
+        .eq('user_id', user.id)
+        .single()
+        .then(({ data }: any) => {
+          if (data) {
+            supabase.from('user_game_state' as any)
+              .update({ dungeon_state: dungeonState as any, updated_at: new Date().toISOString() } as any)
+              .eq('user_id', user.id)
+              .then(() => {});
+          } else {
+            supabase.from('user_game_state' as any)
+              .insert({ user_id: user.id, dungeon_state: dungeonState as any } as any)
+              .then(() => {});
+          }
+        });
+    }, 3000);
+    return () => { if (cloudSaveTimer.current) clearTimeout(cloudSaveTimer.current); };
+  }, [dungeonState, user?.id]);
 
   // Periodic HP regen
   useEffect(() => {

@@ -6,6 +6,8 @@ import MemoryGame from '@/components/minigames/MemoryGame';
 import ReactionGame from '@/components/minigames/ReactionGame';
 import PatternGame from '@/components/minigames/PatternGame';
 import LogicGame from '@/components/minigames/LogicGame';
+import TrueFalseGame from '@/components/minigames/TrueFalseGame';
+import SpeedTypingGame from '@/components/minigames/SpeedTypingGame';
 import { sfxRoomClear, sfxDamage } from '@/lib/audioEngine';
 
 interface Props {
@@ -24,6 +26,8 @@ const ROOM_TYPE_LABELS: Record<DungeonRoomType['type'], { label: string; icon: s
   reaction: { label: 'Prueba de Reflejos', icon: '⚡' },
   pattern: { label: 'Secuencia de Patrones', icon: '🔮' },
   logic: { label: 'Acertijo Lógico', icon: '🧠' },
+  typing: { label: 'Transcripción Arcana', icon: '📜' },
+  truefalse: { label: 'Juicio del Oráculo', icon: '⚖️' },
 };
 
 export default function DungeonRoom({ room, roomNumber, totalRooms, charClass, extraTime = 0, damageReduction = 0, onComplete }: Props) {
@@ -91,6 +95,8 @@ export default function DungeonRoom({ room, roomNumber, totalRooms, charClass, e
           {room.type === 'reaction' && <ReactionGame difficulty={room.difficulty} onComplete={handleComplete} />}
           {room.type === 'pattern' && <PatternGame difficulty={room.difficulty} onComplete={handleComplete} timeMultiplier={effectiveTimeMultiplier} />}
           {room.type === 'logic' && <LogicGame difficulty={room.difficulty} onComplete={handleComplete} timeMultiplier={effectiveTimeMultiplier} />}
+          {room.type === 'typing' && <SpeedTypingGame difficulty={room.difficulty} onComplete={handleComplete} timeMultiplier={effectiveTimeMultiplier} />}
+          {room.type === 'truefalse' && <TrueFalseGame difficulty={room.difficulty} onComplete={handleComplete} timeMultiplier={effectiveTimeMultiplier} />}
         </div>
       )}
     </div>

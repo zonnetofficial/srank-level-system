@@ -221,6 +221,20 @@ export default function Dungeons() {
             });
           }
         } catch { /* ignore */ }
+      } else if ((reward.type === 'potion' || reward.type === 'multiplier' || reward.type === 'vanity') && user) {
+        // Save reward item to inventory
+        try {
+          const matchingItem = shop.items.find(i => i.name === reward.label);
+          if (matchingItem) {
+            const existingInv = shop.inventory.find(i => i.item_id === matchingItem.id);
+            if (existingInv) {
+              await supabase.from('user_inventory').update({ quantity: existingInv.quantity + 1 }).eq('id', existingInv.id);
+            } else {
+              await supabase.from('user_inventory').insert({ user_id: user.id, item_id: matchingItem.id, quantity: 1, source: 'dungeon' });
+            }
+            await shop.refreshShop();
+          }
+        } catch { /* ignore */ }
       }
     }
   };
@@ -702,15 +716,14 @@ export default function Dungeons() {
                 </button>
               )}
 
-              {!roomDone && (
-                <button
-                  onClick={handleEscape}
-                  disabled={char.currentStamina < getEscapeCost(char)}
-                  className="w-full py-2 text-[10px] font-display uppercase tracking-[0.15em] border border-destructive/30 text-destructive/70 hover:bg-destructive/10 transition-all disabled:opacity-30"
-                >
-                  🏃 Escapar ({getEscapeCost(char)} stamina)
-                </button>
-              )}
+              {/* Escape always visible below, less prominent */}
+              <button
+                onClick={handleEscape}
+                disabled={char.currentStamina < getEscapeCost(char)}
+                className="w-full py-2 mt-2 text-[10px] font-display uppercase tracking-[0.15em] border border-destructive/20 text-destructive/50 hover:text-destructive/70 hover:bg-destructive/10 transition-all disabled:opacity-30"
+              >
+                🏃 Escapar ({getEscapeCost(char)} stamina)
+              </button>
             </div>
           )}
 
