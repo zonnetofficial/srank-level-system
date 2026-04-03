@@ -133,6 +133,18 @@ const ROOM_NARRATIVES: Record<DungeonRoom['type'], string[]> = {
     'Un enigma lógico protege el paso al siguiente nivel.',
     'El espíritu del sabio plantea un desafío de razonamiento.',
   ],
+  typing: [
+    'Inscripciones arcanas brillan en el muro — transcribe antes de que se desvanezcan.',
+    'Un pergamino antiguo se desintegra — copia las palabras de poder rápidamente.',
+    'El guardián te reta: recita los conjuros sagrados sin error.',
+    'Runas efímeras aparecen en el aire — escríbelas antes de que desaparezcan.',
+  ],
+  truefalse: [
+    'El oráculo te plantea verdades y mentiras — distingue sabiamente.',
+    'Cristales de verdad y falsedad giran ante ti — ¡decide rápido!',
+    'Un espejo mágico muestra afirmaciones — separa lo real de la ilusión.',
+    'El sabio oscuro te prueba con enigmas de verdad o mentira.',
+  ],
 };
 
 // ==================== HELPERS ====================
