@@ -21,6 +21,35 @@ const Shop = () => {
   const [selectedItem, setSelectedItem] = useState<ShopItem | null>(null);
   const [buying, setBuying] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // Verify payment on return from MercadoPago
+  useEffect(() => {
+    const paymentId = searchParams.get('payment_id') || searchParams.get('collection_id');
+    const status = searchParams.get('collection_status') || searchParams.get('status');
+    const dpSuccess = searchParams.get('dp_success');
+    const tpSuccess = searchParams.get('tp_success');
+
+    if (paymentId && (status === 'approved' || dpSuccess === 'true' || tpSuccess === 'true')) {
+      supabase.functions.invoke('mercadopago', {
+        body: { action: 'webhook_payment', payment_id: paymentId },
+      }).then(({ data, error }) => {
+        if (!error && data?.success) {
+          if (data.already_processed) {
+            toast({ title: 'Pago ya procesado', description: 'Tus monedas ya fueron acreditadas.' });
+          } else {
+            toast({ title: '¡Pago verificado!', description: 'Tus monedas han sido acreditadas.' });
+            sfxPurchase();
+          }
+          shop.refreshShop();
+        } else if (error) {
+          toast({ title: 'Error al verificar pago', description: 'Intenta recargar la página.', variant: 'destructive' });
+        }
+      });
+      // Clean URL params
+      window.history.replaceState({}, '', '/shop');
+    }
+  }, []);
 
   const tabs: { key: Tab; label: string; icon: string }[] = [
     { key: 'shop', label: 'Tienda', icon: '🏪' },
