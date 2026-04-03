@@ -188,6 +188,68 @@ export function useGameState() {
 
   useEffect(() => { saveState(state); }, [state]);
 
+  // ─── Cloud Sync ───
+  const { user } = useAuth();
+  const cloudLoaded = useRef(false);
+  const cloudSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Load from cloud when user is available
+  useEffect(() => {
+    if (!user || cloudLoaded.current) return;
+    cloudLoaded.current = true;
+
+    supabase
+      .from('user_game_state' as any)
+      .select('game_state')
+      .eq('user_id', user.id)
+      .single()
+      .then(({ data }: any) => {
+        if (data?.game_state && typeof data.game_state === 'object' && data.game_state.level) {
+          let cloudState = data.game_state as unknown as GameState;
+          if (!cloudState.statBank) cloudState.statBank = { int: 0, str: 0, agi: 0, vit: 0, end: 0 };
+          if (!cloudState.classChangeProgress) cloudState.classChangeProgress = {};
+          if (!cloudState.missionSchedule) cloudState.missionSchedule = createInitialSchedule();
+          if (cloudState.pendingPunishments === undefined) cloudState.pendingPunishments = 0;
+          if (!cloudState.lastCheckedDate) cloudState.lastCheckedDate = getToday();
+          cloudState = detectAndApplyPunishments(cloudState);
+          setState(cloudState);
+          saveState(cloudState);
+        } else {
+          // No cloud data — upload current state
+          supabase.from('user_game_state' as any).insert({
+            user_id: user.id,
+            game_state: state as any,
+          } as any);
+        }
+      });
+  }, [user?.id]);
+
+  // Debounced cloud save
+  useEffect(() => {
+    if (!user) return;
+    if (cloudSaveTimer.current) clearTimeout(cloudSaveTimer.current);
+    cloudSaveTimer.current = setTimeout(() => {
+      supabase
+        .from('user_game_state' as any)
+        .select('id')
+        .eq('user_id', user.id)
+        .single()
+        .then(({ data }: any) => {
+          if (data) {
+            supabase.from('user_game_state' as any)
+              .update({ game_state: state as any, updated_at: new Date().toISOString() } as any)
+              .eq('user_id', user.id)
+              .then(() => {});
+          } else {
+            supabase.from('user_game_state' as any)
+              .insert({ user_id: user.id, game_state: state as any } as any)
+              .then(() => {});
+          }
+        });
+    }, 3000);
+    return () => { if (cloudSaveTimer.current) clearTimeout(cloudSaveTimer.current); };
+  }, [state, user?.id]);
+
   const today = getToday();
   const todayQuest = state.questLog.find(q => q.date === today);
   const restDay = todayQuest?.status === 'rest';
