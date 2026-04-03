@@ -225,7 +225,7 @@ export function getCooldownRemaining(rank: DungeonRank, cooldowns: Partial<Recor
 
 export function generateDungeonRooms(rank: DungeonRank): DungeonRoom[] {
   const config = DUNGEON_RANKS[rank];
-  const types: DungeonRoom['type'][] = ['math', 'memory', 'reaction', 'pattern', 'logic'];
+  const types: DungeonRoom['type'][] = ['math', 'memory', 'reaction', 'pattern', 'logic', 'typing', 'truefalse'];
   const difficulty = getDungeonDifficulty(rank);
   const rooms: DungeonRoom[] = [];
 

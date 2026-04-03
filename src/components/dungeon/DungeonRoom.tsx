@@ -95,6 +95,8 @@ export default function DungeonRoom({ room, roomNumber, totalRooms, charClass, e
           {room.type === 'reaction' && <ReactionGame difficulty={room.difficulty} onComplete={handleComplete} />}
           {room.type === 'pattern' && <PatternGame difficulty={room.difficulty} onComplete={handleComplete} timeMultiplier={effectiveTimeMultiplier} />}
           {room.type === 'logic' && <LogicGame difficulty={room.difficulty} onComplete={handleComplete} timeMultiplier={effectiveTimeMultiplier} />}
+          {room.type === 'typing' && <SpeedTypingGame difficulty={room.difficulty} onComplete={handleComplete} timeMultiplier={effectiveTimeMultiplier} />}
+          {room.type === 'truefalse' && <TrueFalseGame difficulty={room.difficulty} onComplete={handleComplete} timeMultiplier={effectiveTimeMultiplier} />}
         </div>
       )}
     </div>

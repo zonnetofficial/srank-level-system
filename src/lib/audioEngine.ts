@@ -21,7 +21,7 @@ function loadSettings(): AudioSettings {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) return JSON.parse(raw);
   } catch {}
-  return { masterVolume: 0.5, musicVolume: 0.4, sfxVolume: 0.7, muted: false };
+  return { masterVolume: 0.4, musicVolume: 0.3, sfxVolume: 0.6, muted: false };
 }
 
 function saveSettings(s: AudioSettings) {
