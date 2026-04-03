@@ -21,7 +21,7 @@ export interface DungeonCharacter {
 
 export interface DungeonRoom {
   id: number;
-  type: 'math' | 'memory' | 'reaction' | 'pattern' | 'logic';
+  type: 'math' | 'memory' | 'reaction' | 'pattern' | 'logic' | 'typing' | 'truefalse';
   narrative: string;
   difficulty: number; // 1-3
   damage: number; // HP lost on fail
