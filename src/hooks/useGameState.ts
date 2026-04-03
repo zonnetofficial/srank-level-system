@@ -19,8 +19,18 @@ import {
   checkAndScheduleMission,
   getXPPenalty,
 } from '@/lib/mandatoryMissions';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 const STORAGE_KEY = 'daily-quest-rpg-state';
+
+// Wipe localStorage on first cloud sync migration
+const SYNC_VERSION = 'cloud-sync-v1';
+if (typeof window !== 'undefined' && localStorage.getItem('sync-version') !== SYNC_VERSION) {
+  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem('dungeon-state');
+  localStorage.setItem('sync-version', SYNC_VERSION);
+}
 
 function loadState(): GameState {
   try {
