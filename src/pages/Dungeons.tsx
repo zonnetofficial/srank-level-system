@@ -716,15 +716,14 @@ export default function Dungeons() {
                 </button>
               )}
 
-              {!roomDone && (
-                <button
-                  onClick={handleEscape}
-                  disabled={char.currentStamina < getEscapeCost(char)}
-                  className="w-full py-2 text-[10px] font-display uppercase tracking-[0.15em] border border-destructive/30 text-destructive/70 hover:bg-destructive/10 transition-all disabled:opacity-30"
-                >
-                  🏃 Escapar ({getEscapeCost(char)} stamina)
-                </button>
-              )}
+              {/* Escape always visible below, less prominent */}
+              <button
+                onClick={handleEscape}
+                disabled={char.currentStamina < getEscapeCost(char)}
+                className="w-full py-2 mt-2 text-[10px] font-display uppercase tracking-[0.15em] border border-destructive/20 text-destructive/50 hover:text-destructive/70 hover:bg-destructive/10 transition-all disabled:opacity-30"
+              >
+                🏃 Escapar ({getEscapeCost(char)} stamina)
+              </button>
             </div>
           )}
 
