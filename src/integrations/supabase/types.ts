@@ -546,6 +546,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      update_inventory_quantity: {
+        Args: { p_inventory_id: string; p_new_quantity: number }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
