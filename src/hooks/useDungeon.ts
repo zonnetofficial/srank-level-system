@@ -50,20 +50,10 @@ export function useDungeon(stats: PlayerStats, playerLevel: number) {
           setDungeonState(cloudState);
           saveDungeonState(cloudState);
         } else {
-          supabase.from('user_game_state' as any)
-            .select('id')
-            .eq('user_id', user.id)
-            .single()
-            .then(({ data: existing }: any) => {
-              if (existing) {
-                supabase.from('user_game_state' as any)
-                  .update({ dungeon_state: dungeonState as any, updated_at: new Date().toISOString() } as any)
-                  .eq('user_id', user.id);
-              } else {
-                supabase.from('user_game_state' as any)
-                  .insert({ user_id: user.id, dungeon_state: dungeonState as any } as any);
-              }
-            });
+          // No cloud data — upload current state via RPC
+          supabase.rpc('save_game_state' as any, {
+            p_dungeon_state: dungeonState as any,
+          });
         }
       });
   }, [user?.id]);
