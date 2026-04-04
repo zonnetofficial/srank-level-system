@@ -245,12 +245,8 @@ export function useShop() {
     const price = getMarketPrice(item);
 
     // Reduce inventory
-    if (invItem.quantity === 1) {
-      // Can't delete due to RLS, set quantity to 0
-      await supabase.from('user_inventory').update({ quantity: 0 }).eq('id', invItem.id);
-    } else {
-      await supabase.from('user_inventory').update({ quantity: invItem.quantity - 1 }).eq('id', invItem.id);
-    }
+    const newQty = Math.max(0, invItem.quantity - 1);
+    await supabase.rpc('update_inventory_quantity', { p_inventory_id: invItem.id, p_new_quantity: newQty });
 
     // Create listing
     await supabase.from('marketplace_listings').insert({

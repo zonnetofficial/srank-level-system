@@ -149,7 +149,7 @@ export default function Dungeons() {
       const invItem = shop.inventory.find(i => i.id === equipped.inventoryId);
       if (!invItem) continue;
       const newQty = Math.max(0, invItem.quantity - equipped.quantity);
-      await supabase.from('user_inventory').update({ quantity: newQty }).eq('id', invItem.id);
+      await supabase.rpc('update_inventory_quantity', { p_inventory_id: invItem.id, p_new_quantity: newQty });
     }
     await shop.refreshShop();
   }, [user, loadout, shop]);
