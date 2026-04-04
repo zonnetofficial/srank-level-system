@@ -218,12 +218,7 @@ export function useShop() {
       toast({ title: '¡Compra exitosa!', description: `💎 ${listing.dp_amount} DP adquiridos del mercado` });
     } else if (listing.item_id) {
       // Add item to buyer inventory
-      const existing = inventory.find(i => i.item_id === listing.item_id);
-      if (existing) {
-        await supabase.from('user_inventory').update({ quantity: existing.quantity + 1 }).eq('id', existing.id);
-      } else {
-        await supabase.from('user_inventory').insert({ user_id: user.id, item_id: listing.item_id, quantity: 1, source: 'marketplace' });
-      }
+      await supabase.rpc('grant_inventory_item', { p_user_id: user.id, p_item_id: listing.item_id, p_quantity: 1, p_source: 'marketplace' });
       toast({ title: '¡Compra exitosa!', description: 'Item adquirido del mercado' });
     }
 
