@@ -537,7 +537,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      grant_inventory_item: {
+        Args: {
+          p_item_id: string
+          p_quantity?: number
+          p_source?: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

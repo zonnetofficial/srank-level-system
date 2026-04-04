@@ -46,27 +46,8 @@ const MandatoryMissionPage = () => {
           if (items && items.length > 0) {
             const item = items[Math.floor(Math.random() * items.length)];
 
-            // Check existing inventory
-            const { data: existing } = await supabase
-              .from('user_inventory')
-              .select('*')
-              .eq('user_id', user.id)
-              .eq('item_id', item.id)
-              .maybeSingle();
 
-            if (existing) {
-              await supabase
-                .from('user_inventory')
-                .update({ quantity: existing.quantity + 1 })
-                .eq('id', existing.id);
-            } else {
-              await supabase.from('user_inventory').insert({
-                user_id: user.id,
-                item_id: item.id,
-                quantity: 1,
-                source: 'mission_drop',
-              });
-            }
+            await supabase.rpc('grant_inventory_item', { p_user_id: user.id, p_item_id: item.id, p_quantity: 1, p_source: 'mission_drop' });
 
             setDroppedItem({ name: item.name, icon: item.icon, rarity: item.rarity });
             toast({

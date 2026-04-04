@@ -226,12 +226,7 @@ export default function Dungeons() {
         try {
           const matchingItem = shop.items.find(i => i.name === reward.label);
           if (matchingItem) {
-            const existingInv = shop.inventory.find(i => i.item_id === matchingItem.id);
-            if (existingInv) {
-              await supabase.from('user_inventory').update({ quantity: existingInv.quantity + 1 }).eq('id', existingInv.id);
-            } else {
-              await supabase.from('user_inventory').insert({ user_id: user.id, item_id: matchingItem.id, quantity: 1, source: 'dungeon' });
-            }
+            await supabase.rpc('grant_inventory_item', { p_user_id: user.id, p_item_id: matchingItem.id, p_quantity: 1, p_source: 'dungeon' });
             await shop.refreshShop();
           }
         } catch { /* ignore */ }

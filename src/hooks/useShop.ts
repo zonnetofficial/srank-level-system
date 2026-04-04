@@ -146,15 +146,7 @@ export function useShop() {
       .update({ balance: newBalance, total_spent: dpBalance - newBalance, updated_at: new Date().toISOString() })
       .eq('user_id', user.id);
 
-    const existing = inventory.find(i => i.item_id === item.id);
-    if (existing) {
-      await supabase.from('user_inventory').update({ quantity: existing.quantity + 1 }).eq('id', existing.id);
-    } else {
-      await supabase.from('user_inventory').insert({ user_id: user.id, item_id: item.id, quantity: 1, source: 'shop' });
-    }
-
-    await supabase.from('dp_transactions')
-      .insert({ user_id: user.id, amount: -item.price, type: 'spend', description: `Compra: ${item.name}`, reference_id: item.id });
+    await supabase.rpc('grant_inventory_item', { p_user_id: user.id, p_item_id: item.id, p_quantity: 1, p_source: 'shop' });
 
     toast({ title: '¡Compra exitosa!', description: `${item.icon} ${item.name} añadido a tu inventario` });
     await fetchAll();
@@ -183,15 +175,7 @@ export function useShop() {
       .update({ balance: newBalance, total_spent: (tpBalance - newBalance), updated_at: new Date().toISOString() } as any)
       .eq('user_id', user.id);
 
-    const existing = inventory.find(i => i.item_id === item.id);
-    if (existing) {
-      await supabase.from('user_inventory').update({ quantity: existing.quantity + 1 }).eq('id', existing.id);
-    } else {
-      await supabase.from('user_inventory').insert({ user_id: user.id, item_id: item.id, quantity: 1, source: 'market' });
-    }
-
-    await supabase.from('tp_transactions' as any)
-      .insert({ user_id: user.id, amount: -price, type: 'spend', description: `Compra: ${item.name}`, reference_id: item.id } as any);
+    await supabase.rpc('grant_inventory_item', { p_user_id: user.id, p_item_id: item.id, p_quantity: 1, p_source: 'market' });
 
     toast({ title: '¡Compra exitosa!', description: `${item.icon} ${item.name} añadido (TP)` });
     await fetchAll();
@@ -234,12 +218,7 @@ export function useShop() {
       toast({ title: '¡Compra exitosa!', description: `💎 ${listing.dp_amount} DP adquiridos del mercado` });
     } else if (listing.item_id) {
       // Add item to buyer inventory
-      const existing = inventory.find(i => i.item_id === listing.item_id);
-      if (existing) {
-        await supabase.from('user_inventory').update({ quantity: existing.quantity + 1 }).eq('id', existing.id);
-      } else {
-        await supabase.from('user_inventory').insert({ user_id: user.id, item_id: listing.item_id, quantity: 1, source: 'marketplace' });
-      }
+      await supabase.rpc('grant_inventory_item', { p_user_id: user.id, p_item_id: listing.item_id, p_quantity: 1, p_source: 'marketplace' });
       toast({ title: '¡Compra exitosa!', description: 'Item adquirido del mercado' });
     }
 
@@ -381,12 +360,7 @@ export function useShop() {
       toast({ title: 'Venta cancelada', description: `💎 ${listing.dp_amount} DP devueltos` });
     } else if (listing.item_id) {
       // Refund item
-      const existing = inventory.find(i => i.item_id === listing.item_id);
-      if (existing) {
-        await supabase.from('user_inventory').update({ quantity: existing.quantity + 1 }).eq('id', existing.id);
-      } else {
-        await supabase.from('user_inventory').insert({ user_id: user.id, item_id: listing.item_id, quantity: 1, source: 'refund' });
-      }
+      await supabase.rpc('grant_inventory_item', { p_user_id: user.id, p_item_id: listing.item_id, p_quantity: 1, p_source: 'refund' });
       toast({ title: 'Venta cancelada', description: 'Item devuelto a tu inventario' });
     }
 

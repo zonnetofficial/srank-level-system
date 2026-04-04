@@ -358,7 +358,11 @@ serve(async (req) => {
         throw new Error('Error al crear suscripción');
       }
 
-      const { error: dbError } = await supabase.from('monarch_subscriptions').upsert({
+      const monarchAdmin = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+      );
+      const { error: dbError } = await monarchAdmin.from('monarch_subscriptions').upsert({
         user_id: userId,
         status: 'pending',
         penalty_amount: penalty_amount,
@@ -404,7 +408,11 @@ serve(async (req) => {
       else if (mpData.status === 'pending') newStatus = 'pending';
 
       if (newStatus !== sub.status) {
-        await supabase.from('monarch_subscriptions')
+        const statusAdmin = createClient(
+          Deno.env.get('SUPABASE_URL')!,
+          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+        );
+        await statusAdmin.from('monarch_subscriptions')
           .update({ status: newStatus, updated_at: new Date().toISOString() })
           .eq('id', sub.id);
       }
@@ -436,7 +444,11 @@ serve(async (req) => {
         });
       }
 
-      await supabase.from('monarch_subscriptions')
+      const cancelAdmin = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+      );
+      await cancelAdmin.from('monarch_subscriptions')
         .update({ status: 'inactive', mp_preapproval_id: null, updated_at: new Date().toISOString() })
         .eq('user_id', userId);
 
