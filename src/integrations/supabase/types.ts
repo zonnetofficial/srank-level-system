@@ -554,6 +554,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      save_game_state: {
+        Args: { p_dungeon_state?: Json; p_game_state: Json }
+        Returns: undefined
+      }
       unequip_slot: { Args: { p_slot: string }; Returns: undefined }
       update_inventory_quantity: {
         Args: { p_inventory_id: string; p_new_quantity: number }
