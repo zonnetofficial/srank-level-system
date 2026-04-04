@@ -224,28 +224,14 @@ export function useGameState() {
       });
   }, [user?.id]);
 
-  // Debounced cloud save
+  // Debounced cloud save via secure RPC
   useEffect(() => {
     if (!user) return;
     if (cloudSaveTimer.current) clearTimeout(cloudSaveTimer.current);
     cloudSaveTimer.current = setTimeout(() => {
-      supabase
-        .from('user_game_state' as any)
-        .select('id')
-        .eq('user_id', user.id)
-        .single()
-        .then(({ data }: any) => {
-          if (data) {
-            supabase.from('user_game_state' as any)
-              .update({ game_state: state as any, updated_at: new Date().toISOString() } as any)
-              .eq('user_id', user.id)
-              .then(() => {});
-          } else {
-            supabase.from('user_game_state' as any)
-              .insert({ user_id: user.id, game_state: state as any } as any)
-              .then(() => {});
-          }
-        });
+      supabase.rpc('save_game_state' as any, {
+        p_game_state: state as any,
+      }).then(() => {});
     }, 3000);
     return () => { if (cloudSaveTimer.current) clearTimeout(cloudSaveTimer.current); };
   }, [state, user?.id]);
