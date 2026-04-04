@@ -537,6 +537,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cancel_marketplace_listing: {
+        Args: { p_listing_id: string }
+        Returns: undefined
+      }
+      equip_item: {
+        Args: { p_item_id?: string; p_slot: string; p_title_key?: string }
+        Returns: undefined
+      }
       grant_inventory_item: {
         Args: {
           p_item_id: string
@@ -546,6 +554,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      unequip_slot: { Args: { p_slot: string }; Returns: undefined }
       update_inventory_quantity: {
         Args: { p_inventory_id: string; p_new_quantity: number }
         Returns: undefined
