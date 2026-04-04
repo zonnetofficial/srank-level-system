@@ -337,10 +337,8 @@ export function useShop() {
   const cancelListing = useCallback(async (listing: MarketplaceListing) => {
     if (!user || listing.seller_id !== user.id || listing.status !== 'active') return false;
 
-    // Mark as cancelled
-    await supabase.from('marketplace_listings')
-      .update({ status: 'cancelled' } as any)
-      .eq('id', listing.id);
+    // Mark as cancelled via secure RPC
+    await supabase.rpc('cancel_marketplace_listing', { p_listing_id: listing.id } as any);
 
     if (listing.listing_type === 'dp' && listing.dp_amount) {
       // Refund DP

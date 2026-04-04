@@ -121,24 +121,19 @@ export function useCharacterEquipment(userId?: string) {
   const equipItem = useCallback(async (slot: EquipmentSlot, itemId: string | null, titleKey: string | null) => {
     if (!user) return;
 
-    // Upsert: delete existing + insert
-    await supabase.from('character_equipment' as any).delete().eq('user_id', user.id).eq('slot', slot);
-    
-    if (itemId || titleKey) {
-      await supabase.from('character_equipment' as any).insert({
-        user_id: user.id,
-        slot,
-        item_id: itemId,
-        title_key: titleKey,
-      } as any);
-    }
+    // Use secure RPC that validates inventory ownership
+    await supabase.rpc('equip_item', {
+      p_slot: slot,
+      p_item_id: itemId,
+      p_title_key: titleKey,
+    } as any);
 
     await fetchEquipment();
   }, [user, fetchEquipment]);
 
   const unequipSlot = useCallback(async (slot: EquipmentSlot) => {
     if (!user) return;
-    await supabase.from('character_equipment' as any).delete().eq('user_id', user.id).eq('slot', slot);
+    await supabase.rpc('unequip_slot', { p_slot: slot } as any);
     await fetchEquipment();
   }, [user, fetchEquipment]);
 
