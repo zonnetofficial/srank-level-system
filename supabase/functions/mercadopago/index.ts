@@ -408,7 +408,11 @@ serve(async (req) => {
       else if (mpData.status === 'pending') newStatus = 'pending';
 
       if (newStatus !== sub.status) {
-        await supabase.from('monarch_subscriptions')
+        const statusAdmin = createClient(
+          Deno.env.get('SUPABASE_URL')!,
+          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+        );
+        await statusAdmin.from('monarch_subscriptions')
           .update({ status: newStatus, updated_at: new Date().toISOString() })
           .eq('id', sub.id);
       }
