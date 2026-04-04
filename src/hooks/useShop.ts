@@ -175,15 +175,7 @@ export function useShop() {
       .update({ balance: newBalance, total_spent: (tpBalance - newBalance), updated_at: new Date().toISOString() } as any)
       .eq('user_id', user.id);
 
-    const existing = inventory.find(i => i.item_id === item.id);
-    if (existing) {
-      await supabase.from('user_inventory').update({ quantity: existing.quantity + 1 }).eq('id', existing.id);
-    } else {
-      await supabase.from('user_inventory').insert({ user_id: user.id, item_id: item.id, quantity: 1, source: 'market' });
-    }
-
-    await supabase.from('tp_transactions' as any)
-      .insert({ user_id: user.id, amount: -price, type: 'spend', description: `Compra: ${item.name}`, reference_id: item.id } as any);
+    await supabase.rpc('grant_inventory_item', { p_user_id: user.id, p_item_id: item.id, p_quantity: 1, p_source: 'market' });
 
     toast({ title: '¡Compra exitosa!', description: `${item.icon} ${item.name} añadido (TP)` });
     await fetchAll();
