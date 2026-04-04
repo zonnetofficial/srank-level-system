@@ -215,11 +215,10 @@ export function useGameState() {
           setState(cloudState);
           saveState(cloudState);
         } else {
-          // No cloud data — upload current state
-          supabase.from('user_game_state' as any).insert({
-            user_id: user.id,
-            game_state: state as any,
-          } as any);
+          // No cloud data — upload current state via RPC
+          supabase.rpc('save_game_state' as any, {
+            p_game_state: state as any,
+          });
         }
       });
   }, [user?.id]);
