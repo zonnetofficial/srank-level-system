@@ -444,7 +444,11 @@ serve(async (req) => {
         });
       }
 
-      await supabase.from('monarch_subscriptions')
+      const cancelAdmin = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+      );
+      await cancelAdmin.from('monarch_subscriptions')
         .update({ status: 'inactive', mp_preapproval_id: null, updated_at: new Date().toISOString() })
         .eq('user_id', userId);
 
