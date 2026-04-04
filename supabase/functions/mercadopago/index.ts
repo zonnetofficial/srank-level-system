@@ -358,7 +358,11 @@ serve(async (req) => {
         throw new Error('Error al crear suscripción');
       }
 
-      const { error: dbError } = await supabase.from('monarch_subscriptions').upsert({
+      const monarchAdmin = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+      );
+      const { error: dbError } = await monarchAdmin.from('monarch_subscriptions').upsert({
         user_id: userId,
         status: 'pending',
         penalty_amount: penalty_amount,
