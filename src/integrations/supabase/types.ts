@@ -558,6 +558,18 @@ export type Database = {
         Args: { p_dungeon_state?: Json; p_game_state: Json }
         Returns: undefined
       }
+      sync_dungeon_profile: {
+        Args: {
+          p_character_class: string
+          p_character_name: string
+          p_character_sprite: string
+          p_died: boolean
+          p_display_name: string
+          p_rank: string
+          p_xp_earned: number
+        }
+        Returns: undefined
+      }
       unequip_slot: { Args: { p_slot: string }; Returns: undefined }
       update_inventory_quantity: {
         Args: { p_inventory_id: string; p_new_quantity: number }
