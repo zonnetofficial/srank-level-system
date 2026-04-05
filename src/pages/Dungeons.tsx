@@ -107,38 +107,15 @@ export default function Dungeons() {
       const { data: profile } = await supabase.from('profiles').select('display_name').eq('id', user.id).single();
       const displayName = profile?.display_name || 'Cazador';
 
-      const { data: existing } = await supabase
-        .from('dungeon_profiles')
-        .select('dungeons_cleared, highest_rank, total_xp_earned, deaths')
-        .eq('user_id', user.id)
-        .single();
-
-      if (existing) {
-        const newHighest = RANK_ORDER[rank] > RANK_ORDER[existing.highest_rank] ? rank : existing.highest_rank;
-        await supabase.from('dungeon_profiles').update({
-          display_name: displayName,
-          character_name: char.name,
-          character_class: char.className,
-          character_sprite: char.sprite,
-          dungeons_cleared: existing.dungeons_cleared + (died ? 0 : 1),
-          highest_rank: newHighest,
-          total_xp_earned: existing.total_xp_earned + xpEarned,
-          deaths: existing.deaths + (died ? 1 : 0),
-          updated_at: new Date().toISOString(),
-        }).eq('user_id', user.id);
-      } else {
-        await supabase.from('dungeon_profiles').insert({
-          user_id: user.id,
-          display_name: displayName,
-          character_name: char.name,
-          character_class: char.className,
-          character_sprite: char.sprite,
-          dungeons_cleared: died ? 0 : 1,
-          highest_rank: rank,
-          total_xp_earned: xpEarned,
-          deaths: died ? 1 : 0,
-        });
-      }
+      await supabase.rpc('sync_dungeon_profile', {
+        p_display_name: displayName,
+        p_character_name: char.name,
+        p_character_class: char.className,
+        p_character_sprite: char.sprite,
+        p_rank: rank,
+        p_xp_earned: xpEarned,
+        p_died: died,
+      } as any);
     } catch { /* ignore */ }
   }, [user, char]);
 
