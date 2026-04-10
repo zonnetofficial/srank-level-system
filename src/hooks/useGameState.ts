@@ -238,9 +238,12 @@ export function useGameState() {
           setState(cloudState);
           saveState(cloudState);
         } else {
-          // No cloud data — upload current state via RPC
+          // No cloud data — detect punishments on local state then upload
+          let localState = detectAndApplyPunishments(state);
+          setState(localState);
+          saveState(localState);
           supabase.rpc('save_game_state' as any, {
-            p_game_state: state as any,
+            p_game_state: localState as any,
           });
         }
       });
