@@ -105,6 +105,8 @@ function detectAndApplyPunishments(state: GameState): GameState {
 
   const penalty = getStatPenalty(state);
   const totalPenalty = penalty * failedDays;
+  // Task-type punishments do NOT accumulate — cap at 1
+  const newPendingPunishments = 1;
   const newStats = { ...state.stats };
   const newPoints = { ...state.statPoints };
 
@@ -134,7 +136,7 @@ function detectAndApplyPunishments(state: GameState): GameState {
     questLog: updatedLog,
     currentStreak: 0,
     totalFailed: state.totalFailed + failedDays,
-    pendingPunishments: state.pendingPunishments + failedDays,
+    pendingPunishments: newPendingPunishments,
     lastCheckedDate: today,
     missionSchedule,
   };
@@ -212,6 +214,27 @@ export function useGameState() {
           if (cloudState.pendingPunishments === undefined) cloudState.pendingPunishments = 0;
           if (!cloudState.lastCheckedDate) cloudState.lastCheckedDate = getToday();
           cloudState = detectAndApplyPunishments(cloudState);
+          // Auto-create today's quest if missing (same logic as initial load)
+          const todayStr = getToday();
+          if (!cloudState.questLog.find(q => q.date === todayStr)) {
+            const rest = isRestDay(cloudState.questLog);
+            const newLog = [...cloudState.questLog];
+            if (rest) {
+              newLog.push({ date: todayStr, status: 'rest' });
+              cloudState = { ...cloudState, questLog: newLog, statBank: { ...cloudState.statBank, int: cloudState.statBank.int + 1, vit: cloudState.statBank.vit + 1 } };
+            } else {
+              newLog.push({
+                date: todayStr,
+                status: 'pending',
+                exercises: cloudState.exerciseProgression.map(e => ({ ...e, completed: false })),
+                runMinutes: cloudState.runMode === 'time' ? cloudState.runProgression : undefined,
+                runCompleted: false,
+              });
+              cloudState = { ...cloudState, questLog: newLog };
+            }
+          }
+          if (!cloudState.missionSchedule) cloudState.missionSchedule = createInitialSchedule();
+          cloudState.missionSchedule = checkAndScheduleMission(cloudState.missionSchedule, cloudState.level);
           setState(cloudState);
           saveState(cloudState);
         } else {
