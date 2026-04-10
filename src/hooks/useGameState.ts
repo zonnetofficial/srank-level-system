@@ -145,7 +145,9 @@ function detectAndApplyPunishments(state: GameState): GameState {
 export function useGameState() {
   const [state, setState] = useState<GameState>(() => {
     let loaded = loadState();
-    loaded = detectAndApplyPunishments(loaded);
+    // Do NOT detect punishments here — wait for cloud auth to confirm user is logged in
+    // Reset pending punishments so overlay doesn't flash before auth
+    loaded.pendingPunishments = 0;
     // Auto-start quest if none exists for today
     const today = getToday();
     if (!loaded.questLog.find(q => q.date === today)) {
@@ -238,9 +240,12 @@ export function useGameState() {
           setState(cloudState);
           saveState(cloudState);
         } else {
-          // No cloud data — upload current state via RPC
+          // No cloud data — detect punishments on local state then upload
+          let localState = detectAndApplyPunishments(state);
+          setState(localState);
+          saveState(localState);
           supabase.rpc('save_game_state' as any, {
-            p_game_state: state as any,
+            p_game_state: localState as any,
           });
         }
       });
