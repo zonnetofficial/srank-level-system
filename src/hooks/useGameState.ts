@@ -105,6 +105,8 @@ function detectAndApplyPunishments(state: GameState): GameState {
 
   const penalty = getStatPenalty(state);
   const totalPenalty = penalty * failedDays;
+  // Task-type punishments do NOT accumulate — cap at 1
+  const newPendingPunishments = 1;
   const newStats = { ...state.stats };
   const newPoints = { ...state.statPoints };
 
@@ -134,7 +136,7 @@ function detectAndApplyPunishments(state: GameState): GameState {
     questLog: updatedLog,
     currentStreak: 0,
     totalFailed: state.totalFailed + failedDays,
-    pendingPunishments: state.pendingPunishments + failedDays,
+    pendingPunishments: newPendingPunishments,
     lastCheckedDate: today,
     missionSchedule,
   };
