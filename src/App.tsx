@@ -42,6 +42,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 const AppContent = () => {
   const { state, completePunishment, failPunishment } = useGameState();
+  const { user } = useAuth();
   const { monarchStatus } = useMonarch();
   const isMonarchActive = monarchStatus.status === 'active';
   const { settings: audioSettings, setMasterVolume: setMaster, setMusicVolume: setMusic, setSfxVolume: setSfx, toggleMute } = useAudio(isMonarchActive);
@@ -75,10 +76,11 @@ const AppContent = () => {
         <Route path="*" element={<NotFound />} />
       </Routes>
 
-      {state.pendingPunishments > 0 && (
+      {user && state.pendingPunishments > 0 && (
         <PunishmentOverlay
           pendingCount={state.pendingPunishments}
           level={state.level}
+          intStat={state.stats.int}
           statPenalty={statPenalty}
           onComplete={completePunishment}
           onFail={failPunishment}
