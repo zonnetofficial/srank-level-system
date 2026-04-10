@@ -146,6 +146,8 @@ export function useGameState() {
   const [state, setState] = useState<GameState>(() => {
     let loaded = loadState();
     // Do NOT detect punishments here — wait for cloud auth to confirm user is logged in
+    // Reset pending punishments so overlay doesn't flash before auth
+    loaded.pendingPunishments = 0;
     // Auto-start quest if none exists for today
     const today = getToday();
     if (!loaded.questLog.find(q => q.date === today)) {
