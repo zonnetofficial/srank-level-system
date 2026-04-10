@@ -145,7 +145,7 @@ function detectAndApplyPunishments(state: GameState): GameState {
 export function useGameState() {
   const [state, setState] = useState<GameState>(() => {
     let loaded = loadState();
-    loaded = detectAndApplyPunishments(loaded);
+    // Do NOT detect punishments here — wait for cloud auth to confirm user is logged in
     // Auto-start quest if none exists for today
     const today = getToday();
     if (!loaded.questLog.find(q => q.date === today)) {
