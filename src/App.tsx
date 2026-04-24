@@ -27,6 +27,16 @@ const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
+  const { state, completePunishment, failPunishment } = useGameState();
+  const { monarchStatus } = useMonarch();
+  const isMonarchActive = monarchStatus.status === 'active';
+  const { settings: audioSettings, setMasterVolume: setMaster, setMusicVolume: setMusic, setSfxVolume: setSfx, toggleMute } = useAudio(isMonarchActive);
+
+  let titleIdx = 0;
+  for (let i = 0; i < state.classTitles.length; i++) {
+    if (state.classTitles[i].obtained) titleIdx = i;
+  }
+  const statPenalty = (titleIdx + 1) * 5;
   
   if (loading) {
     return (
@@ -37,21 +47,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
   
   if (!user) return <Navigate to="/auth" replace />;
-  return <>{children}</>;
-};
-
-const AppContent = () => {
-  const { state, completePunishment, failPunishment } = useGameState();
-  const { user } = useAuth();
-  const { monarchStatus } = useMonarch();
-  const isMonarchActive = monarchStatus.status === 'active';
-  const { settings: audioSettings, setMasterVolume: setMaster, setMusicVolume: setMusic, setSfxVolume: setSfx, toggleMute } = useAudio(isMonarchActive);
-  let titleIdx = 0;
-  for (let i = 0; i < state.classTitles.length; i++) {
-    if (state.classTitles[i].obtained) titleIdx = i;
-  }
-  const statPenalty = (titleIdx + 1) * 5;
-
   return (
     <>
       <AudioSettings
@@ -61,6 +56,24 @@ const AppContent = () => {
         onSfxChange={setSfx}
         onToggleMute={toggleMute}
       />
+      {children}
+      {state.pendingPunishments > 0 && (
+        <PunishmentOverlay
+          pendingCount={state.pendingPunishments}
+          level={state.level}
+          intStat={state.stats.int}
+          statPenalty={statPenalty}
+          onComplete={completePunishment}
+          onFail={failPunishment}
+        />
+      )}
+    </>
+  );
+};
+
+const AppContent = () => {
+  return (
+    <>
       <Routes>
         <Route path="/auth" element={<Auth />} />
         <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
@@ -75,17 +88,6 @@ const AppContent = () => {
         <Route path="/install" element={<Install />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
-
-      {user && state.pendingPunishments > 0 && (
-        <PunishmentOverlay
-          pendingCount={state.pendingPunishments}
-          level={state.level}
-          intStat={state.stats.int}
-          statPenalty={statPenalty}
-          onComplete={completePunishment}
-          onFail={failPunishment}
-        />
-      )}
     </>
   );
 };
