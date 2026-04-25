@@ -103,6 +103,13 @@ const PunishmentOverlay = ({ pendingCount, level, intStat, statPenalty, onComple
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-sm overflow-y-auto py-4">
+      {/* DEV ONLY: skip punishment button for preview/testing */}
+      <button
+        onClick={onComplete}
+        className="fixed top-3 right-3 z-[110] px-3 py-1.5 rounded-md bg-yellow-500/20 border border-yellow-500/50 text-yellow-300 text-[10px] font-display uppercase tracking-wider hover:bg-yellow-500/30 transition-colors"
+      >
+        ⏭ Saltar (DEV)
+      </button>
       <div className="w-full max-w-md px-4">
         {phase === 'phrase' ? (
           <div className="text-center space-y-6 animate-fade-in">
