@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { lovable } from '@/integrations/lovable/index';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Eye, EyeOff } from 'lucide-react';
 
@@ -13,6 +13,10 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const rawNext = searchParams.get('next') || '';
+  const nextPath = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/';
+  const nextUrl = window.location.origin + nextPath;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,14 +26,14 @@ const Auth = () => {
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        navigate('/');
+        navigate(nextPath);
       } else {
         const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             data: { display_name: displayName || 'Cazador' },
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo: nextUrl,
           },
         });
         if (error) throw error;
@@ -133,14 +137,14 @@ const Auth = () => {
             setLoading(true);
             try {
               const result = await lovable.auth.signInWithOAuth("google", {
-                redirect_uri: window.location.origin,
+                redirect_uri: nextUrl,
               });
               if (result.error) {
                 toast.error(result.error.message || 'Error con Google');
                 return;
               }
               if (result.redirected) return;
-              navigate('/');
+              navigate(nextPath);
             } catch (e: any) {
               toast.error(e.message || 'Error con Google');
             } finally {

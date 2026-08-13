@@ -15,6 +15,7 @@ import Shop from "./pages/Shop";
 import MandatoryMission from "./pages/MandatoryMission";
 import Dungeons from "./pages/Dungeons";
 import Install from "./pages/Install";
+import OAuthConsent from "./pages/OAuthConsent";
 import NotFound from "./pages/NotFound";
 import PunishmentOverlay from "./components/PunishmentOverlay";
 import AudioSettings from "./components/AudioSettings";
@@ -86,6 +87,7 @@ const AppContent = () => {
         <Route path="/mission" element={<ProtectedRoute><MandatoryMission /></ProtectedRoute>} />
         <Route path="/dungeons" element={<ProtectedRoute><Dungeons /></ProtectedRoute>} />
         <Route path="/install" element={<Install />} />
+        <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>
